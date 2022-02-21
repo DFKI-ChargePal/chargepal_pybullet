@@ -4,10 +4,10 @@ import pybullet as p
 
 # mypy
 from typing import Dict, Any, Union, Tuple, List
-from gym_env.worlds.world_ptp import WorldPoint2Point
-from gym_env.worlds.world_pih import WorldPegInHole
+from chargepal_pybullet.rl_gym.worlds.world_ptp import WorldPoint2Point
+from chargepal_pybullet.rl_gym.worlds.world_pih import WorldPegInHole
 
-from gym_env.bullet.config import JOINT_VELOCITY_MOTOR_CONTROL
+from chargepal_pybullet.rl_gym.bullet.config import JOINT_VELOCITY_MOTOR_CONTROL
 
 
 LOGGER = logging.getLogger(__name__)

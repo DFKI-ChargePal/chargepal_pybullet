@@ -1,5 +1,6 @@
 import numpy as np
-import quaternion
+# import quaternion
+import quaternionic
 
 # MyPy
 from typing import Tuple
@@ -30,4 +31,5 @@ def bullet2numpy_repr(q_bullet: Tuple[float, ...]) -> np.quaternion:
     PyBullet [w, x, y, z]
     Numpy Quaternion [x, y, z, w]
     """
-    return np.quaternion(q_bullet[3], q_bullet[0], q_bullet[1], q_bullet[2])
+    return quaternionic.array([q_bullet[3], q_bullet[0], q_bullet[1], q_bullet[2]])
+    # return np.quaternion(q_bullet[3], q_bullet[0], q_bullet[1], q_bullet[2])

@@ -4,13 +4,13 @@ import logging
 # mypy
 import numpy as np
 from typing import Dict, Any, Tuple
-from gym_env.sensors.sensor_tool import ToolSensor
-from gym_env.bullet.ik_solver import IKSolver
-from gym_env.bullet.joint_position_motor_control import JointPositionMotorControl
+from chargepal_pybullet.rl_gym.sensors.sensor_tool import ToolSensor
+from chargepal_pybullet.rl_gym.bullet.ik_solver import IKSolver
+from chargepal_pybullet.rl_gym.bullet.joint_position_motor_control import JointPositionMotorControl
 
 
-from gym_env.controllers.controller import Controller
-from gym_env.controllers.config import POSITION_3DOF_CARTESIAN_CONTROLLER
+from chargepal_pybullet.rl_gym.controllers.controller import Controller
+from chargepal_pybullet.rl_gym.controllers.config import POSITION_3DOF_CARTESIAN_CONTROLLER
 
 
 LOGGER = logging.getLogger(__name__)

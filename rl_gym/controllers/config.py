@@ -3,7 +3,7 @@
 # mypy
 from typing import Dict, Any
 
-from rl_gym.utility.constants import WorldFrame
+from chargepal_pybullet.rl_gym.utility.constants import WorldFrame
 
 CONTROLLER: Dict[str, Any] = {}
 

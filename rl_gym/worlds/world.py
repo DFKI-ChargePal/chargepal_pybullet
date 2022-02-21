@@ -9,10 +9,10 @@ from pybullet_utils import bullet_client
 
 # mypy
 from typing import Dict, Any, Union, Tuple, List, Optional
-from gym_env.sensors.sensor import Sensor
-from gym_env.worlds.config import BulletLinkState, BulletJointState
+from chargepal_pybullet.rl_gym.sensors.sensor import Sensor
+from chargepal_pybullet.rl_gym.worlds.config import BulletLinkState, BulletJointState
 
-from gym_env.worlds.config import WORLD
+from chargepal_pybullet.rl_gym.worlds.config import WORLD
 
 
 class World(object):

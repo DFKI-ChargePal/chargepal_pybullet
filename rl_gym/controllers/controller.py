@@ -5,7 +5,7 @@ import copy
 # mypy
 from typing import Dict, Any, Generic, TypeVar
 
-from gym_env.controllers.config import CONTROLLER
+from chargepal_pybullet.rl_gym.controllers.config import CONTROLLER
 
 
 class Controller(object):

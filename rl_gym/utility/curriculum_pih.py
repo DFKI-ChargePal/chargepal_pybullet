@@ -2,7 +2,7 @@ import numpy as np
 
 # MyPy
 from typing import Tuple
-from gym_env.sensors.sensor_target_pih import TargetSensor
+from chargepal_pybullet.rl_gym.sensors.sensor_target_pih import TargetSensor
 
 
 class CurriculumPegInHole(object):

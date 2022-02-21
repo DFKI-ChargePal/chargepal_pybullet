@@ -5,10 +5,10 @@ import pybullet as p
 
 # mypy
 from typing import Dict, Any, Tuple
-from gym_env.worlds.world_ptp import WorldPoint2Point
+from chargepal_pybullet.rl_gym.worlds.world_ptp import WorldPoint2Point
 
-from gym_env.sensors.sensor import Sensor
-from gym_env.sensors.config import TARGET_SENSOR
+from chargepal_pybullet.rl_gym.sensors.sensor import Sensor
+from chargepal_pybullet.rl_gym.sensors.config import TARGET_SENSOR
 
 
 LOGGER = logging.getLogger(__name__)

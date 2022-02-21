@@ -5,14 +5,14 @@ import numpy as np
 
 # mypy
 from typing import Dict, Any
-from gym_env.bullet.jacobian import Jacobian
-from gym_env.bullet.joint_velocity_motor_control import JointVelocityMotorControl
-from gym_env.sensors.sensor_tool import ToolSensor
-from gym_env.sensors.sensor_joints import JointSensor
+from chargepal_pybullet.rl_gym.bullet.jacobian import Jacobian
+from chargepal_pybullet.rl_gym.bullet.joint_velocity_motor_control import JointVelocityMotorControl
+from chargepal_pybullet.rl_gym.sensors.sensor_tool import ToolSensor
+from chargepal_pybullet.rl_gym.sensors.sensor_joints import JointSensor
 
 
-from gym_env.controllers.controller import Controller
-from gym_env.controllers.config import VELOCITY_6DOF_CARTESIAN_CONTROLLER
+from chargepal_pybullet.rl_gym.controllers.controller import Controller
+from chargepal_pybullet.rl_gym.controllers.config import VELOCITY_6DOF_CARTESIAN_CONTROLLER
 
 
 LOGGER = logging.getLogger(__name__)

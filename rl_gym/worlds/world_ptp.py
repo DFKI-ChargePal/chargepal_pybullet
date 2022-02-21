@@ -7,9 +7,9 @@ from typing import Dict, Any, Tuple, Union
 import pybullet as p
 import pybullet_data
 
-from gym_env.worlds.config import WORLD_PTP
-from gym_env.worlds.world import World
-from gym_env.bullet.utility import draw_sphere_marker
+from chargepal_pybullet.rl_gym.worlds.config import WORLD_PTP
+from chargepal_pybullet.rl_gym.worlds.world import World
+from chargepal_pybullet.rl_gym.bullet.utility import draw_sphere_marker
 
 
 class WorldPoint2Point(World):

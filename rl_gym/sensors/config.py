@@ -12,6 +12,8 @@ TOOL_SENSOR: Dict[str, Any] = {}
 
 TARGET_SENSOR: Dict[str, Any] = {}
 
+VIRTUAL_SENSOR: Dict[str, Any] = {}
+
 VIRTUAL_TOOL_SENSOR: Dict[str, Any] = {}
 
 VIRTUAL_TARGET_SENSOR: Dict[str, Any] = {}

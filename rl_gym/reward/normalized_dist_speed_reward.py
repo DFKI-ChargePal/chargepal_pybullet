@@ -6,7 +6,7 @@ import copy
 import numpy as np
 from typing import Dict, Any
 
-from gym_env.reward.config import NORMALIZED_DIST_SPEED_REWARD
+from chargepal_pybullet.rl_gym.reward.config import NORMALIZED_DIST_SPEED_REWARD
 
 
 LOGGER = logging.getLogger(__name__)

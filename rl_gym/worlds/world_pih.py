@@ -7,8 +7,8 @@ from typing import Dict, Any, Union, Tuple
 import pybullet as p
 import pybullet_data
 
-from gym_env.worlds.config import WORLD_PIH
-from gym_env.worlds.world import World
+from chargepal_pybullet.rl_gym.worlds.config import WORLD_PIH
+from chargepal_pybullet.rl_gym.worlds.world import World
 
 
 class WorldPegInHole(World):

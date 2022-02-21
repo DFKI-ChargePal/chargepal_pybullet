@@ -5,11 +5,11 @@ import numpy as np
 
 # mypy
 from typing import Dict, Any, Union, Tuple, List
-from gym_env.worlds.world_ptp import WorldPoint2Point
-from gym_env.worlds.world_pih import WorldPegInHole
+from chargepal_pybullet.rl_gym.worlds.world_ptp import WorldPoint2Point
+from chargepal_pybullet.rl_gym.worlds.world_pih import WorldPegInHole
 
-from gym_env.bullet.config import IK_SOLVER
-from gym_env.utility.general_utils import wrap
+from chargepal_pybullet.rl_gym.bullet.config import IK_SOLVER
+from chargepal_pybullet.rl_gym.utility.general_utils import wrap
 
 LOGGER = logging.getLogger(__name__)
 

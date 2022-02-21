@@ -1,4 +1,6 @@
 """ This file defines the default configuration of the pybullet worlds. """
+import numpy as np
+
 
 ur_joint_idx = {
     'SHOULDER_PAN': 1,
@@ -10,7 +12,7 @@ ur_joint_idx = {
 }
 
 ur_joint_x0 = {
-    'SHOULDER_PAN': 1.571,
+    'SHOULDER_PAN': np.pi,
     'SHOULDER_LIFT': -1.0,
     'ELBOW_JOINT': 2.171,
     'WRIST_1': -1.171,
