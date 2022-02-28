@@ -1,17 +1,17 @@
 import gym
-import gym_chargepal
 
 
-def main() -> None:
+def main(env_name: str) -> None:
 
-    env = gym.make("ChargePal-P2P-1D-PositionControl-v0")
+    env = gym.make("gym_chargepal:" + env_name)
     env.action_space.seed(42)
 
     obs = env.reset()
 
     episode = 1
+    print(f'Start test with environment: {env_name}')
     print(f'Episode: {episode}')
-    for _ in range(1000):
+    while True:
         env.render()
         action = env.action_space.sample()
 
@@ -25,10 +25,17 @@ def main() -> None:
         if done:
             print(f'\n\nEpisode: {episode}')
             episode += 1
+            if episode > 7:
+                break
             obs = env.reset()
 
     env.close()
 
 
 if __name__ == '__main__':
-    main()
+    env_names = [
+        'ChargePal-P2P-1D-PositionControl-v0',
+    ]
+
+    for env_ in env_names:
+        main(env_)

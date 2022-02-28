@@ -15,7 +15,7 @@ POSITION_1DOF_CARTESIAN_CONTROLLER = {
 
 POSITION_3DOF_CARTESIAN_CONTROLLER = {
     'home_orientation': None,
-    'wa': 0.005,  # translation delta in m
+    'wa': 0.05,  # translation delta in m
 }
 
 VELOCITY_3DOF_CARTESIAN_CONTROLLER = {

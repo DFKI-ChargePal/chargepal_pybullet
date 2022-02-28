@@ -19,22 +19,40 @@ from gym_chargepal.reward.normalized_dist_reward import NormalizedDistanceReward
 
 class EnvironmentP2PCartesian3DPositionCtrl(Environment):
     """ Cartesian Environment with 3 dof position controller - Task: point to point """
-    def __init__(self, hyperparams: Dict[str, Any]):
-        config: Dict[str, Any] = copy.deepcopy(ENVIRONMENT_PTP_3DOF_CARTESIAN_POSITION_CONTROL)
-        config.update(hyperparams['common'])
+    def __init__(self, **kwargs: Any):
+        # Update environment configuration
+        config_env = {} if 'config_env' not in kwargs else kwargs['config_env']
+        config: Dict[str, Any] = copy.deepcopy(
+            ENVIRONMENT_PTP_3DOF_CARTESIAN_POSITION_CONTROL)
+        config.update(config_env)
         Environment.__init__(self, config)
-        # components
-        hp = hyperparams['components']
-        hp['worlds']['gui'] = self._hyperparams['gui']
-        self._world = WorldPoint2Point(hp['worlds'])
-        self._ik_solver = IKSolver(hp['ik_solver'], self._world)
-        self._control_interface = JointPositionMotorControl(hp['control_interface'], self._world)
-        self._plug_sensor = PlugSensor(hp['tool_sensor'], self._world)
-        self._target_sensor = TargetSensor(hp['target_sensor'], self._world)
+
+        # extract component hyperparameter from kwargs
+        config_reward = {} if 'config_reward' not in kwargs else kwargs['config_reward']
+        config_world = {} if 'config_world' not in kwargs else kwargs['config_world']
+        config_ik_solver = {} if 'config_ik_solver' not in kwargs else kwargs['config_ik_solver']
+        config_control_interface = {} if 'config_control_interface' not in kwargs else kwargs['config_control_interface']
+        config_low_level_control = {} if 'config_low_level_control' not in kwargs else kwargs['config_low_level_control']
+        config_plug_sensor = {} if 'config_plug_sensor' not in kwargs else kwargs['config_plug_sensor']
+        config_target_sensor = {} if 'config_target_sensor' not in kwargs else kwargs['config_target_sensor']
+
+        # resolve cross references
+        config_world['gui'] = self._hyperparams['gui']
+        config_low_level_control['home_orientation'] = self._hyperparams['start_ori']
+
+        # componets
+        self._world = WorldPoint2Point(config_world)
+        self._ik_solver = IKSolver(config_ik_solver, self._world)
+        self._control_interface = JointPositionMotorControl(config_control_interface, self._world)
+        self._plug_sensor = PlugSensor(config_plug_sensor, self._world)
+        self._target_sensor = TargetSensor(config_target_sensor, self._world)
         self._low_level_control = Position3dofCartesianController(
-            hp['low_level_control'], self._ik_solver, self._control_interface, self._plug_sensor
+            config_low_level_control, 
+            self._ik_solver, 
+            self._control_interface, 
+            self._plug_sensor
         )
-        self._reward = NormalizedDistanceReward(hp['reward'])
+        self._reward = NormalizedDistanceReward(config_reward)
         # params
         self._tool_ori0 = self._hyperparams['start_ori']
         self._start_off = np.array(self._hyperparams['start_off'])
@@ -67,8 +85,6 @@ class EnvironmentP2PCartesian3DPositionCtrl(Environment):
         return obs, reward, done, info
 
     def reset(self) -> np.ndarray:
-        # draw target marker
-        self._world.draw_target()
         # reset environment
         self._n_step = 0
         # reset robot
@@ -77,7 +93,6 @@ class EnvironmentP2PCartesian3DPositionCtrl(Environment):
         # solve ik to get joint configuration
         tgt = self._target_sensor.get_pos()
         p0 = tuple(tgt + self._start_off + self._start_var * np.random.randn(3))
-        # p0 = tuple(tgt + self._start_off)
         pose0 = (p0, self._tool_ori0)
         joint_configuration = self._ik_solver.solve(pose0)
 

@@ -4,7 +4,7 @@ from tkinter.messagebox import NO
 import numpy as np
 
 # mypy
-from typing import Dict, Any, Optional, Tuple, List
+from typing import Dict, Any, Tuple
 
 from gym_chargepal.envs.env import Environment
 from gym_chargepal.envs.config import ENVIRONMENT_PTP_1DOF_CARTESIAN_POSITION_CONTROL
@@ -19,11 +19,15 @@ from gym_chargepal.reward.normalized_dist_reward import NormalizedDistanceReward
 
 
 class EnvironmentP2PCartesian1DPositionCtrl(Environment):
-    """ Cartesian Environment with 3 dof position controller - Task: point to point """
+    """ 
+    Cartesian Environment with 3 dof position controller
+    Task: point to point 
+    """
     def __init__(self, **kwargs: Any):
         # update environment configuration
         config_env = {} if 'config_env' not in kwargs else kwargs['config_env']
-        config: Dict[str, Any] = copy.deepcopy(ENVIRONMENT_PTP_1DOF_CARTESIAN_POSITION_CONTROL)
+        config: Dict[str, Any] = copy.deepcopy(
+            ENVIRONMENT_PTP_1DOF_CARTESIAN_POSITION_CONTROL)
         config.update(config_env)
         Environment.__init__(self, config)
 
@@ -95,7 +99,6 @@ class EnvironmentP2PCartesian1DPositionCtrl(Environment):
         # solve ik to get joint configuration
         tgt = self._target_sensor.get_pos()
         p0 = tuple(tgt + self._start_off + self._start_var * np.random.randn(3))
-        p0 = tuple(tgt + self._start_off)
         pose0 = (p0, self._tool_ori0)
         joint_configuration = self._ik_solver.solve(pose0)
 

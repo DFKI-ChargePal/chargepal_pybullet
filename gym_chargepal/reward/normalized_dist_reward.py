@@ -32,8 +32,8 @@ class NormalizedDistanceReward(object):
         dist_norm = min(np.mean(np.abs(dist)) * self._wd, 1.0)
         if done:
             # discrete done reward
-            reward_value = - (dist_norm ** self._final_dst_exp)
-            reward = 1.0 + reward_value if solved else reward_value
+            reward_value = (dist_norm ** self._final_dst_exp)
+            reward = 1.0 if solved else 1 - reward_value
         else:
             # calculate reward
             reward = 1.0 - (dist_norm ** self._dst_exp)
