@@ -5,8 +5,8 @@ import copy
 # mypy
 from typing import Dict, Any, Tuple
 
-from chargepal_pybullet.gym_chargepal.sensors.sensor import Sensor
-from chargepal_pybullet.gym_chargepal.sensors.config import VIRTUAL_SENSOR
+from gym_chargepal.sensors.sensor import Sensor
+from gym_chargepal.sensors.config import VIRTUAL_SENSOR
 
 
 LOGGER = logging.getLogger(__name__)

@@ -5,26 +5,30 @@ import numpy as np
 
 # mypy
 from typing import Dict, Any, Union, Tuple, List
-from chargepal_pybullet.gym_chargepal.worlds.world_ptp import WorldPoint2Point
-from chargepal_pybullet.gym_chargepal.worlds.world_pih import WorldPegInHole
+from gym_chargepal.worlds.world_ptp import WorldPoint2Point
+from gym_chargepal.worlds.world_pih import WorldPegInHole
 
-from chargepal_pybullet.gym_chargepal.bullet.config import IK_SOLVER
-from chargepal_pybullet.gym_chargepal.utility.general_utils import wrap
+from gym_chargepal.bullet.config import IK_SOLVER
+from gym_chargepal.bullet.bullet_observer import BulletObserver
+from gym_chargepal.utility.general_utils import wrap
 
 LOGGER = logging.getLogger(__name__)
 
 
-class IKSolver(object):
+class IKSolver(BulletObserver):
     """ Inverse kinematics solver. """
     def __init__(self, hyperparams: Dict[str, Any], world: Union[WorldPoint2Point, WorldPegInHole]):
         config: Dict[str, Any] = copy.deepcopy(IK_SOLVER)
         config.update(hyperparams)
         self._hyperparams = config
+        BulletObserver.__init__(self)
         # get attributes of the world
-        self._physics_client_id = world.physics_client_id
-        self._arm_id = world.arm_id
-        self._ee_tip = world.tool_frame_idx
-        self._rest_pos = [x0 for x0 in world.joint_x0.values()]
+        self._world = world
+        self._world.attach_bullet_obs(self)
+        self._physics_client_id = -1
+        self._robot_id = -1
+        self._ee_tip = -1
+        self._rest_pos: List[float] = []
         # constants
         self._lo_limits: List[float] = self._hyperparams['lower_limits']
         self._up_limits: List[float] = self._hyperparams['upper_limits']
@@ -42,9 +46,9 @@ class IKSolver(object):
         assert len(pose) == 2
         assert len(pose[0]) == 3
         assert len(pose[1]) == 4
-
+        
         joints = p.calculateInverseKinematics(
-            bodyUniqueId=self._arm_id,
+            bodyUniqueId=self._robot_id,
             endEffectorLinkIndex=self._ee_tip,
             targetPosition=pose[0],
             targetOrientation=pose[1],
@@ -56,6 +60,12 @@ class IKSolver(object):
             residualThreshold=self._residual_threshold,
             physicsClientId=self._physics_client_id
         )
-        # bring joint configuration in range bet
+        # bring joint configuration in range between - 2 pi and + 2 pi
         joint_wrapped = tuple([wrap(i, -np.pi, np.pi) for i in joints])
         return joint_wrapped
+
+    def update_bullet_id(self) -> None:
+        self._physics_client_id = self._world.physics_client_id
+        self._robot_id = self._world.robot_id
+        self._ee_tip = self._world.plug_reference_frame_idx
+        self._rest_pos = [x0 for x0 in self._world.ur_joint_start_config.values()]

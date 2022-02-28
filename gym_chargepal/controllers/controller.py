@@ -3,9 +3,9 @@ import abc
 import copy
 
 # mypy
-from typing import Dict, Any, Generic, TypeVar
+from typing import Dict, Any
 
-from chargepal_pybullet.gym_chargepal.controllers.config import CONTROLLER
+from gym_chargepal.controllers.config import CONTROLLER
 
 
 class Controller(object):

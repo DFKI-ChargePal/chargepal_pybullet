@@ -3,18 +3,18 @@
 # mypy
 from typing import Dict, Any
 
-from chargepal_pybullet.gym_chargepal.utility.constants import WorldFrame
+from gym_chargepal.utility.constants import WorldFrame
 
 CONTROLLER: Dict[str, Any] = {}
 
 POSITION_1DOF_CARTESIAN_CONTROLLER = {
-    'home_orientation': (1.0, 0.0, 0.0, 0.0),
+    'home_orientation': None,
     'wa': 0.05,  # translation delta in m
     'moving_direction': WorldFrame.Y
 }
 
 POSITION_3DOF_CARTESIAN_CONTROLLER = {
-    'home_orientation': (1.0, 0.0, 0.0, 0.0),
+    'home_orientation': None,
     'wa': 0.005,  # translation delta in m
 }
 

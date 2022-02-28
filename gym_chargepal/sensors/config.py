@@ -8,13 +8,13 @@ SENSOR: Dict[str, Any] = {}
 # sub-class configurations
 JOINT_SENSOR: Dict[str, Any] = {}
 
-TOOL_SENSOR: Dict[str, Any] = {}
+PLUG_SENSOR: Dict[str, Any] = {}
 
 TARGET_SENSOR: Dict[str, Any] = {}
 
 VIRTUAL_SENSOR: Dict[str, Any] = {}
 
-VIRTUAL_TOOL_SENSOR: Dict[str, Any] = {}
+VIRTUAL_PLUG_SENSOR: Dict[str, Any] = {}
 
 VIRTUAL_TARGET_SENSOR: Dict[str, Any] = {}
 

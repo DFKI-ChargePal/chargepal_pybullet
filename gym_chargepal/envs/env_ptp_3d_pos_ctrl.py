@@ -5,16 +5,16 @@ import numpy as np
 # mypy
 from typing import Dict, Any, Tuple, Optional
 
-from chargepal_pybullet.gym_chargepal.envs.env import Environment
-from chargepal_pybullet.gym_chargepal.envs.config import ENVIRONMENT_PTP_3DOF_CARTESIAN_POSITION_CONTROL
+from gym_chargepal.envs.env import Environment
+from gym_chargepal.envs.config import ENVIRONMENT_PTP_3DOF_CARTESIAN_POSITION_CONTROL
 # components
-from chargepal_pybullet.gym_chargepal.worlds.world_ptp import WorldPoint2Point
-from chargepal_pybullet.gym_chargepal.bullet.ik_solver import IKSolver
-from chargepal_pybullet.gym_chargepal.bullet.joint_position_motor_control import JointPositionMotorControl
-from chargepal_pybullet.gym_chargepal.controllers.controller_pos_3dof_cartesian import Position3dofCartesianController
-from chargepal_pybullet.gym_chargepal.sensors.sensor_target_ptp import TargetSensor
-from chargepal_pybullet.gym_chargepal.sensors.sensor_tool import ToolSensor
-from chargepal_pybullet.gym_chargepal.reward.normalized_dist_reward import NormalizedDistanceReward
+from gym_chargepal.worlds.world_ptp import WorldPoint2Point
+from gym_chargepal.bullet.ik_solver import IKSolver
+from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotorControl
+from gym_chargepal.controllers.controller_pos_3dof_cartesian import Position3dofCartesianController
+from gym_chargepal.sensors.sensor_target_ptp import TargetSensor
+from gym_chargepal.sensors.sensor_plug import PlugSensor
+from gym_chargepal.reward.normalized_dist_reward import NormalizedDistanceReward
 
 
 class EnvironmentP2PCartesian3DPositionCtrl(Environment):
@@ -29,10 +29,10 @@ class EnvironmentP2PCartesian3DPositionCtrl(Environment):
         self._world = WorldPoint2Point(hp['worlds'])
         self._ik_solver = IKSolver(hp['ik_solver'], self._world)
         self._control_interface = JointPositionMotorControl(hp['control_interface'], self._world)
-        self._tool_sensor = ToolSensor(hp['tool_sensor'], self._world)
+        self._plug_sensor = PlugSensor(hp['tool_sensor'], self._world)
         self._target_sensor = TargetSensor(hp['target_sensor'], self._world)
         self._low_level_control = Position3dofCartesianController(
-            hp['low_level_control'], self._ik_solver, self._control_interface, self._tool_sensor
+            hp['low_level_control'], self._ik_solver, self._control_interface, self._plug_sensor
         )
         self._reward = NormalizedDistanceReward(hp['reward'])
         # params
@@ -88,19 +88,19 @@ class EnvironmentP2PCartesian3DPositionCtrl(Environment):
         self._update_sensors()
         return self._get_obs()[0]
 
-    def exit(self) -> None:
-        self._world.exit()
+    def close(self) -> None:
+        self._world.disconnect()
 
     def get_info(self) -> Dict[str, Any]:
         return self._info
 
     def _update_sensors(self) -> None:
-        self._tool_sensor.update()
+        self._plug_sensor.update()
         self._target_sensor.update()
 
     def _get_obs(self) -> Tuple[np.ndarray, Dict[str, float]]:
         tgt = np.array(self._target_sensor.get_pos())
-        ee_pos = np.array(self._tool_sensor.get_pos())
+        ee_pos = np.array(self._plug_sensor.get_pos())
         d_pos = np.array((tgt - ee_pos), dtype=np.float32)
 
         info = {

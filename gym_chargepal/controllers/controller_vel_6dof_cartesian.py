@@ -5,14 +5,14 @@ import numpy as np
 
 # mypy
 from typing import Dict, Any
-from chargepal_pybullet.gym_chargepal.bullet.jacobian import Jacobian
-from chargepal_pybullet.gym_chargepal.bullet.joint_velocity_motor_control import JointVelocityMotorControl
-from chargepal_pybullet.gym_chargepal.sensors.sensor_tool import ToolSensor
-from chargepal_pybullet.gym_chargepal.sensors.sensor_joints import JointSensor
+from gym_chargepal.bullet.jacobian import Jacobian
+from gym_chargepal.bullet.joint_velocity_motor_control import JointVelocityMotorControl
+from gym_chargepal.sensors.sensor_plug import PlugSensor
+from gym_chargepal.sensors.sensor_joints import JointSensor
 
 
-from chargepal_pybullet.gym_chargepal.controllers.controller import Controller
-from chargepal_pybullet.gym_chargepal.controllers.config import VELOCITY_6DOF_CARTESIAN_CONTROLLER
+from gym_chargepal.controllers.controller import Controller
+from gym_chargepal.controllers.config import VELOCITY_6DOF_CARTESIAN_CONTROLLER
 
 
 LOGGER = logging.getLogger(__name__)
@@ -20,14 +20,14 @@ LOGGER = logging.getLogger(__name__)
 
 class Velocity6dofCartesianControllerC(Controller):
     """ Continues cartesian XYZ velocity controllers. """
-    def __init__(self, hyperparams: Dict[str, Any], jacobian: Jacobian, control_interface: JointVelocityMotorControl, tool_sensor: ToolSensor, joint_sensor: JointSensor):
+    def __init__(self, hyperparams: Dict[str, Any], jacobian: Jacobian, control_interface: JointVelocityMotorControl, plug_sensor: PlugSensor, joint_sensor: JointSensor):
         config: Dict[str, Any] = copy.deepcopy(VELOCITY_6DOF_CARTESIAN_CONTROLLER)
         config.update(hyperparams)
         Controller.__init__(self, config)
         # object references
         self._jacobian = jacobian
         self._joint_sensor = joint_sensor
-        self._tool_sensor = tool_sensor
+        self._tool_sensor = plug_sensor
         self._controller_interface = control_interface
 
     def update(self, action: np.ndarray) -> None:

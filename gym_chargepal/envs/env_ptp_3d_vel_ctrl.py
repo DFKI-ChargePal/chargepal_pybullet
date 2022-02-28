@@ -15,7 +15,7 @@ from gym_chargepal.bullet.joint_velocity_motor_control import JointVelocityMotor
 from gym_chargepal.controllers.controller_vel_3dof_cartesian import Velocity3dofCartesianController
 from gym_chargepal.sensors.sensor_joints import JointSensor
 from gym_chargepal.sensors.sensor_target_ptp import TargetSensor
-from gym_chargepal.sensors.sensor_tool import ToolSensor
+from gym_chargepal.sensors.sensor_plug import PlugSensor
 from gym_chargepal.reward.normalized_dist_speed_reward import NormalizedDistSpeedReward
 
 
@@ -33,10 +33,10 @@ class EnvironmentP2PCartesian3DVelocityCtrl(Environment):
         self._jacobian = Jacobian(hp['jacobian'], self._world)
         self._control_interface = JointVelocityMotorControl(hp['control_interface'], self._world)
         self._joint_sensor = JointSensor(hp['joint_sensor'], self._world)
-        self._tool_sensor = ToolSensor(hp['tool_sensor'], self._world)
+        self._plug_sensor = PlugSensor(hp['tool_sensor'], self._world)
         self._target_sensor = TargetSensor(hp['target_sensor'], self._world)
         self._low_level_control = Velocity3dofCartesianController(
-            hp['low_level_control'], self._jacobian, self._control_interface, self._tool_sensor, self._joint_sensor
+            hp['low_level_control'], self._jacobian, self._control_interface, self._plug_sensor, self._joint_sensor
         )
         self._reward = NormalizedDistSpeedReward(hp['reward'])
         # params
@@ -90,22 +90,22 @@ class EnvironmentP2PCartesian3DVelocityCtrl(Environment):
         self._update_sensors()
         return self._get_obs()[0]
 
-    def exit(self) -> None:
-        self._world.exit()
+    def close(self) -> None:
+        self._world.disconnect()
 
     def get_info(self) -> Dict[str, Any]:
         return self._info
 
     def _update_sensors(self) -> None:
         self._joint_sensor.update()
-        self._tool_sensor.update()
+        self._plug_sensor.update()
         self._target_sensor.update()
 
     def _get_obs(self) -> Tuple[np.ndarray, Dict[str, float]]:
         tgt = np.array(self._target_sensor.get_pos())
-        ee_pos = np.array(self._tool_sensor.get_pos())
+        ee_pos = np.array(self._plug_sensor.get_pos())
         d_pos = np.array((tgt - ee_pos), dtype=np.float32)
-        lin_vel = np.array(self._tool_sensor.get_lin_vel(), dtype=np.float32)
+        lin_vel = np.array(self._plug_sensor.get_lin_vel(), dtype=np.float32)
         info = {
             'dist': np.sqrt(np.sum(np.square(d_pos)))
         }

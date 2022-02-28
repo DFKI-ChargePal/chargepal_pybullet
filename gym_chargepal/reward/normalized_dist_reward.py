@@ -6,7 +6,7 @@ import copy
 import numpy as np
 from typing import Dict, Any
 
-from chargepal_pybullet.gym_chargepal.reward.config import NORMALIZED_DIST_REWARD
+from gym_chargepal.reward.config import NORMALIZED_DIST_REWARD
 
 
 LOGGER = logging.getLogger(__name__)
@@ -23,7 +23,6 @@ class NormalizedDistanceReward(object):
         config.update(hyperparams)
         self._hyperparams = config
         # params
-        self._T: int = self._hyperparams['T']
         self._wd: float = self._hyperparams['w_dist']
         self._dst_exp: float = self._hyperparams['dst_exp']
         self._final_dst_exp: float = self._hyperparams['final_dst_exp']
@@ -37,5 +36,5 @@ class NormalizedDistanceReward(object):
             reward = 1.0 + reward_value if solved else reward_value
         else:
             # calculate reward
-            reward = - (dist_norm ** self._dst_exp)
+            reward = 1.0 - (dist_norm ** self._dst_exp)
         return float(reward)

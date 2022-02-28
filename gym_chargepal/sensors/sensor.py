@@ -5,7 +5,7 @@ import copy
 # mypy
 from typing import Dict, Any
 
-from chargepal_pybullet.gym_chargepal.sensors.config import SENSOR
+from gym_chargepal.sensors.config import SENSOR
 
 
 class Sensor(object):

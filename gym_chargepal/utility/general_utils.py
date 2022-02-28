@@ -26,7 +26,7 @@ def wrap(x: float, m: float, m_: float) -> float:
     return x
 
 
-def bullet2numpy_repr(q_bullet: Tuple[float, ...]) -> np.quaternion:
+def bullet2numpy_repr(q_bullet: Tuple[float, ...]) -> quaternionic.array:
     """ Change quaternion representation.
     PyBullet [w, x, y, z]
     Numpy Quaternion [x, y, z, w]

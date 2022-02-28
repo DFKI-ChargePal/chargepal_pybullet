@@ -4,26 +4,30 @@ import pybullet as p
 
 # mypy
 from typing import Dict, Any, Union, Tuple, List
-from chargepal_pybullet.gym_chargepal.worlds.world_ptp import WorldPoint2Point
-from chargepal_pybullet.gym_chargepal.worlds.world_pih import WorldPegInHole
+from gym_chargepal.worlds.world_ptp import WorldPoint2Point
+from gym_chargepal.worlds.world_pih import WorldPegInHole
 
 
-from chargepal_pybullet.gym_chargepal.bullet.config import JOINT_POSITION_MOTOR_CONTROL
+from gym_chargepal.bullet.config import JOINT_POSITION_MOTOR_CONTROL
+from gym_chargepal.bullet.bullet_observer import BulletObserver
 
 
 LOGGER = logging.getLogger(__name__)
 
 
-class JointPositionMotorControl(object):
+class JointPositionMotorControl(BulletObserver):
     """ Interface to use PyBullet Position Controller. """
     def __init__(self, hyperparams: Dict[str, Any], world: Union[WorldPoint2Point, WorldPegInHole]):
         config: Dict[str, Any] = copy.deepcopy(JOINT_POSITION_MOTOR_CONTROL)
         config.update(hyperparams)
         self._hyperparams = config
+        BulletObserver.__init__(self)
         # get attributes of the world
-        self._physics_client_id = world.physics_client_id
-        self._arm_id = world.arm_id
-        self._joint_ids = [idx for idx in world.joint_idx.values()]
+        self._world = world
+        self._world.attach_bullet_obs(self)
+        self._physics_client_id = -1
+        self._robot_id = -1
+        self._joint_ids: List[int] = []
         # constants
         self._control_mode: int = self._hyperparams['control_mode']
         self._target_vel: List[float] = self._hyperparams['target_vel']
@@ -36,7 +40,7 @@ class JointPositionMotorControl(object):
         assert len(self._joint_ids) == len(tgt_pos)
 
         p.setJointMotorControlArray(
-            bodyIndex=self._arm_id,
+            bodyIndex=self._robot_id,
             jointIndices=self._joint_ids,
             controlMode=self._control_mode,
             targetPositions=tgt_pos,
@@ -46,3 +50,8 @@ class JointPositionMotorControl(object):
             velocityGains=self._vel_gains,
             physicsClientId=self._physics_client_id
         )
+
+    def update_bullet_id(self) -> None:
+        self._physics_client_id = self._world.physics_client_id
+        self._robot_id = self._world.robot_id
+        self._joint_ids = [idx for idx in self._world.ur_joint_idx_dict.values()]
