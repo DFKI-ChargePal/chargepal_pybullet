@@ -35,7 +35,7 @@ class VirtualAdapterStationSensor(Sensor, BulletObserver):
     def update(self) -> None:
         self._sensor_state = p.getLinkStates(
             bodyUniqueId=self._adpstd_id,
-            linkIndex=self._adpstd_ref_frame_idx,
+            linkIndices=self._adpstd_ref_frame_idx,
             computeLinkVelocity=True,
             computeForwardKinematics=True,
             physicsClientId=self._physics_client_id
