@@ -23,10 +23,13 @@ class TargetSensor(Sensor):
         # params
         self._world = world
         # intern sensors state
-        self._sensor_state = self._world.target
+        self._sensor_state = (self._world.target_pos, self._world.target_ori)
 
     def update(self) -> None:
-        self._sensor_state = self._world.target
+        self._sensor_state = (self._world.target_pos, self._world.target_ori)
 
     def get_pos(self) -> Tuple[float, ...]:
-        return self._sensor_state
+        return self._sensor_state[0]
+
+    def get_ori(self) -> Tuple[float, ...]:
+        return self._sensor_state[1]

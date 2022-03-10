@@ -14,8 +14,10 @@ TARGET_SENSOR: Dict[str, Any] = {}
 
 VIRTUAL_SENSOR: Dict[str, Any] = {}
 
+VIRTUAL_TARGET_SENSOR: Dict[str, Any] = {}
+
 VIRTUAL_PLUG_SENSOR: Dict[str, Any] = {}
 
-VIRTUAL_TARGET_SENSOR: Dict[str, Any] = {}
+VIRTUAL_ADAPTER_STATION_SENSOR: Dict[str, Any] = {}
 
 FT_SENSOR: Dict[str, Any] = {}

@@ -4,8 +4,9 @@ import copy
 import pybullet as p
 
 # mypy
-from typing import Dict, Any, Tuple, List, Optional
+from typing import Dict, Any, Tuple, List, Optional, Union
 from gym_chargepal.worlds.world_pih import WorldPegInHole
+from gym_chargepal.worlds.world_ptp import WorldPoint2Point
 
 from gym_chargepal.sensors.sensor import Sensor
 from gym_chargepal.sensors.config import VIRTUAL_PLUG_SENSOR
@@ -15,9 +16,9 @@ from gym_chargepal.bullet.config import BulletLinkState
 LOGGER = logging.getLogger(__name__)
 
 
-class VirtualToolSensor(Sensor, BulletObserver):
-    """ Sensor of the virtual tool frames. """
-    def __init__(self, hyperparams: Dict[str, Any], world: WorldPegInHole):
+class VirtualPlugSensor(Sensor, BulletObserver):
+    """ Sensor of the virtual plug frames. """
+    def __init__(self, hyperparams: Dict[str, Any], world: Union[WorldPoint2Point, WorldPegInHole]):
         config = copy.deepcopy(VIRTUAL_PLUG_SENSOR)
         config.update(hyperparams)
         Sensor.__init__(self, config)
@@ -34,7 +35,7 @@ class VirtualToolSensor(Sensor, BulletObserver):
     def update(self) -> None:
         self._sensor_state = p.getLinkStates(
             bodyUniqueId=self._robot_id,
-            linkIndex=self._plug_ref_frame_idx,
+            linkIndices=self._plug_ref_frame_idx,
             computeLinkVelocity=True,
             computeForwardKinematics=True,
             physicsClientId=self._physics_client_id

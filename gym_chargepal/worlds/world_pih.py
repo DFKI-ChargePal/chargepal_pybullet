@@ -80,10 +80,12 @@ class WorldPegInHole(World):
                 client_id=self.physics_client_id
                 )
 
-    def reset(self, joint_conf: Union[None, Tuple[float, ...]] = None) -> None:
+
+    def reset(self, joint_conf: Union[None, Tuple[float, ...]] = None, render: bool = False) -> None:
+
         if self.physics_client_id < 0:
             # connect to bullet simulation server
-            self.connect()
+            self.connect(render)
             # load plane
             self.plane_id = p.loadURDF('plane.urdf', physicsClientId=self.physics_client_id)
             # load robot

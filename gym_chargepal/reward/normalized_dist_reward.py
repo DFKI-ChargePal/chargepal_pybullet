@@ -30,11 +30,13 @@ class NormalizedDistanceReward(object):
     def eval(self, dist: np.ndarray, done: bool, solved: bool) -> float:
         # l1-norm of the distance
         dist_norm = min(np.mean(np.abs(dist)) * self._wd, 1.0)
-        if done:
-            # discrete done reward
-            reward_value = (dist_norm ** self._final_dst_exp)
-            reward = 1.0 if solved else 1 - reward_value
+        if solved:
+            reward = 1.0
         else:
-            # calculate reward
-            reward = 1.0 - (dist_norm ** self._dst_exp)
+            if done:
+                # discrete done reward
+                reward = 1.0 - (dist_norm ** self._final_dst_exp)
+            else:
+                # calculate reward
+                reward = 1.0 - (dist_norm ** self._dst_exp)
         return float(reward)

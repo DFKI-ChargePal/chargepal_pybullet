@@ -47,7 +47,7 @@ class IKSolver(BulletObserver):
         assert len(pose[0]) == 3
         assert len(pose[1]) == 4
         
-        joints = p.calculateInverseKinematics(
+        joints: Tuple[float, ...] = p.calculateInverseKinematics(
             bodyUniqueId=self._robot_id,
             endEffectorLinkIndex=self._ee_tip,
             targetPosition=pose[0],

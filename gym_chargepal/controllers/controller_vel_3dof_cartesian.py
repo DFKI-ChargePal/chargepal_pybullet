@@ -44,7 +44,7 @@ class Velocity3dofCartesianController(Controller):
         :return: None
         """
         j_pos = self._joint_sensor.get_pos()
-        j_vel = self._joint_sensor.get_vel()
+        j_vel = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
         j_acc = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
         # get Jacobian

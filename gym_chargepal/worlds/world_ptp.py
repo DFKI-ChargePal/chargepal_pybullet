@@ -11,8 +11,9 @@ import pybullet as p
 from gym_chargepal.worlds.config import WORLD_PTP
 from gym_chargepal.worlds.world import World
 from gym_chargepal.bullet.utility import (
-    draw_sphere_marker,
+    draw_cylinder_marker,
     create_joint_index_dict,
+    create_link_index_dict,
     get_link_idx,
 )
 
@@ -31,10 +32,15 @@ class WorldPoint2Point(World):
         self.target_id = -1
 
         self.ur_joint_idx_dict: Dict[str, int] = {}
+        self.plug_ref_frame_idx_dict: Dict[str, int] = {}
         self.plug_reference_frame_idx: int = -1
 
         self.ur_joint_start_config: Dict[str, float] = self._hyperparams['ur_joint_start_config']
-        self.target: Tuple[float, ...] = self._hyperparams['target']
+        # Check if target configuration is initialized
+        assert self._hyperparams['target_pos']
+        assert self._hyperparams['target_ori']
+        self.target_pos: Tuple[float, ...] = self._hyperparams['target_pos']
+        self.target_ori: Tuple[float, ...] = self._hyperparams['target_ori']
 
     def _init_idx(self) -> None:
         if self.physics_client_id < 0:
@@ -51,12 +57,18 @@ class WorldPoint2Point(World):
                 body_id=self.robot_id,
                 joint_names=self._hyperparams['ur_joint_names'],
                 client_id=self.physics_client_id
-            )
+                )
+            self.plug_ref_frame_idx_dict = create_link_index_dict(
+                body_id=self.robot_id,
+                link_names=self._hyperparams['plug_ref_frame_names'],
+                client_id=self.physics_client_id
+                )
 
-    def reset(self, joint_conf: Union[None, Tuple[float, ...]] = None) -> None:
+    def reset(self, joint_conf: Union[None, Tuple[float, ...]] = None, render: bool = False) -> None:
+
         if self.physics_client_id < 0:
             # connect to bullet simulation server
-            self.connect()
+            self.connect(render)
             # load plane
             self.plane_id = p.loadURDF('plane.urdf', physicsClientId=self.physics_client_id)
             # load robot
@@ -96,10 +108,17 @@ class WorldPoint2Point(World):
                     physicsClientId=self.physics_client_id
                     )
         # draw target
-        self.draw_target()
+        self.draw_target(render)
 
-    def draw_target(self) -> None:
-        if self._hyperparams['gui']:
+    def draw_target(self, render: bool) -> None:
+        if render:
             if self.target_id > -1:
                 p.removeBody(self.target_id, physicsClientId=self.physics_client_id)
-            self.target_id = draw_sphere_marker(self.target, 0.045, (1, 0, 0, 0.75), self.physics_client_id)
+            self.target_id = draw_cylinder_marker(
+                position=self.target_pos, 
+                orientation=self.target_ori,
+                radius=0.035, 
+                height=0.080,
+                color=(1, 0, 0, 0.75), 
+                physics_client_id=self.physics_client_id
+                )

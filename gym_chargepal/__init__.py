@@ -5,32 +5,21 @@ logger = logging.getLogger(__name__)
 
 register(
     id='ChargePal-P2P-1D-PositionControl-v0',
-    entry_point='gym_chargepal.envs:EnvironmentP2PCartesian1DPositionCtrl',
-    kwargs={
-        'config_env': {
-            'gui': True,
-            'T': 100,
-        },
-        'config_world': {
-            'hz_ctrl': 20,
-        },
-    },
+    entry_point='gym_chargepal.envs:EnvironmentPtPCartesianPositionCtrl1DOF',
     reward_threshold=1.0,
     nondeterministic=True,
 )
 
 register(
     id='ChargePal-P2P-3D-PositionControl-v0',
-    entry_point='gym_chargepal.envs:EnvironmentP2PCartesian3DPositionCtrl',
-    kwargs={
-        'config_env': {
-            'gui': True,
-            'T': 100,
-        },
-        'config_world': {
-            'hz_ctrl': 20,
-        },
-    },
+    entry_point='gym_chargepal.envs:EnvironmentPtPCartesianPositionCtrl3DOF',
+    reward_threshold=1.0,
+    nondeterministic=True,
+)
+
+register(
+    id='ChargePal-P2P-6D-PositionControl-v0',
+    entry_point='gym_chargepal.envs:EnvironmentPtPCartesianPositionCtrl6DOF',
     reward_threshold=1.0,
     nondeterministic=True,
 )

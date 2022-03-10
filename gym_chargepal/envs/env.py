@@ -7,17 +7,13 @@ import numpy as np
 # mypy
 from typing import Dict, Any, Union, Tuple
 
-from gym_chargepal.envs.config import ENVIRONMENT
-
 
 class Environment(gym.Env):  # type: ignore
     """
     This is the concrete implementation of the OpenAI gym interface.
     """
     def __init__(self, hyperparams: Dict[str, Any]):
-        config: Dict[str, Any] = copy.deepcopy(ENVIRONMENT)
-        config.update(hyperparams)
-        self._hyperparams = config
+        self._hyperparams = copy.deepcopy(hyperparams)
         super(Environment, self).__init__()
         # simulation parameter
         self._n_step = 0

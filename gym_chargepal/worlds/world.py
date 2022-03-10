@@ -34,7 +34,6 @@ class World(object):
         self.bullet_client = None
         self.physics_client_id = -1
         self.bullet_observers: List[BulletObserver] = []
-        self.gui_mode = self._hyperparams['gui']
         self.gravity = self._hyperparams['gravity']
         self.sim_steps = int(self._hyperparams['hz_sim'] // self._hyperparams['hz_ctrl'])
         # find chargepal ros description package
@@ -42,9 +41,9 @@ class World(object):
         ros_pkg_path = ros_pkg.get_path(self._hyperparams['chargepal_description_pkg'])
         self.urdf_pkg_path = os.path.join(ros_pkg_path, self._hyperparams['urdf_sub_dir'])
 
-    def connect(self) -> None:
+    def connect(self, gui: bool) -> None:
         # connecting to bullet server
-        connection_mode = p.GUI if self.gui_mode else p.DIRECT
+        connection_mode = p.GUI if gui else p.DIRECT
         self.bullet_client = bullet_client.BulletClient(connection_mode=connection_mode)
         assert self.bullet_client is not None
         # set common bullet data path
@@ -58,7 +57,9 @@ class World(object):
         self.bullet_client.setPhysicsEngineParameter(deterministicOverlappingPairs=1)
 
     def disconnect(self) -> None:
-        p.disconnect(physicsClientId=self.physics_client_id)
+        connection_info = p.getConnectionInfo(1)
+        if connection_info['isConnected'] > 0:
+            p.disconnect(physicsClientId=self.physics_client_id)
         self.physics_client_id = -1
         self.bullet_client = None
         self.notify_bullet_obs()
@@ -73,7 +74,7 @@ class World(object):
         for obs in self.bullet_observers:
             obs.update_bullet_id()
 
-    def step(self, sensors: Optional[List[Sensor]] = None) -> None:
+    def step(self, render: bool, sensors: Optional[List[Sensor]] = None) -> None:
         # step bullet simulation
         if self.physics_client_id < 0:
             error_msg = f'Unable to step simulation! Did you connect with a Bullet physics server?'
@@ -87,7 +88,7 @@ class World(object):
                 for sensor in sensors:
                     sensor.update()
             # wait to render in wall clock time
-            if self._hyperparams['gui']:
+            if render:
                 time.sleep(1./self._hyperparams['hz_sim'])
 
     @abc.abstractmethod

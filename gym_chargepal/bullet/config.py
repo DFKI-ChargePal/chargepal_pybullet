@@ -75,9 +75,9 @@ JOINT_VELOCITY_MOTOR_CONTROL = {
 }
 
 IK_SOLVER = {
-    'lower_limits': [-2*pi, -pi, -pi, -pi, -pi, -pi],
-    'upper_limits': [2*pi, pi, pi, pi, pi, pi],
-    'joint_ranges': [2 * pi, 2 * pi, 2 * pi, 2 * pi, 2 * pi, 2 * pi],
+    'lower_limits': [-pi, -pi, -pi, -pi, -pi, -pi],
+    'upper_limits': [pi, pi, pi, pi, pi, pi],
+    'joint_ranges': [2*pi, 2*pi, 2*pi, 2*pi, 2*pi, 2*pi],
     'max_num_iterations': 100,
     'residual_threshold': 1e-5,
 }

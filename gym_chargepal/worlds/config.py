@@ -14,12 +14,12 @@ ur_joint_names = [
 
 
 ur_joint_start_config = {
-    'shoulder_pan_joint': np.pi,
+    'shoulder_pan_joint': 0.0,
     'shoulder_lift_joint': -np.pi/2 - np.pi/6,
     'elbow_joint': -np.pi/2 - np.pi/6,
     'wrist_1_joint': np.pi/2 - np.pi/6,
     'wrist_2_joint': np.pi/2,
-    'wrist_3_joint': 0.0,
+    'wrist_3_joint': np.pi/2,
 }
 
 
@@ -55,11 +55,13 @@ WORLD = {
 WORLD_PTP = {
     'robot_urdf': 'primitive_chargepal_with_fix_plug.urdf',
     'robot_start_pos': [0.0, 1.15, 0.0],
-    'robot_start_ori': p.getQuaternionFromEuler([0.0, 0.0, np.pi]),
+    'robot_start_ori': p.getQuaternionFromEuler([0.0, 0.0, 0.0]),
     'ur_joint_names': ur_joint_names,
     'ur_joint_start_config': ur_joint_start_config,
     'plug_reference_frame': 'plug_reference_frame',
-    'target': (0.0, 0.0, 1.2),
+    'plug_ref_frame_names': plug_ref_frame_names,
+    'target_pos': None,
+    'target_ori': None,
 }
 
 WORLD_PIH = {
