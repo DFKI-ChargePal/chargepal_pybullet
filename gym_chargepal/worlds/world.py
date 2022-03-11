@@ -3,7 +3,6 @@ import os
 import abc
 import copy
 import logging
-from select import select
 import time
 import rospkg
 
