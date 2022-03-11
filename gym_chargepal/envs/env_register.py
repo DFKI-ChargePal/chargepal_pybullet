@@ -57,24 +57,12 @@ class EnvironmentPtPCartesianPositionCtrl1DOF(EnvironmentPtPCartesianPositionCtr
         'angular_enabled_motion_axis': (False, False, False),
         }
 
-
     def __init__(self, **kwargs: Any):
-
-        config_env = copy.deepcopy(self.config_env)
-        if 'config_env' in kwargs:
-            config_env.update(kwargs['config_env'])
-        kwargs['config_env'] = config_env
-
-        config_world = copy.deepcopy(self.config_world)
-        if 'config_world' in kwargs:
-            config_world.update(kwargs['config_world'])
-        kwargs['config_world'] = config_world
-
-        config_llc = copy.deepcopy(self.config_low_level_control)
-        if 'config_low_level_control' in kwargs:
-            config_llc.update(kwargs['config_low_level_control'])
-        kwargs['config_low_level_control'] = config_llc
-
+        # Update configuration
+        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_env', config_dict=self.config_env)
+        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_world', config_dict=self.config_world)
+        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_low_level_control', config_dict=self.config_low_level_control)
+        # Create environment
         EnvironmentPtPCartesianPositionCtrl.__init__(self, **kwargs)
 
 
@@ -109,24 +97,12 @@ class EnvironmentPtPCartesianPositionCtrl3DOF(EnvironmentPtPCartesianPositionCtr
         'angular_enabled_motion_axis': (False, False, False),
         }
 
-
     def __init__(self, **kwargs: Any):
-
-        config_env = copy.deepcopy(self.config_env)
-        if 'config_env' in kwargs:
-            config_env.update(kwargs['config_env'])
-        kwargs['config_env'] = config_env
-
-        config_world = copy.deepcopy(self.config_world)
-        if 'config_world' in kwargs:
-            config_world.update(kwargs['config_world'])
-        kwargs['config_world'] = config_world
-
-        config_llc = copy.deepcopy(self.config_low_level_control)
-        if 'config_low_level_control' in kwargs:
-            config_llc.update(kwargs['config_low_level_control'])
-        kwargs['config_low_level_control'] = config_llc
-
+        # Update configuration
+        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_env', config_dict=self.config_env)
+        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_world', config_dict=self.config_world)
+        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_low_level_control', config_dict=self.config_low_level_control)
+        # Create environment
         EnvironmentPtPCartesianPositionCtrl.__init__(self, **kwargs)
 
 
@@ -160,22 +136,10 @@ class EnvironmentPtPCartesianPositionCtrl6DOF(EnvironmentPtPCartesianPositionCtr
         'wa_ang': 0.05,  # action scaling in angular directions [rad]
         }
 
-
     def __init__(self, **kwargs: Any):
-
-        config_env = copy.deepcopy(self.config_env)
-        if 'config_env' in kwargs:
-            config_env.update(kwargs['config_env'])
-        kwargs['config_env'] = config_env
-
-        config_world = copy.deepcopy(self.config_world)
-        if 'config_world' in kwargs:
-            config_world.update(kwargs['config_world'])
-        kwargs['config_world'] = config_world
-
-        config_llc = copy.deepcopy(self.config_low_level_control)
-        if 'config_low_level_control' in kwargs:
-            config_llc.update(kwargs['config_low_level_control'])
-        kwargs['config_low_level_control'] = config_llc
-
+        # Update configuration
+        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_env', config_dict=self.config_env)
+        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_world', config_dict=self.config_world)
+        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_low_level_control', config_dict=self.config_low_level_control)
+        # Create environment
         EnvironmentPtPCartesianPositionCtrl.__init__(self, **kwargs)
