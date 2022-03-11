@@ -32,6 +32,13 @@ ur_link_names = [
     'wrist_3_link',
 ]
 
+ur_virtual_link_names = [
+    'flange',
+    'tool0',
+    'base_link',
+    'base',
+]
+
 plug_ref_frame_names = [
     'virt_tool_frame_x',
     'virt_tool_frame_y',
@@ -48,6 +55,9 @@ WORLD = {
     'hz_sim': 240,  # frequency physic engine !not recommended to changing this value!
     'hz_ctrl': 60,
     'gravity': (0, 0, -9.81),
+    'ur_joint_names': ur_joint_names,
+    'ur_virtual_link_names': ur_virtual_link_names,
+    'ur_joint_start_config': ur_joint_start_config,
     'chargepal_description_pkg': 'chargepal_description',
     'urdf_sub_dir': '_bullet_urdf_autogen',
 }
@@ -56,8 +66,6 @@ WORLD_PTP = {
     'robot_urdf': 'primitive_chargepal_with_fix_plug.urdf',
     'robot_start_pos': [0.0, 1.15, 0.0],
     'robot_start_ori': p.getQuaternionFromEuler([0.0, 0.0, 0.0]),
-    'ur_joint_names': ur_joint_names,
-    'ur_joint_start_config': ur_joint_start_config,
     'plug_reference_frame': 'plug_reference_frame',
     'plug_ref_frame_names': plug_ref_frame_names,
     'target_pos': None,
@@ -67,8 +75,6 @@ WORLD_PTP = {
 WORLD_PIH = {
     'robot_urdf': 'primitive_chargepal_with_fix_plug.urdf',
     'adapter_station_urdf': 'primitive_adapter_station.urdf',
-    'ur_joint_names': ur_joint_names,
-    'ur_joint_start_config': ur_joint_start_config,
     'ft_sensor_joint': 'measurement_joint',
     'plug_reference_frame': 'plug_reference_frame',
     'adpstd_reference_frame': 'target_reference_frame',

@@ -79,6 +79,8 @@ class WorldPoint2Point(World):
                 baseOrientation=self._hyperparams['robot_start_ori'], 
                 physicsClientId=self.physics_client_id
                 )
+            # set virtual link mass and inertial values to zero
+            self.change_virtual_link_inertial()
             # set gravity
             p.setGravity(*self._hyperparams['gravity'], physicsClientId=self.physics_client_id)
             # initialize joint and link indices
@@ -121,4 +123,19 @@ class WorldPoint2Point(World):
                 height=0.080,
                 color=(1, 0, 0, 0.75), 
                 physics_client_id=self.physics_client_id
+                )
+
+    def change_virtual_link_inertial(self) -> None:
+        for link_name in self._hyperparams['ur_virtual_link_names']:
+            link_idx = get_link_idx(
+                body_id=self.robot_id,
+                link_name=link_name,
+                client_id=self.physics_client_id
+                )
+            p.changeDynamics(
+                bodyUniqueId=self.robot_id,
+                linkIndex=link_idx,
+                mass=0.0,
+                localInertiaDiagonal=(0.0, 0.0, 0.0),
+                physicsClientId=self.physics_client_id
                 )

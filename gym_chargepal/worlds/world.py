@@ -12,7 +12,6 @@ from pybullet_utils import bullet_client
 
 from gym_chargepal.worlds.config import WORLD
 
-
 # mypy
 from typing import Dict, Any, Union, Tuple, List, Optional
 from gym_chargepal.sensors.sensor import Sensor
