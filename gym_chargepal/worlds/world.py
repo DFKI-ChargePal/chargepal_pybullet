@@ -53,8 +53,16 @@ class World(object):
         # disable real-time simulation
         p.setRealTimeSimulation(False, physicsClientId=self.physics_client_id)
         # reset simulation
-        self.bullet_client.resetSimulation()
+        self.bullet_client.resetSimulation(physicsClientId=self.physics_client_id)
         self.bullet_client.setPhysicsEngineParameter(deterministicOverlappingPairs=1)
+        if gui:
+            p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
+            p.resetDebugVisualizerCamera(
+                cameraDistance=2.5, 
+                cameraYaw=50, 
+                cameraPitch=-42,
+                cameraTargetPosition=[0,0,1.2]
+                )
 
     def disconnect(self) -> None:
         connection_info = p.getConnectionInfo(1)
