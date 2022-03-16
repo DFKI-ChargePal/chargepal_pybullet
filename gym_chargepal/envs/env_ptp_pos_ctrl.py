@@ -150,7 +150,7 @@ class EnvironmentPtPCartesianPositionCtrl(Environment):
         tgt_ori_ = np.array(tgt_ori)
         plg_ori_ = np.array(plg_ori)
         self._error_pos = np.sqrt(np.sum(np.square(dif_pos)))
-        self._error_ang = np.arccos(2 * (tgt_ori_.dot(plg_ori_))**2 - 1)
+        self._error_ang = np.arccos(np.clip((2 * (tgt_ori_.dot(plg_ori_))**2 - 1), -1.0, 1.0))
         return obs
 
     def calc_reward(self) -> float:
