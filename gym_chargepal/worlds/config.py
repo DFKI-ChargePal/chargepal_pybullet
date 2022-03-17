@@ -32,13 +32,6 @@ ur_link_names = [
     'wrist_3_link',
 ]
 
-ur_virtual_link_names = [
-    'flange',
-    'tool0',
-    'base_link',
-    'base',
-]
-
 plug_ref_frame_names = [
     'virt_tool_frame_x',
     'virt_tool_frame_y',
@@ -56,7 +49,6 @@ WORLD = {
     'hz_ctrl': 60,
     'gravity': (0, 0, -9.81),
     'ur_joint_names': ur_joint_names,
-    'ur_virtual_link_names': ur_virtual_link_names,
     'ur_joint_start_config': ur_joint_start_config,
     'chargepal_description_pkg': 'chargepal_description',
     'urdf_sub_dir': '_bullet_urdf_autogen',

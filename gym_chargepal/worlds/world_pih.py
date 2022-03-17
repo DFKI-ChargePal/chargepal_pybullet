@@ -99,8 +99,6 @@ class WorldPegInHole(World):
             # load adapter station
             f_path_adpstd_urdf = os.path.join(self.urdf_pkg_path, self._hyperparams['adapter_station_urdf'])
             self.adpstd_id = p.loadURDF(f_path_adpstd_urdf, physicsClientId=self.physics_client_id)
-            # set virtual link mass and inertial values to zero
-            self.change_virtual_link_inertial()
             # set gravity
             p.setGravity(*self._hyperparams['gravity'], physicsClientId=self.physics_client_id)
             # initialize joint and link indices
@@ -136,18 +134,3 @@ class WorldPegInHole(World):
                     targetVelocity=0.0, 
                     physicsClientId=self.physics_client_id
                     )
-
-    def change_virtual_link_inertial(self) -> None:
-        for link_name in self._hyperparams['ur_virtual_link_names']:
-            link_idx = get_link_idx(
-                body_id=self.robot_id,
-                link_name=link_name,
-                client_id=self.physics_client_id
-                )
-            p.changeDynamics(
-                bodyUniqueId=self.robot_id,
-                linkIndex=link_idx,
-                mass=0.0,
-                localInertiaDiagonal=(0.0, 0.0, 0.0),
-                physicsClientId=self.physics_client_id
-                )
