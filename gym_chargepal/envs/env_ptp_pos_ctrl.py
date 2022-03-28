@@ -92,8 +92,8 @@ class EnvironmentPtPCartesianPositionCtrl(Environment):
         self._world.reset(render=self.is_render)
 
         # get start joint configuration by inverse kinematic
-        pos_0 = tuple(np.array(self.pos_w_0) + np.array(self.pos_var_0) * np.random.randn(3))
-        ang_0 = tuple(np.array(self.ang_w_0) + np.array(self.ang_var_0) * np.random.randn(3))
+        pos_0 = tuple(np.array(self.pos_w_0) + np.array(self.pos_var_0) * self._rs.randn(3))  # type: ignore
+        ang_0 = tuple(np.array(self.ang_w_0) + np.array(self.ang_var_0) * self._rs.randn(3))  # type: ignore
         ori_0 = p.getQuaternionFromEuler(ang_0, physicsClientId=self._world.physics_client_id)
         joint_config_0 = self._ik_solver.solve((pos_0, ori_0))
 

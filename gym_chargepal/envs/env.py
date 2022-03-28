@@ -3,9 +3,10 @@ import abc
 import copy
 import gym
 import numpy as np
+from numpy.random import RandomState
 
 # mypy
-from typing import Dict, Any, Union, Tuple
+from typing import Dict, Any, Optional, Union, Tuple
 
 
 class Environment(gym.Env):  # type: ignore
@@ -21,8 +22,8 @@ class Environment(gym.Env):  # type: ignore
         self.action_space = self._hyperparams['action_space']
         self.observation_space = self._hyperparams['observation_space']
         # seed
-        self._rs = None
-        self.seed(123456789)
+        self._rs: Optional[RandomState] = None
+        self.seed()
 
     @abc.abstractmethod
     def step(self, action: np.ndarray) -> Tuple[np.ndarray, float, bool, Dict[Any, Any]]:
@@ -40,7 +41,7 @@ class Environment(gym.Env):  # type: ignore
         raise NotImplementedError('Must be implemented in subclass.')
 
     def seed(self, seed: Union[None, int, np.ndarray] = None) -> Union[None, int, np.ndarray]:
-        self._rs = np.random.RandomState(seed)
+        self._rs = RandomState(seed)
         return seed
 
     def render(self, mode: str = "human") -> None:
