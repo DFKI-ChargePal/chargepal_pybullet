@@ -9,7 +9,7 @@ from gym_chargepal.sensors.sensor_plug import PlugSensor
 from gym_chargepal.sensors.sensor_virtual_plug import VirtualPlugSensor
 from gym_chargepal.sensors.sensor_target_ptp import TargetSensor
 from gym_chargepal.sensors.sensor_virtual_ptp import VirtualTargetSensor
-from gym_chargepal.controllers.controller_pos_cartesian import PositionCartesianController
+from gym_chargepal.controllers.controller_tcp_pos import TcpPositionController
 from gym_chargepal.reward.normalized_dist_reward import NormalizedDistanceReward
 
 # MyPy
@@ -64,7 +64,7 @@ class EnvironmentPtPCartesianPositionCtrl(Environment):
         self._plug_ref_sensor = VirtualPlugSensor(config_plug_ref_sensor, self._world)
         self._target_sensor = TargetSensor(config_target_sensor, self._world)
         self._target_ref_sensor = VirtualTargetSensor(config_target_ref_sensor, self._world)
-        self._low_level_control = PositionCartesianController(
+        self._low_level_control = TcpPositionController(
             config_low_level_control,
             self._ik_solver,
             self._control_interface,

@@ -17,8 +17,8 @@ from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotor
 LOGGER = logging.getLogger(__name__)
 
 
-class PositionCartesianController(Controller):
-    """ Cartesian position controller """
+class TcpPositionController(Controller):
+    """ Cartesian tool center point position controller """
     def __init__(self,
         hyperparams: Dict[str, Any],
         ik_solver: IKSolver,
