@@ -4,7 +4,7 @@ import pybullet as p
 
 from gym_chargepal.utility.constants import MotionAxis
 from gym_chargepal.controllers.controller import Controller
-from gym_chargepal.controllers.config import POSITION_CARTESIAN_CONTROLLER
+from gym_chargepal.controllers.config import TCP_POSITION_CONTROLLER
 
 # mypy
 import numpy as np
@@ -26,7 +26,7 @@ class TcpPositionController(Controller):
         plug_sensor: PlugSensor
         ) -> None:
         # parameter update
-        config: Dict[str, Any] = copy.deepcopy(POSITION_CARTESIAN_CONTROLLER)
+        config: Dict[str, Any] = copy.deepcopy(TCP_POSITION_CONTROLLER)
         config.update(hyperparams)
         Controller.__init__(self, config)
         # object references
@@ -64,7 +64,7 @@ class TcpPositionController(Controller):
 
     def update(self, action: np.ndarray) -> None:
         """
-        Updates the cartesian position controller
+        Updates the tcp position controller
         : param action: Action array; The action sequence is defined as (x y z roll pitch yaw).
                         If not all motion directions are enabled, the actions will be executed 
                         in the order in which they are given.
