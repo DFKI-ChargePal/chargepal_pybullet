@@ -97,9 +97,11 @@ class TcpVelocityController(Controller):
         # Calculate difference of commanded tcp velocity and current tcp velocity 
         # to get new disired absolute velocity.
         # Degrees of freedom that are not controlled are set to zero.
-        tcp_dot = np.zeros(6)
-        tcp_dot[self._lin_motion_axis[MotionAxis.ENABLED]] = action[self._lin_action_ids] - tcp_dot_lin[self._lin_motion_axis[MotionAxis.ENABLED]]
-        tcp_dot[self._ang_motion_axis[MotionAxis.ENABLED]] = action[self._ang_action_ids] - tcp_dot_ang[self._ang_motion_axis[MotionAxis.ENABLED]]
+        tcp_dot_lin_ = np.zeros(3)
+        tcp_dot_ang_ = np.zeros(3)
+        tcp_dot_lin_[self._lin_motion_axis[MotionAxis.ENABLED]] = action[self._lin_action_ids] - tcp_dot_lin[self._lin_motion_axis[MotionAxis.ENABLED]]
+        tcp_dot_ang_[self._ang_motion_axis[MotionAxis.ENABLED]] = action[self._ang_action_ids] - tcp_dot_ang[self._ang_motion_axis[MotionAxis.ENABLED]]
+        tcp_dot = np.concatenate([tcp_dot_lin_, tcp_dot_ang_])
 
         # convert desired velocities from cart space to joint space
         q_dot = np.matmul(inv_jac, tcp_dot)
