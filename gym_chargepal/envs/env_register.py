@@ -172,7 +172,7 @@ class EnvironmentTcpVelocityCtrlPtP1Dof(EnvironmentTcpVelocityCtrlPtP):
 
     # configuration low-level controller
     config_low_level_control = {
-        'wa_lin': 0.05,  # action scaling in linear directions [m]
+        'wa_lin': 0.125,  # action scaling in linear directions [m]
         'linear_enabled_motion_axis': (False, True, False),
         'angular_enabled_motion_axis': (False, False, False),
         }
