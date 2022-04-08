@@ -45,7 +45,7 @@ class NormalizedDistanceSpeedReward(object):
                 # calculate reward during episode
                 dist_reward = 1.0 - (dist_norm ** self._dst_exp)
             speed_base = 1.0 - max(speed_norm, self._lower_sb)
-            speed_exp = 1.0 / max(dist_norm, self._lower_sb)
+            speed_exp = 1.0 / max(dist_norm, self._lower_db)
             speed_discount = speed_base**speed_exp
             reward = speed_discount*dist_reward
 
