@@ -1,4 +1,4 @@
-""" This file defines the normalized reward class. """
+""" This file defines the normalized distance reward class. """
 import logging
 import copy
 
@@ -31,10 +31,11 @@ class NormalizedDistanceReward(object):
         # l1-norm of the distance
         dist_norm = min(np.mean(np.abs(dist)) * self._wd, 1.0)
         if solved:
+            # discrete task completion reward
             reward = 1.0
         else:
             if done:
-                # discrete done reward
+                # final reward if task is not solved
                 reward = 1.0 - (dist_norm ** self._final_dst_exp)
             else:
                 # calculate reward

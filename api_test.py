@@ -45,6 +45,9 @@ if __name__ == '__main__':
         'ChargePal-P2P-1D-PositionControl-v0',
         'ChargePal-P2P-3D-PositionControl-v0',
         'ChargePal-P2P-6D-PositionControl-v0',
+        'ChargePal-P2P-1D-VelocityControl-v0',
+        'ChargePal-P2P-3D-VelocityControl-v0',
+        'ChargePal-P2P-6D-VelocityControl-v0',
     ]
 
     for env_ in env_names:

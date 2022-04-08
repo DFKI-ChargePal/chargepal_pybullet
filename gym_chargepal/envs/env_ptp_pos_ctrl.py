@@ -16,8 +16,8 @@ from gym_chargepal.reward.normalized_dist_reward import NormalizedDistanceReward
 from typing import Dict, Any, Tuple
 
 
-class EnvironmentPtPCartesianPositionCtrl(Environment):
-    """ Cartesian Environment with 3 dof position controller - Task: point to point """
+class EnvironmentTcpPositionCtrlPtP(Environment):
+    """ Cartesian Environment with position controller - Task: point to point """
     def __init__(self, **kwargs: Any):
         # Update environment configuration
         config_env = {} if 'config_env' not in kwargs else kwargs['config_env']
