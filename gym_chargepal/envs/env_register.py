@@ -42,9 +42,6 @@ class EnvironmentTcpPositionCtrlPtP1Dof(EnvironmentTcpPositionCtrlPtP):
         'start_config_ang': (0.0, 0.0, 0.0),
         # Reset variance of the start pose
         'reset_variance': ((0.0, 0.05, 0.0), (0.0, 0.0, 0.0)),
-        # Task performance criteria
-        'task_epsilon_pos': 0.003,  # 3 mm
-        'task_epsilon_ang': 1,  # 1 rad
         }
 
     config_world = {
@@ -82,9 +79,6 @@ class EnvironmentTcpPositionCtrlPtP3Dof(EnvironmentTcpPositionCtrlPtP):
         'start_config_ang': (0.0, 0.0, 0.0),
         # Reset variance of the start pose
         'reset_variance': ((0.01, 0.05, 0.01), (0.0, 0.0, 0.0)),
-        # Task performance criteria
-        'task_epsilon_pos': 0.003,  # 3 mm
-        'task_epsilon_ang': 1,  # 1 rad
         }
 
     config_world = {
@@ -122,9 +116,6 @@ class EnvironmentTcpPositionCtrlPtP6Dof(EnvironmentTcpPositionCtrlPtP):
         'start_config_ang': (0.0, 0.0, 0.0),
         # Reset variance of the start pose
         'reset_variance': ((0.05, 0.05, 0.05), (0.1, 0.1, 0.1)),
-        # Task performance criteria
-        'task_epsilon_pos': 0.003,  # 3 mm
-        'task_epsilon_ang': 1,  # 1 rad
         }
 
     config_world = {
@@ -161,9 +152,6 @@ class EnvironmentTcpVelocityCtrlPtP1Dof(EnvironmentTcpVelocityCtrlPtP):
         'start_config_ang': (0.0, 0.0, 0.0),
         # Reset variance of the start pose
         'reset_variance': ((0.0, 0.05, 0.0), (0.0, 0.0, 0.0)),
-        # Task performance criteria
-        'task_epsilon_pos': 0.003,  # 3 mm
-        'task_epsilon_ang': 1,  # 1 rad
         }
 
     config_world = {
@@ -172,7 +160,7 @@ class EnvironmentTcpVelocityCtrlPtP1Dof(EnvironmentTcpVelocityCtrlPtP):
 
     # configuration low-level controller
     config_low_level_control = {
-        'wa_lin': 0.125,  # action scaling in linear directions [m]
+        'wa_lin': 0.25,  # action scaling in linear directions [m]
         'linear_enabled_motion_axis': (False, True, False),
         'angular_enabled_motion_axis': (False, False, False),
         }
@@ -201,9 +189,6 @@ class EnvironmentTcpVelocityCtrlPtP3Dof(EnvironmentTcpVelocityCtrlPtP):
         'start_config_ang': (0.0, 0.0, 0.0),
         # Reset variance of the start pose
         'reset_variance': ((0.01, 0.05, 0.01), (0.0, 0.0, 0.0)),
-        # Task performance criteria
-        'task_epsilon_pos': 0.003,  # 3 mm
-        'task_epsilon_ang': 1,  # 1 rad
         }
 
     config_world = {
@@ -212,7 +197,7 @@ class EnvironmentTcpVelocityCtrlPtP3Dof(EnvironmentTcpVelocityCtrlPtP):
 
     # configuration low-level controller
     config_low_level_control = {
-        'wa_lin': 0.05,  # action scaling in linear directions [m]
+        'wa_lin': 0.25,  # action scaling in linear directions [m]
         'linear_enabled_motion_axis': (True, True, True),
         'angular_enabled_motion_axis': (False, False, False),
         }
@@ -241,9 +226,6 @@ class EnvironmentTcpVelocityCtrlPtP6Dof(EnvironmentTcpVelocityCtrlPtP):
         'start_config_ang': (0.0, 0.0, 0.0),
         # Reset variance of the start pose
         'reset_variance': ((0.05, 0.05, 0.05), (0.1, 0.1, 0.1)),
-        # Task performance criteria
-        'task_epsilon_pos': 0.003,  # 3 mm
-        'task_epsilon_ang': 1,  # 1 rad
         }
 
     config_world = {
@@ -252,8 +234,8 @@ class EnvironmentTcpVelocityCtrlPtP6Dof(EnvironmentTcpVelocityCtrlPtP):
 
     # configuration low-level controller
     config_low_level_control = {
-        'wa_lin': 0.05,  # action scaling in linear directions [m]
-        'wa_ang': 0.05 * np.pi,  # action scaling in angular directions [rad]
+        'wa_lin': 0.25,  # action scaling in linear directions [m]
+        'wa_ang': 0.25 * np.pi,  # action scaling in angular directions [rad]
         }
 
     def __init__(self, **kwargs: Any):
