@@ -8,11 +8,13 @@ from gym_chargepal.eval.eval_ptp import EvalPtP
 # mypy
 from gym_chargepal.utility.env_clock import EnvironmentClock
 from gym_chargepal.sensors.sensor_virtual_ptp import VirtualTargetSensor
+from gym_chargepal.sensors.sensor_virtual_adpstd import VirtualAdapterStationSensor
 from gym_chargepal.sensors.sensor_virtual_plug import VirtualPlugSensor
 
 from typing import (
     Any, 
     Dict,
+    Union,
 )
 
 
@@ -22,7 +24,7 @@ class EvalDistancePtP(EvalPtP):
         self, 
         hyperparams: Dict[str, Any], 
         clock: EnvironmentClock,
-        target_sensor: VirtualTargetSensor, 
+        target_sensor: Union[VirtualTargetSensor, VirtualAdapterStationSensor], 
         plug_sensor: VirtualPlugSensor
         ):
         config: Dict[str, Any] = copy.deepcopy(EVAL_PTP_DIST)
