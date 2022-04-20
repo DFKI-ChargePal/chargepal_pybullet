@@ -18,7 +18,7 @@ from typing import Dict, Any, Tuple
 
 class EnvironmentTcpPositionCtrlPtP(Environment):
     """ Cartesian Environment with position controller - Task: point to point """
-    def __init__(self, **kwargs: Any):
+    def __init__(self, **kwargs: Dict[str, Any]):
         # Update environment configuration
         config_env = {} if 'config_env' not in kwargs else kwargs['config_env']
         Environment.__init__(self, config_env)
