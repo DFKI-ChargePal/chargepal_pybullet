@@ -1,7 +1,8 @@
 import gym
+import numpy as np
 
 # constants
-N_EPISODES = 2
+N_EPISODES = 1
 
 
 def main(env_name: str) -> None:
@@ -45,6 +46,7 @@ if __name__ == '__main__':
         'ChargePal-P2P-1D-PositionControl-v0',
         'ChargePal-P2P-3D-PositionControl-v0',
         'ChargePal-P2P-6D-PositionControl-v0',
+        'ChargePal-PiH-6D-PositionControl-v0',
         'ChargePal-P2P-1D-VelocityControl-v0',
         'ChargePal-P2P-3D-VelocityControl-v0',
         'ChargePal-P2P-6D-VelocityControl-v0',

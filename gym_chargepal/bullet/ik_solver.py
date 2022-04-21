@@ -60,9 +60,11 @@ class IKSolver(BulletObserver):
             residualThreshold=self._residual_threshold,
             physicsClientId=self._physics_client_id
         )
+        return joints
         # bring joint configuration in range between - 2 pi and + 2 pi
-        joint_wrapped = tuple([wrap(i, -np.pi, np.pi) for i in joints])
-        return joint_wrapped
+        # joint_wrapped = tuple([wrap(i, -np.pi, np.pi) for i in joints])
+        # return joint_wrapped
+
 
     def update_bullet_id(self) -> None:
         self._physics_client_id = self._world.physics_client_id

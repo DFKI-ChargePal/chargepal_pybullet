@@ -66,7 +66,11 @@ WORLD_PTP = {
 
 WORLD_PIH = {
     'robot_urdf': 'primitive_chargepal_with_fix_plug.urdf',
+    'robot_start_pos': [0.0, 1.05, 0.0],
+    'robot_start_ori': p.getQuaternionFromEuler([0.0, 0.0, 0.0]),
     'adapter_station_urdf': 'primitive_adapter_station.urdf',
+    'adpstd_start_pos': [0.0, -0.25/2.0, 0.0],
+    'adpstd_start_ori': p.getQuaternionFromEuler([0.0, 0.0, np.pi]),
     'ft_sensor_joint': 'measurement_joint',
     'plug_reference_frame': 'plug_reference_frame',
     'adpstd_reference_frame': 'target_reference_frame',

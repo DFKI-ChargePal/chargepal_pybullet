@@ -1,4 +1,5 @@
 """ This file defines the peg in hole in a cartesian control worlds. """
+from email.mime import base
 import os
 import copy
 import logging
@@ -41,7 +42,6 @@ class WorldPegInHole(World):
         self.adpstd_reference_frame_idx: int = -1
 
         self.ur_joint_start_config: Dict[str, float] = self._hyperparams['ur_joint_start_config']
-        self.target: Tuple[float, ...] = self._hyperparams['target']
 
     def _init_idx(self) -> None:
         if self.physics_client_id < 0:
@@ -98,7 +98,12 @@ class WorldPegInHole(World):
                 )
             # load adapter station
             f_path_adpstd_urdf = os.path.join(self.urdf_pkg_path, self._hyperparams['adapter_station_urdf'])
-            self.adpstd_id = p.loadURDF(f_path_adpstd_urdf, physicsClientId=self.physics_client_id)
+            self.adpstd_id = p.loadURDF(
+                fileName=f_path_adpstd_urdf, 
+                basePosition=self._hyperparams['adpstd_start_pos'],
+                baseOrientation=self._hyperparams['adpstd_start_ori'],
+                physicsClientId=self.physics_client_id
+                )
             # set gravity
             p.setGravity(*self._hyperparams['gravity'], physicsClientId=self.physics_client_id)
             # initialize joint and link indices
