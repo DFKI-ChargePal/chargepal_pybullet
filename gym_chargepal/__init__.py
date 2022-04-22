@@ -31,6 +31,19 @@ register(
     nondeterministic=True,
 )
 
+register(
+    id='ChargePal-PiH-6D-PositionControl-v1',
+    entry_point='gym_chargepal.envs:EnvironmentTcpPositionCtrlPiH6DofV1',
+    reward_threshold=1.0,
+    nondeterministic=True,
+)
+
+register(
+    id='ChargePal-PiH-6D-PositionControl-v2',
+    entry_point='gym_chargepal.envs:EnvironmentTcpPositionCtrlPiH6DofV2',
+    reward_threshold=1.0,
+    nondeterministic=True,
+)
 
 register(
     id='ChargePal-P2P-1D-VelocityControl-v0',

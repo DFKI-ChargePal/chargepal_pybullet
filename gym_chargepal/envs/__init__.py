@@ -4,6 +4,8 @@ from gym_chargepal.envs.env_register import (
     EnvironmentTcpPositionCtrlPtP6Dof,
     
     EnvironmentTcpPositionCtrlPiH6Dof,
+    EnvironmentTcpPositionCtrlPiH6DofV1,
+    EnvironmentTcpPositionCtrlPiH6DofV2,
     
     EnvironmentTcpVelocityCtrlPtP1Dof,
     EnvironmentTcpVelocityCtrlPtP3Dof,
