@@ -1,5 +1,6 @@
 import copy
 import logging
+import numpy as np
 import pybullet as p
 
 from gym_chargepal.utility.constants import MotionAxis
@@ -7,8 +8,8 @@ from gym_chargepal.controllers.controller import Controller
 from gym_chargepal.controllers.config import TCP_POSITION_CONTROLLER
 
 # mypy
-import numpy as np
-from typing import Dict, Any, Tuple, List
+import numpy.typing as npt
+from typing import Any, Dict, List
 from gym_chargepal.sensors.sensor_plug import PlugSensor
 from gym_chargepal.bullet.ik_solver import IKSolver
 from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotorControl
@@ -62,7 +63,7 @@ class TcpPositionController(Controller):
         self._ang_action_ids = slice(start_idx, stop_idx)
 
 
-    def update(self, action: np.ndarray) -> None:
+    def update(self, action: npt.NDArray[np.float32]) -> None:
         """
         Updates the tcp position controller
         : param action: Action array; The action sequence is defined as (x y z roll pitch yaw).

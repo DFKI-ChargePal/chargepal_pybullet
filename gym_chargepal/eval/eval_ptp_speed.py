@@ -6,14 +6,12 @@ from gym_chargepal.eval.config import EVAL_PTP_SPEED
 from gym_chargepal.eval.eval_ptp import EvalPtP
 
 # mypy
+from numpy import typing as npt
+from typing import Any, Dict
+
 from gym_chargepal.utility.env_clock import EnvironmentClock
 from gym_chargepal.sensors.sensor_virtual_ptp import VirtualTargetSensor
 from gym_chargepal.sensors.sensor_virtual_plug import VirtualPlugSensor
-
-from typing import (
-    Any, 
-    Dict,
-)
 
 
 class EvalSpeedPtP(EvalPtP):
@@ -38,12 +36,12 @@ class EvalSpeedPtP(EvalPtP):
         https://medium.com/@BonsaiAI/deep-reinforcement-learning-models-tips-tricks-for-writing-reward-functions-a84fe525e8e0
         """
         # get virtual frame values
-        tgt_ref_pos = np.array(self.target_sensor.get_pos_list())
-        plg_ref_pos = np.array(self.plug_sensor.get_pos_list())
-        speed = np.array(self.plug_sensor.get_vel_list())
+        tgt_ref_pos = np.array(self.target_sensor.get_pos_list(), dtype=np.float32)
+        plg_ref_pos = np.array(self.plug_sensor.get_pos_list(), dtype=np.float32)
+        speed = np.array(self.plug_sensor.get_vel_list(), dtype=np.float32)
         
         # distance between tool and target
-        distances = tgt_ref_pos - plg_ref_pos
+        distances: npt.NDArray[np.float32] = tgt_ref_pos - plg_ref_pos
         # l1-norm of the speed and distance
         dist_norm = min(np.mean(np.abs(distances)) * self.hyperparams['distance_weight'], 1.0)
         speed_norm = min(np.mean(np.abs(speed)) * self.hyperparams['speed_weight'], 1.0)

@@ -9,6 +9,7 @@ from gym_chargepal.controllers.controller import Controller
 from gym_chargepal.controllers.config import TCP_VELOCITY_CONTROLLER
 
 # mypy
+import numpy.typing as npt
 from typing import Any, Dict, List
 from gym_chargepal.bullet.jacobian import Jacobian
 from gym_chargepal.sensors.sensor_plug import PlugSensor
@@ -60,7 +61,7 @@ class TcpVelocityController(Controller):
         stop_idx = start_idx + len(self._ang_motion_axis[MotionAxis.ENABLED])
         self._ang_action_ids = slice(start_idx, stop_idx)
 
-    def update(self, action: np.ndarray) -> None:
+    def update(self, action: npt.NDArray[np.float32]) -> None:
         """
         Updates the tcp velocity controller
         : param action: Action array; The action sequence is defined as (x y z roll pitch yaw).

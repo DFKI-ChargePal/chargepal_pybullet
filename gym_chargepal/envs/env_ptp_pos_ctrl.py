@@ -13,6 +13,7 @@ from gym_chargepal.controllers.controller_tcp_pos import TcpPositionController
 from gym_chargepal.eval.eval_ptp_dist import EvalDistancePtP
 
 # MyPy
+from numpy import typing as npt
 from typing import Dict, Any, Tuple
 
 
@@ -81,7 +82,7 @@ class EnvironmentTcpPositionCtrlPtP(Environment):
         self.error_pos = np.inf
         self.error_ang = np.inf
 
-    def reset(self) -> np.ndarray:
+    def reset(self) -> npt.NDArray[np.float32]:
         # reset environment
         self.clock.reset()
 
@@ -105,7 +106,7 @@ class EnvironmentTcpPositionCtrlPtP(Environment):
         self.update_sensors(target_sensor=True)
         return self.get_obs()
 
-    def step(self, action: np.ndarray) -> Tuple[np.ndarray, float, bool, Dict[Any, Any]]:
+    def step(self, action: npt.NDArray[np.float32]) -> Tuple[npt.NDArray[np.float32], float, bool, Dict[Any, Any]]:
         """ Execute environment/simulation step. """
         # apply action
         self._low_level_control.update(action=np.array(action))
@@ -138,10 +139,10 @@ class EnvironmentTcpPositionCtrlPtP(Environment):
         self.plug_sensor.update()
         self.plug_ref_sensor.update()
 
-    def get_obs(self) -> np.ndarray:
+    def get_obs(self) -> npt.NDArray[np.float32]:
         tgt_pos = np.array(self.target_sensor.get_pos())
         plg_pos = np.array(self.plug_sensor.get_pos())
-        dif_pos = tuple(tgt_pos - plg_pos)
+        dif_pos: Tuple[float, ...] = tuple(tgt_pos - plg_pos)
 
         tgt_ori = self.target_sensor.get_ori()
         plg_ori = self.plug_sensor.get_ori()

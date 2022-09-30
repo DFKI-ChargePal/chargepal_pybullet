@@ -6,20 +6,17 @@ from gym_chargepal.eval.config import EVAL_PTP_DIST
 from gym_chargepal.eval.eval_ptp import EvalPtP
 
 # mypy
+from numpy import typing as npt
+from typing import Any, Dict, Union
+
 from gym_chargepal.utility.env_clock import EnvironmentClock
 from gym_chargepal.sensors.sensor_virtual_ptp import VirtualTargetSensor
 from gym_chargepal.sensors.sensor_virtual_adpstd import VirtualAdapterStationSensor
 from gym_chargepal.sensors.sensor_virtual_plug import VirtualPlugSensor
 
-from typing import (
-    Any, 
-    Dict,
-    Union,
-)
-
 
 class EvalDistancePtP(EvalPtP):
-    """ Evalation subclass class """
+    """ Evaluation subclass class """
     def __init__(
         self, 
         hyperparams: Dict[str, Any], 
@@ -37,13 +34,13 @@ class EvalDistancePtP(EvalPtP):
     def eval_reward(self) -> float:
         """ Calculate reward for small distance errors """
         # get virtual frame values
-        tgt_ref_pos = np.array(self.target_sensor.get_pos_list())
-        plg_ref_pos = np.array(self.plug_sensor.get_pos_list())
+        tgt_ref_pos = np.array(self.target_sensor.get_pos_list(), dtype=np.float32)
+        plg_ref_pos = np.array(self.plug_sensor.get_pos_list(), dtype=np.float32)
         # distance between tool and target
-        distances = tgt_ref_pos - plg_ref_pos
+        distances: npt.NDArray[np.float32] = tgt_ref_pos - plg_ref_pos
         # l1-norm of the distance
         dist_norm = min(np.mean(np.abs(distances)) * self.hyperparams['distance_weight'], 1.0)
         # calculate reward and scale it exponential
         r: float = 1.0 - (dist_norm ** self.hyperparams['distance_exp'])
-        reward = r if self.eval_done() else r / self.clock.t_end 
+        reward = r if self.eval_done() else r / self.clock.t_end
         return reward

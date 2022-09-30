@@ -8,6 +8,7 @@ from numpy.random import RandomState
 from gym_chargepal.utility.env_clock import EnvironmentClock
 
 # mypy
+from numpy import typing as npt
 from typing import Dict, Any, Optional, Union, Tuple
 
 
@@ -28,12 +29,12 @@ class Environment(gym.Env):  # type: ignore
         self.seed()
 
     @abc.abstractmethod
-    def step(self, action: np.ndarray) -> Tuple[np.ndarray, float, bool, Dict[Any, Any]]:
+    def step(self, action: npt.NDArray[np.float32]) -> Tuple[npt.NDArray[np.float32], float, bool, Dict[Any, Any]]:
         """ Environment step function of the Reinforcement Learning framework. """
         raise NotImplementedError('Must be implemented in subclass.')
 
     @abc.abstractmethod
-    def reset(self) -> np.ndarray:
+    def reset(self) -> npt.NDArray[np.float32]:
         """ Environment step function of the Reinforcement Learning framework. """
         raise NotImplementedError('Must be implemented in subclass.')
 
@@ -42,7 +43,7 @@ class Environment(gym.Env):  # type: ignore
         """ Environment close function called at the end of the program. """
         raise NotImplementedError('Must be implemented in subclass.')
 
-    def seed(self, seed: Union[None, int, np.ndarray] = None) -> Union[None, int, np.ndarray]:
+    def seed(self, seed: Union[None, int, npt.NDArray[np.float32]] = None) -> Union[None, int, npt.NDArray[np.float32]]:
         self.rs = RandomState(seed)
         return seed
 
