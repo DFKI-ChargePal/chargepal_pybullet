@@ -77,3 +77,9 @@ WORLD_PIH = {
     'plug_ref_frame_names': plug_ref_frame_names,
     'adpstd_ref_frame_names': adpstd_ref_frame_names,
 }
+
+WORLD_TDT = {
+    'urdf_sub_dir': '_bullet_urdf_models',
+    'robot_urdf': 'chargepal_testbed_tdt.urdf',
+
+}

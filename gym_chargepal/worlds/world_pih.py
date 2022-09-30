@@ -1,5 +1,4 @@
-""" This file defines the peg in hole in a cartesian control worlds. """
-from email.mime import base
+""" This file defines the peg in hole in a cartesian controlled world. """
 import os
 import copy
 import logging
