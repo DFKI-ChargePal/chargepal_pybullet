@@ -80,6 +80,24 @@ WORLD_PIH = {
 
 WORLD_TDT = {
     'urdf_sub_dir': '_bullet_urdf_models',
+    'plane_start_pos': [0.0, 0.0, -0.8136],
+    'plane_start_ori': p.getQuaternionFromEuler([0.0, 0.0, 0.0]),
     'robot_urdf': 'chargepal_testbed_tdt.urdf',
+    'robot_start_pos': [0.0, 0.0, 0.0],
+    'robot_start_ori': p.getQuaternionFromEuler([0.0, 0.0, 0.0]),
+    'socket_urdf': 'tdt_socket.urdf',
+    'socket_start_pos': [0.5, 0.8, 0.0],
+    'socket_start_ori': p.getQuaternionFromEuler([0.0, 0.0, 0.0]),
+    'ur_joint_start_config': {
+        'shoulder_pan_joint': np.pi,
+        'shoulder_lift_joint': -7*np.pi/36,
+        'elbow_joint': -np.pi/2 - 7*np.pi/36,
+        'wrist_1_joint': -np.pi/2 - 4*np.pi/36,
+        'wrist_2_joint': np.pi/2,
+        'wrist_3_joint': -np.pi/2,
+    },
+    'ft_sensor_joint': 'mounting_to_wrench',
+    'plug_link_name': 'plug',
+    'socket_link_name': 'socket',
 
 }

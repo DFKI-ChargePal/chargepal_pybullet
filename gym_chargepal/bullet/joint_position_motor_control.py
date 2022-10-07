@@ -6,6 +6,7 @@ import pybullet as p
 from typing import Dict, Any, Union, Tuple, List
 from gym_chargepal.worlds.world_ptp import WorldPoint2Point
 from gym_chargepal.worlds.world_pih import WorldPegInHole
+from gym_chargepal.worlds.world_tdt import WorldTopDownTask
 
 
 from gym_chargepal.bullet.config import JOINT_POSITION_MOTOR_CONTROL
@@ -17,7 +18,7 @@ LOGGER = logging.getLogger(__name__)
 
 class JointPositionMotorControl(BulletObserver):
     """ Interface to use PyBullet Position Controller. """
-    def __init__(self, hyperparams: Dict[str, Any], world: Union[WorldPoint2Point, WorldPegInHole]):
+    def __init__(self, hyperparams: Dict[str, Any], world: Union[WorldPoint2Point, WorldPegInHole, WorldTopDownTask]):
         config: Dict[str, Any] = copy.deepcopy(JOINT_POSITION_MOTOR_CONTROL)
         config.update(hyperparams)
         self._hyperparams = config

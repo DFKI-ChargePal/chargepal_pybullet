@@ -10,6 +10,8 @@ JOINT_SENSOR: Dict[str, Any] = {}
 
 PLUG_SENSOR: Dict[str, Any] = {}
 
+SOCKET_SENSOR: Dict[str, Any] = {}
+
 TARGET_SENSOR: Dict[str, Any] = {}
 
 VIRTUAL_SENSOR: Dict[str, Any] = {}

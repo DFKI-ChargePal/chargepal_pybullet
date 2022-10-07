@@ -7,6 +7,7 @@ import numpy as np
 from typing import Dict, Any, Union, Tuple, List
 from gym_chargepal.worlds.world_ptp import WorldPoint2Point
 from gym_chargepal.worlds.world_pih import WorldPegInHole
+from gym_chargepal.worlds.world_tdt import WorldTopDownTask
 
 from gym_chargepal.bullet.config import IK_SOLVER
 from gym_chargepal.bullet.bullet_observer import BulletObserver
@@ -17,7 +18,7 @@ LOGGER = logging.getLogger(__name__)
 
 class IKSolver(BulletObserver):
     """ Inverse kinematics solver. """
-    def __init__(self, hyperparams: Dict[str, Any], world: Union[WorldPoint2Point, WorldPegInHole]):
+    def __init__(self, hyperparams: Dict[str, Any], world: Union[WorldPoint2Point, WorldPegInHole, WorldTopDownTask]):
         config: Dict[str, Any] = copy.deepcopy(IK_SOLVER)
         config.update(hyperparams)
         self._hyperparams = config

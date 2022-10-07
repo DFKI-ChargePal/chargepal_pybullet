@@ -46,6 +46,13 @@ register(
 )
 
 register(
+    id='ChargePal-Tdt-6D-PositionControl-v0',
+    entry_point='gym_chargepal.envs:EnvironmentTcpPositionCtrlTdt6DofV0',
+    reward_threshold=1.0,
+    nondeterministic=True,
+)
+
+register(
     id='ChargePal-P2P-1D-VelocityControl-v0',
     entry_point='gym_chargepal.envs:EnvironmentTcpVelocityCtrlPtP1Dof',
     reward_threshold=1.0,

@@ -79,7 +79,7 @@ IK_SOLVER = {
     'upper_limits': [pi, pi, pi, pi, pi, pi],
     'joint_ranges': [2*pi, 2*pi, 2*pi, 2*pi, 2*pi, 2*pi],
     'max_num_iterations': 100,
-    'residual_threshold': 1e-5,
+    'residual_threshold': 1e-7,
 }
 
 JACOBIAN: Dict[str, Any] = {}

@@ -7,6 +7,7 @@ import pybullet as p
 from typing import Dict, Any, Tuple, Union, Optional
 from gym_chargepal.worlds.world_ptp import WorldPoint2Point
 from gym_chargepal.worlds.world_pih import WorldPegInHole
+from gym_chargepal.worlds.world_tdt import WorldTopDownTask
 
 from gym_chargepal.sensors.sensor import Sensor
 from gym_chargepal.sensors.config import PLUG_SENSOR
@@ -19,7 +20,7 @@ LOGGER = logging.getLogger(__name__)
 
 class PlugSensor(Sensor, BulletObserver):
     """ Sensor of the arm plug. """
-    def __init__(self, hyperparams: Dict[str, Any], world: Union[WorldPoint2Point, WorldPegInHole]):
+    def __init__(self, hyperparams: Dict[str, Any], world: Union[WorldPoint2Point, WorldPegInHole, WorldTopDownTask]):
         config = copy.deepcopy(PLUG_SENSOR)
         config.update(hyperparams)
         Sensor.__init__(self, config)

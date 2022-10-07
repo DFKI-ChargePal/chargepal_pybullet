@@ -23,7 +23,7 @@ LOGGER = logging.getLogger(__name__)
 
 class WorldPegInHole(World):
 
-    """ Build a worlds where the task is to plug in a peg. """
+    """ Build a world where the task is to plug in a peg. """
     def __init__(self, hyperparams: Dict[str, Any]):
         config: Dict[str, Any] = copy.deepcopy(WORLD_PIH)
         config.update(hyperparams)
