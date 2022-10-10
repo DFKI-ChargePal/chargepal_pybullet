@@ -235,9 +235,11 @@ class EnvironmentTcpPositionCtrlPiH6DofV1(EnvironmentTcpPositionCtrlPiH):
         # 'reset_variance': ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
         }
 
+    rod_diameter = "32d5"
+
     config_world = {
         'hz_ctrl': 40,
-        'robot_urdf': 'primitive_chargepal_with_fix_rod.urdf',
+        'robot_urdf': f'cpm_fix_rod_{rod_diameter}.urdf',
         'adapter_station_urdf': 'adapter_station_square_socket.urdf',
         'adpstd_start_pos': [0.0, -0.1/2.0, 0.0],
     }
@@ -274,10 +276,10 @@ class EnvironmentTcpPositionCtrlPiH6DofV2(EnvironmentTcpPositionCtrlPiH):
         'reset_variance': ((0.01, 0.005, 0.01), (0.05, 0.05, 0.05)),
         # 'reset_variance': ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
         }
-
+    rod_diameter = "34"
     config_world = {
         'hz_ctrl': 40,
-        'robot_urdf': 'primitive_chargepal_with_fix_rod.urdf',
+        'robot_urdf': f'cpm_fix_rod_{rod_diameter}.urdf',
         'adapter_station_urdf': 'adapter_station_octa_socket.urdf',
         'adpstd_start_pos': [0.0, -0.1/2.0, 0.0],
     }

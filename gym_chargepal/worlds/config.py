@@ -51,7 +51,7 @@ WORLD = {
     'ur_joint_names': ur_joint_names,
     'ur_joint_start_config': ur_joint_start_config,
     'chargepal_description_pkg': 'chargepal_description',
-    'urdf_sub_dir': '_bullet_urdf_autogen',
+    'urdf_sub_dir': '_bullet_urdf_models',
 }
 
 WORLD_PTP = {
@@ -71,7 +71,7 @@ WORLD_PIH = {
     'adapter_station_urdf': 'primitive_adapter_station.urdf',
     'adpstd_start_pos': [0.0, -0.25/2.0, 0.0],
     'adpstd_start_ori': p.getQuaternionFromEuler([0.0, 0.0, np.pi]),
-    'ft_sensor_joint': 'measurement_joint',
+    'ft_sensor_joint': 'mounting_to_wrench',
     'plug_reference_frame': 'plug_reference_frame',
     'adpstd_reference_frame': 'target_reference_frame',
     'plug_ref_frame_names': plug_ref_frame_names,
@@ -79,7 +79,6 @@ WORLD_PIH = {
 }
 
 WORLD_TDT = {
-    'urdf_sub_dir': '_bullet_urdf_models',
     'plane_start_pos': [0.0, 0.0, -0.8136],
     'plane_start_ori': p.getQuaternionFromEuler([0.0, 0.0, 0.0]),
     'robot_urdf': 'chargepal_testbed_tdt.urdf',

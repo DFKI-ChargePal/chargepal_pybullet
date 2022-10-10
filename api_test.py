@@ -7,6 +7,7 @@ N_EPISODES = 1
 
 def main(env_name: str) -> None:
 
+    print(3 * '\n' + f"Start test with environment: {env_name}")
     env = gym.make("gym_chargepal:" + env_name)
     env.action_space.seed(42)
     env.render()
@@ -14,7 +15,6 @@ def main(env_name: str) -> None:
 
     episode = 1
     ep_return = 0.0
-    print(f'Start test with environment: {env_name}')
     print(f'Episode: {episode}')
     while True:
 
@@ -43,16 +43,16 @@ def main(env_name: str) -> None:
 
 if __name__ == '__main__':
     env_names = [
-        # 'ChargePal-P2P-1D-PositionControl-v0',
-        # 'ChargePal-P2P-3D-PositionControl-v0',
-        # 'ChargePal-P2P-6D-PositionControl-v0',
-        # 'ChargePal-PiH-6D-PositionControl-v0',
-        # 'ChargePal-PiH-6D-PositionControl-v1',
-        # 'ChargePal-PiH-6D-PositionControl-v2',
+        'ChargePal-P2P-1D-PositionControl-v0',
+        'ChargePal-P2P-3D-PositionControl-v0',
+        'ChargePal-P2P-6D-PositionControl-v0',
+        'ChargePal-PiH-6D-PositionControl-v0',
+        'ChargePal-PiH-6D-PositionControl-v1',
+        'ChargePal-PiH-6D-PositionControl-v2',
         'ChargePal-Tdt-6D-PositionControl-v0',
-        # 'ChargePal-P2P-1D-VelocityControl-v0',
-        # 'ChargePal-P2P-3D-VelocityControl-v0',
-        # 'ChargePal-P2P-6D-VelocityControl-v0',
+        'ChargePal-P2P-1D-VelocityControl-v0',
+        'ChargePal-P2P-3D-VelocityControl-v0',
+        'ChargePal-P2P-6D-VelocityControl-v0',
     ]
 
     for env_ in env_names:
