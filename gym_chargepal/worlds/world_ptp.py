@@ -6,8 +6,6 @@ import logging
 # mypy
 from typing import Dict, Any, Tuple, Union
 
-import pybullet as p
-
 from gym_chargepal.worlds.config import WORLD_PTP
 from gym_chargepal.worlds.world import World
 from gym_chargepal.bullet.utility import (
@@ -51,36 +49,36 @@ class WorldPoint2Point(World):
             self.plug_reference_frame_idx = get_link_idx(
                 body_id=self.robot_id, 
                 link_name=self._hyperparams['plug_reference_frame'],
-                client_id=self.physics_client_id
+                bullet_client=self.bullet_client
                 )
             self.ur_joint_idx_dict = create_joint_index_dict(
                 body_id=self.robot_id,
                 joint_names=self._hyperparams['ur_joint_names'],
-                client_id=self.physics_client_id
+                bullet_client=self.bullet_client
                 )
             self.plug_ref_frame_idx_dict = create_link_index_dict(
                 body_id=self.robot_id,
                 link_names=self._hyperparams['plug_ref_frame_names'],
-                client_id=self.physics_client_id
+                bullet_client=self.bullet_client
                 )
 
     def reset(self, joint_conf: Union[None, Tuple[float, ...]] = None, render: bool = False) -> None:
 
-        if self.physics_client_id < 0:
+        if self.bullet_client is None:
             # connect to bullet simulation server
             self.connect(render)
+            assert self.bullet_client
             # load plane
-            self.plane_id = p.loadURDF('plane.urdf', physicsClientId=self.physics_client_id)
+            self.plane_id = self.bullet_client.loadURDF('plane.urdf')
             # load robot
             f_path_robot_urdf = os.path.join(self.urdf_pkg_path, self._hyperparams['robot_urdf'])
-            self.robot_id = p.loadURDF(
+            self.robot_id = self.bullet_client.loadURDF(
                 fileName=f_path_robot_urdf,
                 basePosition=self._hyperparams['robot_start_pos'],
-                baseOrientation=self._hyperparams['robot_start_ori'], 
-                physicsClientId=self.physics_client_id
+                baseOrientation=self._hyperparams['robot_start_ori']
                 )
             # set gravity
-            p.setGravity(*self._hyperparams['gravity'], physicsClientId=self.physics_client_id)
+            self.bullet_client.setGravity(*self._hyperparams['gravity'])
             # initialize joint and link indices
             self._init_idx()
             # notify all references about the changes
@@ -89,23 +87,21 @@ class WorldPoint2Point(World):
         # reset joint configuration
         if joint_conf is None:
             for joint_name in self.ur_joint_idx_dict.keys():
-                p.resetJointState(
+                self.bullet_client.resetJointState(
                     bodyUniqueId=self.robot_id, 
                     jointIndex=self.ur_joint_idx_dict[joint_name], 
                     targetValue=self.ur_joint_start_config[joint_name],
-                    targetVelocity=0.0, 
-                    physicsClientId=self.physics_client_id
+                    targetVelocity=0.0
                     )
         else:
             assert len(joint_conf) == len(self.ur_joint_idx_dict)
             for k, joint_name in enumerate(self.ur_joint_idx_dict.keys()):
                 joint_state = joint_conf[k]
-                p.resetJointState(
+                self.bullet_client.resetJointState(
                     bodyUniqueId=self.robot_id,
                     jointIndex=self.ur_joint_idx_dict[joint_name], 
                     targetValue=joint_state,
-                    targetVelocity=0.0, 
-                    physicsClientId=self.physics_client_id
+                    targetVelocity=0.0
                     )
         # draw target
         self.draw_target(render)
@@ -113,12 +109,12 @@ class WorldPoint2Point(World):
     def draw_target(self, render: bool) -> None:
         if render:
             if self.target_id > -1:
-                p.removeBody(self.target_id, physicsClientId=self.physics_client_id)
+                self.bullet_client.removeBody(self.target_id)
             self.target_id = draw_cylinder_marker(
                 position=self.target_pos, 
                 orientation=self.target_ori,
                 radius=0.035, 
                 height=0.080,
                 color=(1, 0, 0, 0.75), 
-                physics_client_id=self.physics_client_id
+                bullet_client=self.bullet_client
                 )

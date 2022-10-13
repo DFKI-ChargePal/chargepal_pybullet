@@ -5,12 +5,12 @@ import numpy as np
 N_EPISODES = 1
 
 
-def main(env_name: str) -> None:
+def main(env_name: str, gui: bool) -> None:
 
     print(3 * '\n' + f"Start test with environment: {env_name}")
     env = gym.make("gym_chargepal:" + env_name)
     env.action_space.seed(42)
-    env.render()
+    if gui: env.render()
     obs = env.reset()
 
     episode = 1
@@ -27,7 +27,7 @@ def main(env_name: str) -> None:
         obs_string = " ".join(format(f, '6.2f') for f in obs)
 
         print(f'Action: {act_string}  ----  Observation: {obs_string}  ----  Reward: {reward:5.2}')
-        env.render()
+        if gui: env.render()
         # reset environment
         if done:
             print(f'Finish episode {episode} with return: {ep_return}')
@@ -56,4 +56,4 @@ if __name__ == '__main__':
     ]
 
     for env_ in env_names:
-        main(env_)
+        main(env_name=env_, gui=True)

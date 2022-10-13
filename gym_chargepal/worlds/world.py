@@ -8,7 +8,7 @@ import rospkg
 
 import pybullet as p
 import pybullet_data
-from pybullet_utils import bullet_client
+from pybullet_utils.bullet_client import BulletClient
 
 from gym_chargepal.worlds.config import WORLD
 
@@ -29,7 +29,7 @@ class World(object):
         config: Dict[str, Any] = copy.deepcopy(WORLD)
         config.update(hyperparams)
         self._hyperparams = config
-        self.bullet_client = None
+        self.bullet_client: BulletClient = None
         self.physics_client_id = -1
         self.bullet_observers: List[BulletObserver] = []
         self.gravity = self._hyperparams['gravity']
@@ -42,8 +42,8 @@ class World(object):
     def connect(self, gui: bool) -> None:
         # connecting to bullet server
         connection_mode = p.GUI if gui else p.DIRECT
-        self.bullet_client = bullet_client.BulletClient(connection_mode=connection_mode)
-        assert self.bullet_client is not None
+        self.bullet_client = BulletClient(connection_mode=connection_mode)
+        assert self.bullet_client
         # set common bullet data path
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         # extract client id
@@ -54,8 +54,8 @@ class World(object):
         self.bullet_client.resetSimulation(physicsClientId=self.physics_client_id)
         self.bullet_client.setPhysicsEngineParameter(deterministicOverlappingPairs=1)
         if gui:
-            p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
-            p.resetDebugVisualizerCamera(
+            self.bullet_client.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
+            self.bullet_client.resetDebugVisualizerCamera(
                 cameraDistance=2.5, 
                 cameraYaw=50, 
                 cameraPitch=-42,
@@ -63,12 +63,13 @@ class World(object):
                 )
 
     def disconnect(self) -> None:
-        connection_info = p.getConnectionInfo(1)
-        if connection_info['isConnected'] > 0:
-            p.disconnect(physicsClientId=self.physics_client_id)
-        self.physics_client_id = -1
-        self.bullet_client = None
-        self.notify_bullet_obs()
+        if self.bullet_client is not None:
+            connection_info = self.bullet_client.getConnectionInfo()
+            if connection_info['isConnected'] > 0:
+                self.bullet_client.disconnect()
+            self.physics_client_id = -1
+            self.bullet_client = None
+            self.notify_bullet_obs()
 
     def attach_bullet_obs(self, bullet_obs: BulletObserver) -> None:
         self.bullet_observers.append(bullet_obs)
@@ -82,13 +83,13 @@ class World(object):
 
     def step(self, render: bool, sensors: Optional[List[Sensor]] = None) -> None:
         # step bullet simulation
-        if self.physics_client_id < 0:
+        if self.bullet_client is None:
             error_msg = f'Unable to step simulation! Did you connect with a Bullet physics server?'
             LOGGER.error(error_msg)
             raise RuntimeError(error_msg)
 
         for _ in range(self.sim_steps):
-            p.stepSimulation(physicsClientId=self.physics_client_id)
+            self.bullet_client.stepSimulation()
             # update sensor values as needed
             if sensors is not None:
                 for sensor in sensors:
