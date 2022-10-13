@@ -62,7 +62,7 @@ class EnvironmentTcpPositionCtrlTdt(Environment):
             self.control_interface,
             self.plug_sensor
         )
-        self.eval = EvalDistance(config_eval, self.world, self.clock)
+        self.eval = EvalDistance(config_eval, self.clock)
         # logging
         self.error_pos = np.inf
         self.error_ang = np.inf

@@ -2,23 +2,23 @@
 # global
 import copy
 import numpy as np
+import quaternionic as quat
 
 # local
 from gym_chargepal.eval.config import EVAL_DIST
 
+
 # mypy
 from numpy import typing as npt
 from typing import Any, Dict, List, Tuple
-from gym_chargepal.worlds.world_tdt import WorldTopDownTask
 from gym_chargepal.utility.env_clock import EnvironmentClock
 
 
 class EvalDistance:
     """ Evaluation class for spatial distances. """
-    def __init__(self, hyperparams: Dict[str, Any], world: WorldTopDownTask, env_clock: EnvironmentClock):
+    def __init__(self, hyperparams: Dict[str, Any], env_clock: EnvironmentClock):
         config: Dict[str, Any] = copy.deepcopy(EVAL_DIST)
         config.update(hyperparams)
-        self.world = world
         self.clock = env_clock
         self.hyperparams = config
 
@@ -39,23 +39,17 @@ class EvalDistance:
         ) -> npt.NDArray[np.float32]:
         """ Transform a pose to 3 spatial points. """
         points: List[List[float]] = []
-        points.append(list(pos))  # first spatial point is just the origin of the pose
-        # get second point as extension of the x-axis
-        p2, o2 = self.world.bullet_client.multiplyTransforms(
-            positionA=pos,
-            orientationA=ori,
-            positionB=(dist, 0.0, 0.0),
-            orientationB=(0.0, 0.0, 0.0, 1.0)  # no rotation
-        )
+        # First spatial point is just the origin of the pose
+        points.append(list(pos))
+        # Bring pose in right form
+        p1 = np.array(pos)
+        q1 = quat.array((ori[3],) + ori[0:3])
+        # Get second point as extension of the x-axis
+        p2 = q1.rotate((dist, 0.0, 0.0)) + p1
         points.append(list(p2))
-        # get third point as extension of the y-axis
-        p3, o3 = self.world.bullet_client.multiplyTransforms(
-            positionA=pos,
-            orientationA=ori,
-            positionB=(0.0, dist, 0.0),
-            orientationB=(0.0, 0.0, 0.0, 1.0)  # no rotation
-        )
-        points.append(list(p3))
+        # Get third point as extension of the y-axis
+        p3 = q1.rotate((0.0, dist, 0.0)) + p1
+        points.append(list(p3))        
         return np.array(points, dtype=np.float32)
 
     def calc_reward(
