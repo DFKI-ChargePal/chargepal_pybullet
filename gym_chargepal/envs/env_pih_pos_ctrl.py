@@ -1,6 +1,8 @@
+# global
 import numpy as np
 import pybullet as p
 
+# local
 from gym_chargepal.envs.env import Environment
 from gym_chargepal.worlds.world_pih import WorldPegInHole
 from gym_chargepal.bullet.ik_solver import IKSolver
@@ -11,7 +13,6 @@ from gym_chargepal.sensors.sensor_target_adpstd import TargetSensor
 from gym_chargepal.sensors.sensor_virtual_adpstd import VirtualAdapterStationSensor
 from gym_chargepal.controllers.controller_tcp_pos import TcpPositionController
 from gym_chargepal.eval.eval_ptp_dist import EvalDistancePtP
-
 
 # mypy
 import numpy.typing as npt
@@ -26,7 +27,6 @@ class EnvironmentTcpPositionCtrlPiH(Environment):
         config_env = {} if 'config_env' not in kwargs else kwargs['config_env']
         Environment.__init__(self, config_env)
         
-
         # extract component hyperparameter from kwargs
         extract_config: Callable[[str], Dict[str, Any]] = lambda name: {} if name not in kwargs else kwargs[name]
         config_eval = extract_config('config_eval')
@@ -97,7 +97,7 @@ class EnvironmentTcpPositionCtrlPiH(Environment):
         # get start joint configuration by inverse kinematic
         pos_0 = tuple(np.array(self.pos_world_0) + np.array(self.pos_var_0) * self.rs.randn(3))  # type: ignore
         ang_0 = tuple(np.array(self.ang_world_0) + np.array(self.ang_var_0) * self.rs.randn(3))  # type: ignore
-        ori_0 = p.getQuaternionFromEuler(ang_0, physicsClientId=self.world.physics_client_id)
+        ori_0 = self.world.bullet_client.getQuaternionFromEuler(ang_0)
         joint_config_0 = self.ik_solver.solve((pos_0, ori_0))
 
         # reset robot again
@@ -147,7 +147,7 @@ class EnvironmentTcpPositionCtrlPiH(Environment):
 
         tgt_ori = self.target_sensor.get_ori()
         plg_ori = self.plug_sensor.get_ori()
-        dif_ori = p.getDifferenceQuaternion(plg_ori, tgt_ori, physicsClientId=self.world.physics_client_id)
+        dif_ori = self.world.bullet_client.getDifferenceQuaternion(plg_ori, tgt_ori)
         obs = np.array((dif_pos + dif_ori), dtype=np.float32)
 
         tgt_ori_ = np.array(tgt_ori)

@@ -27,7 +27,7 @@ class EvalDistancePtP(EvalPtP):
         config: Dict[str, Any] = copy.deepcopy(EVAL_PTP_DIST)
         config.update(hyperparams)
         EvalPtP.__init__(self, config, clock)
-
+        # sensor references
         self.target_sensor = target_sensor
         self.plug_sensor = plug_sensor
 

@@ -1,14 +1,15 @@
 """ This file defines the sensors target class. """
-import logging
+# global
 import copy
-import pybullet as p
+import logging
+
+# local
+from gym_chargepal.sensors.sensor import Sensor
+from gym_chargepal.sensors.config import TARGET_SENSOR
 
 # mypy
 from typing import Dict, Any, Tuple
 from gym_chargepal.worlds.world_ptp import WorldPoint2Point
-
-from gym_chargepal.sensors.sensor import Sensor
-from gym_chargepal.sensors.config import TARGET_SENSOR
 
 
 LOGGER = logging.getLogger(__name__)
@@ -21,15 +22,15 @@ class TargetSensor(Sensor):
         config.update(hyperparams)
         Sensor.__init__(self, config)
         # params
-        self._world = world
+        self.world = world
         # intern sensors state
-        self._sensor_state = (self._world.target_pos, self._world.target_ori)
+        self.sensor_state = (self.world.target_pos, self.world.target_ori)
 
     def update(self) -> None:
-        self._sensor_state = (self._world.target_pos, self._world.target_ori)
+        self.sensor_state = (self.world.target_pos, self.world.target_ori)
 
     def get_pos(self) -> Tuple[float, ...]:
-        return self._sensor_state[0]
+        return self.sensor_state[0]
 
     def get_ori(self) -> Tuple[float, ...]:
-        return self._sensor_state[1]
+        return self.sensor_state[1]

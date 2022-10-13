@@ -1,7 +1,5 @@
 
 # World Coordinate System
-from tkinter import DISABLED
-
 
 class WorldFrame:
     X = 0

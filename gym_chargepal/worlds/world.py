@@ -1,27 +1,27 @@
 """ This file defines the worlds base class. """
+# global
 import os
 import abc
 import copy
 import logging
 import time
 import rospkg
-
 import pybullet as p
 import pybullet_data
 from pybullet_utils.bullet_client import BulletClient
 
+# local
 from gym_chargepal.worlds.config import WORLD
 
 # mypy
 from typing import Dict, Any, Union, Tuple, List, Optional
 from gym_chargepal.sensors.sensor import Sensor
-from gym_chargepal.bullet.bullet_observer import BulletObserver
 
 
 LOGGER = logging.getLogger(__name__)
 
 
-class World(object):
+class World:
     """ World superclass. """
     __metaclass__ = abc.ABCMeta
 
@@ -30,8 +30,6 @@ class World(object):
         config.update(hyperparams)
         self._hyperparams = config
         self.bullet_client: BulletClient = None
-        self.physics_client_id = -1
-        self.bullet_observers: List[BulletObserver] = []
         self.gravity = self._hyperparams['gravity']
         self.sim_steps = int(self._hyperparams['hz_sim'] // self._hyperparams['hz_ctrl'])
         # find chargepal ros description package
@@ -45,13 +43,11 @@ class World(object):
         self.bullet_client = BulletClient(connection_mode=connection_mode)
         assert self.bullet_client
         # set common bullet data path
-        p.setAdditionalSearchPath(pybullet_data.getDataPath())
-        # extract client id
-        self.physics_client_id = self.bullet_client._client
+        self.bullet_client.setAdditionalSearchPath(pybullet_data.getDataPath())
         # disable real-time simulation
-        p.setRealTimeSimulation(False, physicsClientId=self.physics_client_id)
+        self.bullet_client.setRealTimeSimulation(False)
         # reset simulation
-        self.bullet_client.resetSimulation(physicsClientId=self.physics_client_id)
+        self.bullet_client.resetSimulation()
         self.bullet_client.setPhysicsEngineParameter(deterministicOverlappingPairs=1)
         if gui:
             self.bullet_client.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
@@ -67,19 +63,7 @@ class World(object):
             connection_info = self.bullet_client.getConnectionInfo()
             if connection_info['isConnected'] > 0:
                 self.bullet_client.disconnect()
-            self.physics_client_id = -1
             self.bullet_client = None
-            self.notify_bullet_obs()
-
-    def attach_bullet_obs(self, bullet_obs: BulletObserver) -> None:
-        self.bullet_observers.append(bullet_obs)
-
-    def detach_bullet_obs(self, bullet_obs: BulletObserver) -> None:
-        self.bullet_observers.remove(bullet_obs)
-
-    def notify_bullet_obs(self) -> None:
-        for obs in self.bullet_observers:
-            obs.update_bullet_id()
 
     def step(self, render: bool, sensors: Optional[List[Sensor]] = None) -> None:
         # step bullet simulation

@@ -1,6 +1,8 @@
+# global
 import numpy as np
 import pybullet as p
 
+# local
 from gym_chargepal.envs.env import Environment
 from gym_chargepal.worlds.world_ptp import WorldPoint2Point
 from gym_chargepal.bullet.ik_solver import IKSolver
@@ -96,7 +98,7 @@ class EnvironmentTcpPositionCtrlPtP(Environment):
         # get start joint configuration by inverse kinematic
         pos_0 = tuple(np.array(self.pos_w_0) + np.array(self.pos_var_0) * self.rs.randn(3))  # type: ignore
         ang_0 = tuple(np.array(self.ang_w_0) + np.array(self.ang_var_0) * self.rs.randn(3))  # type: ignore
-        ori_0 = p.getQuaternionFromEuler(ang_0, physicsClientId=self.world.physics_client_id)
+        ori_0 = self.world.bullet_client.getQuaternionFromEuler(ang_0)
         joint_config_0 = self.ik_solver.solve((pos_0, ori_0))
 
         # reset robot again
@@ -146,7 +148,7 @@ class EnvironmentTcpPositionCtrlPtP(Environment):
 
         tgt_ori = self.target_sensor.get_ori()
         plg_ori = self.plug_sensor.get_ori()
-        dif_ori = p.getDifferenceQuaternion(plg_ori, tgt_ori, physicsClientId=self.world.physics_client_id)
+        dif_ori = self.world.bullet_client.getDifferenceQuaternion(plg_ori, tgt_ori)
         obs = np.array((dif_pos + dif_ori), dtype=np.float32)
 
         tgt_ori_ = np.array(tgt_ori)

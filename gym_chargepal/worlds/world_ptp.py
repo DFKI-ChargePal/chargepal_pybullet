@@ -41,7 +41,7 @@ class WorldPoint2Point(World):
         self.target_ori: Tuple[float, ...] = self._hyperparams['target_ori']
 
     def _init_idx(self) -> None:
-        if self.physics_client_id < 0:
+        if self.bullet_client is None:
             error_msg = f'Unable to set link/joint indices! Did you connect with a Bullet physics server?'
             LOGGER.error(error_msg)
             raise RuntimeError(error_msg)
@@ -81,8 +81,6 @@ class WorldPoint2Point(World):
             self.bullet_client.setGravity(*self._hyperparams['gravity'])
             # initialize joint and link indices
             self._init_idx()
-            # notify all references about the changes
-            self.notify_bullet_obs()
 
         # reset joint configuration
         if joint_conf is None:

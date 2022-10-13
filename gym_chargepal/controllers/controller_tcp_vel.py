@@ -42,7 +42,7 @@ class TcpVelocityController(Controller):
         self._wa_ang: float = self._hyperparams['wa_ang']
         # mapping of the enabled motion axis to the indices
         self._lin_motion_axis: Dict[bool, List[int]] = {
-            MotionAxis.ENABLED: [], 
+            MotionAxis.ENABLED: [],
             MotionAxis.DISABLED: [],
             }
         for axis, mode in enumerate(self._hyperparams['linear_enabled_motion_axis']):

@@ -3,7 +3,6 @@
 # mypy
 from typing import Dict, Any
 
-from gym_chargepal.utility.constants import WorldFrame
 
 CONTROLLER: Dict[str, Any] = {}
 
@@ -12,7 +11,7 @@ TCP_POSITION_CONTROLLER = {
     'wa_ang': 1.0,  # action scaling in angular directions [rad]
     'linear_enabled_motion_axis': (True, True, True),
     'angular_enabled_motion_axis': (True, True, True),
-    # absolute default postitions for disabled motion directions.
+    # absolute default positions for disabled motion directions.
     'plug_lin_config': None,
     'plug_ang_config': None,
 }

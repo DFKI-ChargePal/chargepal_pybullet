@@ -110,8 +110,6 @@ class WorldPegInHole(World):
                 jointIndex=self.ft_sensor_joint_idx,
                 enableSensor=True
                 )
-            # notify all references about the changes
-            self.notify_bullet_obs()
 
         # reset joint configuration
         if joint_conf is None:

@@ -31,7 +31,7 @@ class TcpPositionController(Controller):
         config.update(hyperparams)
         Controller.__init__(self, config)
         # object references
-        self._plug_sensor = plug_sensor
+        self.plug_sensor = plug_sensor
         self._ik_solver = ik_solver
         self._controller_interface = controller_interface
         # constants
@@ -75,8 +75,8 @@ class TcpPositionController(Controller):
         action[self._lin_action_ids] *= self._wa_lin
         action[self._ang_action_ids] *= self._wa_ang
         # Get current pose
-        plug_lin_pos = np.array(self._plug_sensor.get_pos())
-        plug_ang_pos = np.array(p.getEulerFromQuaternion(self._plug_sensor.get_ori()))
+        plug_lin_pos = np.array(self.plug_sensor.get_pos())
+        plug_ang_pos = np.array(p.getEulerFromQuaternion(self.plug_sensor.get_ori()))
         # Increment pose by action
         plug_lin_pos[self._lin_motion_axis[MotionAxis.ENABLED]] += action[self._lin_action_ids]
         plug_ang_pos[self._ang_motion_axis[MotionAxis.ENABLED]] += action[self._ang_action_ids]

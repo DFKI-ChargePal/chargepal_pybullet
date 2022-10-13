@@ -2,7 +2,6 @@
 # global
 import copy
 import numpy as np
-import pybullet as p
 
 # local
 from gym_chargepal.eval.config import EVAL_DIST
@@ -42,21 +41,19 @@ class EvalDistance:
         points: List[List[float]] = []
         points.append(list(pos))  # first spatial point is just the origin of the pose
         # get second point as extension of the x-axis
-        p2, o2 = p.multiplyTransforms(
+        p2, o2 = self.world.bullet_client.multiplyTransforms(
             positionA=pos,
             orientationA=ori,
             positionB=(dist, 0.0, 0.0),
-            orientationB=(0.0, 0.0, 0.0, 1.0), # no rotation
-            physicsClientId=self.world.physics_client_id
+            orientationB=(0.0, 0.0, 0.0, 1.0)  # no rotation
         )
         points.append(list(p2))
         # get third point as extension of the y-axis
-        p3, o3 = p.multiplyTransforms(
+        p3, o3 = self.world.bullet_client.multiplyTransforms(
             positionA=pos,
             orientationA=ori,
             positionB=(0.0, dist, 0.0),
-            orientationB=(0.0, 0.0, 0.0, 1.0), # no rotation
-            physicsClientId=self.world.physics_client_id
+            orientationB=(0.0, 0.0, 0.0, 1.0)  # no rotation
         )
         points.append(list(p3))
         return np.array(points, dtype=np.float32)
