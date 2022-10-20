@@ -2,10 +2,8 @@
 # global
 import abc
 import gym
-import copy
 import numpy as np
 from dataclasses import dataclass
-from numpy.random import RandomState
 
 # local
 from gym_chargepal.utility.tf import Quaternion, Translation, Pose, RndPoseGenerator

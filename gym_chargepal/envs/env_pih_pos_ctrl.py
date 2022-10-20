@@ -9,12 +9,10 @@ from gym_chargepal.worlds.world_pih import WorldPegInHole
 from gym_chargepal.bullet.ik_solver import IKSolver
 from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotorControl
 from gym_chargepal.sensors.sensor_plug import PlugSensor
-from gym_chargepal.sensors.sensor_virtual_plug import VirtualPlugSensor
 from gym_chargepal.sensors.sensor_target_adpstd import TargetSensor
-from gym_chargepal.sensors.sensor_virtual_adpstd import VirtualAdapterStationSensor
 from gym_chargepal.controllers.controller_tcp_pos import TcpPositionController
-from gym_chargepal.eval.eval_ptp_dist import EvalDistancePtP
-from gym_chargepal.utility.tf import Quaternion
+from gym_chargepal.reward.reward_dist import DistanceReward
+from gym_chargepal.utility.tf import Quaternion, Translation, Pose
 
 # mypy
 from numpy import typing as npt
@@ -31,15 +29,13 @@ class EnvironmentTcpPositionCtrlPiH(Environment):
         
         # extract component hyperparameter from kwargs
         extract_config: Callable[[str], Dict[str, Any]] = lambda name: {} if name not in kwargs else kwargs[name]
-        config_eval = extract_config('config_eval')
+        config_reward = extract_config('config_reward')
         config_world = extract_config('config_world')
         config_ik_solver = extract_config('config_ik_solver')
         config_control_interface = extract_config('config_control_interface')
         config_low_level_control = extract_config('config_low_level_control')
-        config_plug_sensor = {} if 'config_plug_sensor' not in kwargs else kwargs['config_plug_sensor']
-        config_plug_ref_sensor = {} if 'config_plug_ref_sensor' not in kwargs else kwargs['config_plug_ref_sensor']
-        config_target_sensor = {} if 'config_target_sensor' not in kwargs else kwargs['config_target_sensor']
-        config_target_ref_sensor = {} if 'config_target_ref_sensor' not in kwargs else kwargs['config_target_ref_sensor']
+        config_plug_sensor = extract_config('config_plug_sensor')
+        config_target_sensor = extract_config('config_target_sensor')
 
         # start configuration in world coordinates
         self.x0_WP: Tuple[float, ...] = tuple(self.cfg.target_config.pos.as_array() + self.cfg.start_config.pos.as_array())
@@ -61,21 +57,14 @@ class EnvironmentTcpPositionCtrlPiH(Environment):
         self.ik_solver = IKSolver(config_ik_solver, self.world)
         self.control_interface = JointPositionMotorControl(config_control_interface, self.world)
         self.plug_sensor = PlugSensor(config_plug_sensor, self.world)
-        self.plug_ref_sensor = VirtualPlugSensor(config_plug_ref_sensor, self.world)
         self.target_sensor = TargetSensor(config_target_sensor, self.world)
-        self.target_ref_sensor = VirtualAdapterStationSensor(config_target_ref_sensor, self.world)
         self._low_level_control = TcpPositionController(
             config_low_level_control,
             self.ik_solver,
             self.control_interface,
             self.plug_sensor
         )
-        self.eval = EvalDistancePtP(
-            config_eval, 
-            self.clock, 
-            self.target_ref_sensor, 
-            self.plug_ref_sensor
-        )
+        self.reward = DistanceReward(config_reward, self.clock)
 
     def reset(self) -> npt.NDArray[np.float32]:
         # reset environment
@@ -114,12 +103,18 @@ class EnvironmentTcpPositionCtrlPiH(Environment):
         # update states
         self.update_sensors()
         obs = self.get_obs()
-
         # evaluate environment
         done = self.done
-        reward = self.eval.eval_reward()
+        X_tcp = Pose(
+            Translation(*self.plug_sensor.get_pos()), 
+            Quaternion(*(self.plug_sensor.get_ori()) + ('xyzw',))
+            )
+        X_tgt = Pose(
+            Translation(*self.target_sensor.get_pos()),
+            Quaternion(*(self.target_sensor.get_ori()) + ('xyzw',))
+            )
+        reward = self.reward.compute(X_tcp, X_tgt, done)
         info = self.compose_info()
-        
         return obs, reward, done, info
 
     def render(self, mode: str = "human") -> None:
@@ -132,9 +127,7 @@ class EnvironmentTcpPositionCtrlPiH(Environment):
     def update_sensors(self, target_sensor: bool=False) -> None:
         if target_sensor:
             self.target_sensor.update()
-            self.target_ref_sensor.update()
         self.plug_sensor.update()
-        self.plug_ref_sensor.update()
 
     def get_obs(self) -> npt.NDArray[np.float32]:
         tgt_pos = np.array(self.target_sensor.get_pos())

@@ -11,8 +11,8 @@ from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotor
 from gym_chargepal.sensors.sensor_plug import PlugSensor
 from gym_chargepal.sensors.sensor_socket import SocketSensor
 from gym_chargepal.controllers.controller_tcp_pos import TcpPositionController
-from gym_chargepal.eval.eval_dist import EvalDistance
-from gym_chargepal.utility.tf import Quaternion
+from gym_chargepal.reward.reward_dist import DistanceReward
+from gym_chargepal.utility.tf import Quaternion, Translation, Pose
 
 # mypy
 import numpy.typing as npt
@@ -29,7 +29,7 @@ class EnvironmentTcpPositionCtrlTdt(Environment):
 
         # extract component hyperparameter from kwargs
         extract_config: Callable[[str], Dict[str, Any]] = lambda name: {} if name not in kwargs else kwargs[name]
-        config_eval = extract_config('config_eval')
+        config_reward = extract_config('config_reward')
         config_world = extract_config('config_world')
         config_ik_solver = extract_config('config_ik_solver')
         config_control_interface = extract_config('config_control_interface')
@@ -61,7 +61,7 @@ class EnvironmentTcpPositionCtrlTdt(Environment):
             self.control_interface,
             self.plug_sensor
         )
-        self.eval = EvalDistance(config_eval, self.clock)
+        self.reward = DistanceReward(config_reward, self.clock)
 
     def reset(self) -> npt.NDArray[np.float32]:
         # reset environment
@@ -96,12 +96,15 @@ class EnvironmentTcpPositionCtrlTdt(Environment):
         obs = self.get_obs()
         # evaluate environment
         done = self.done
-        reward = self.eval.calc_reward(
-            pos_ee=self.plug_sensor.get_pos(),
-            ori_ee=self.plug_sensor.get_ori(),
-            pos_tg=self.socket_sensor.get_pos(),
-            ori_tg=self.socket_sensor.get_ori()
-        )
+        X_tcp = Pose(
+            Translation(*self.plug_sensor.get_pos()), 
+            Quaternion(*(self.plug_sensor.get_ori()) + ('xyzw',))
+            )
+        X_tgt = Pose(
+            Translation(*self.socket_sensor.get_pos()),
+            Quaternion(*(self.socket_sensor.get_ori()) + ('xyzw',))
+            )
+        reward = self.reward.compute(X_tcp, X_tgt, done)
         info = self.compose_info()
         return obs, reward, done, info
 

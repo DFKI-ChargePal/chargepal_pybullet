@@ -15,8 +15,8 @@ from gym_chargepal.sensors.sensor_target_ptp import TargetSensor
 from gym_chargepal.sensors.sensor_virtual_plug import VirtualPlugSensor
 from gym_chargepal.sensors.sensor_virtual_ptp import VirtualTargetSensor
 from gym_chargepal.controllers.controller_tcp_vel import TcpVelocityController
-from gym_chargepal.eval.eval_ptp_speed import EvalSpeedPtP
-from gym_chargepal.utility.tf import Quaternion
+from gym_chargepal.reward.reward_dist_speed import DistanceSpeedReward
+from gym_chargepal.utility.tf import Quaternion, Translation, Twist, Pose
 
 # mypy
 from numpy import typing as npt
@@ -33,7 +33,7 @@ class EnvironmentTcpVelocityCtrlPtP(Environment):
         
         # extract component hyperparameter from kwargs
         extract_config: Callable[[str], Dict[str, Any]] = lambda name: {} if name not in kwargs else kwargs[name]
-        config_eval = extract_config('config_eval')
+        config_reward = extract_config('config_reward')
         config_world = extract_config('config_world')
         config_jacobian = extract_config('config_jacobian')
         config_ik_solver = extract_config('config_ik_solver')
@@ -41,9 +41,7 @@ class EnvironmentTcpVelocityCtrlPtP(Environment):
         config_low_level_control = extract_config('config_low_level_control')
         config_joint_sensor = extract_config('config_joint_sensor')
         config_plug_sensor = extract_config('config_plug_sensor')
-        config_plug_ref_sensor = extract_config('config_plug_ref_sensor')
         config_target_sensor = extract_config('config_target_sensor')
-        config_target_ref_sensor = extract_config('config_target_ref_sensor')
 
         # start configuration in world coordinates
         self.x0_WP: Tuple[float, ...] = tuple(self.cfg.target_config.pos.as_array() + self.cfg.start_config.pos.as_array())
@@ -70,9 +68,7 @@ class EnvironmentTcpVelocityCtrlPtP(Environment):
         self.control_interface = JointVelocityMotorControl(config_control_interface, self.world)
         self.joint_sensor = JointSensor(config_joint_sensor, self.world)
         self.plug_sensor = PlugSensor(config_plug_sensor, self.world)
-        self.plug_ref_sensor = VirtualPlugSensor(config_plug_ref_sensor, self.world)
         self.target_sensor = TargetSensor(config_target_sensor, self.world)
-        self.target_ref_sensor = VirtualTargetSensor(config_target_ref_sensor, self.world)
         self.low_level_control = TcpVelocityController(
             config_low_level_control,
             self.jacobian, 
@@ -80,12 +76,7 @@ class EnvironmentTcpVelocityCtrlPtP(Environment):
             self.plug_sensor, 
             self.joint_sensor
         )
-        self.eval = EvalSpeedPtP(
-            config_eval,
-            self.clock,
-            self.target_ref_sensor,
-            self.plug_ref_sensor
-        )
+        self.reward = DistanceSpeedReward(config_reward, self.clock)
 
     def reset(self) -> npt.NDArray[np.float32]:
         # reset environment
@@ -124,7 +115,16 @@ class EnvironmentTcpVelocityCtrlPtP(Environment):
 
         # evaluate environment
         done = self.done
-        reward = self.eval.eval_reward()
+        X_tcp = Pose(
+            Translation(*self.plug_sensor.get_pos()), 
+            Quaternion(*(self.plug_sensor.get_ori()) + ('xyzw',))
+            )
+        X_tgt = Pose(
+            Translation(*self.target_sensor.get_pos()),
+            Quaternion(*(self.target_sensor.get_ori()) + ('xyzw',))
+            )
+        V_tcp = Twist(*(self.plug_sensor.get_lin_vel() + self.plug_sensor.get_ang_vel()))
+        reward = self.reward.compute(X_tcp=X_tcp, V_tcp=V_tcp, X_tgt=X_tgt, done=done)
         info = self.compose_info()
 
         return obs, reward, done, info
@@ -139,9 +139,7 @@ class EnvironmentTcpVelocityCtrlPtP(Environment):
     def update_sensors(self, target_sensor: bool=False) -> None:
         if target_sensor:
             self.target_sensor.update()
-            self.target_ref_sensor.update()
         self.plug_sensor.update()
-        self.plug_ref_sensor.update()
         self.joint_sensor.update()
 
     def get_obs(self) -> npt.NDArray[np.float32]:
