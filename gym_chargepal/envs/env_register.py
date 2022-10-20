@@ -4,15 +4,17 @@ import numpy as np
 from gym import spaces
 
 
-# mypy
-from typing import Any, Dict
-
-
+# local
+from gym_chargepal.utility.tf import Euler, Quaternion, Translation, Pose
 # base environments
 from gym_chargepal.envs.env_ptp_pos_ctrl import EnvironmentTcpPositionCtrlPtP
 from gym_chargepal.envs.env_pih_pos_ctrl import EnvironmentTcpPositionCtrlPiH
 from gym_chargepal.envs.env_tdt_pos_ctrl import EnvironmentTcpPositionCtrlTdt
 from gym_chargepal.envs.env_ptp_vel_ctrl import EnvironmentTcpVelocityCtrlPtP
+
+# mypy
+from typing import Any, Dict
+
 
 
 def update_kwargs_dict(kwargs_dict: Dict[str, Any], config_name: str, config_dict: Dict[str, Any]) -> None:
@@ -25,8 +27,13 @@ def update_kwargs_dict(kwargs_dict: Dict[str, Any], config_name: str, config_dic
 
 """ Concrete point-to-point position controlled environments. """
 # Constants
-DEFAULT_PLUG_ANG_POS = (np.pi/2, 0.0, 0.0)
-DEFAULT_TARGET_LIN_POS = (0.0, 0.0, 1.2)
+ROT_PI_2_X = Quaternion()
+ROT_PI_2_X.from_euler_angles(np.pi/2, 0.0, 0.0)
+
+ROT_PI_X = Quaternion()
+ROT_PI_X.from_euler_angles(np.pi, 0.0, 0.0)
+
+DEFAULT_TARGET_POS = Translation(0.0, 0.0, 1.2)
 
 
 # ///////////////////////////////////////////////////// #
@@ -42,11 +49,9 @@ class EnvironmentTcpPositionCtrlPtP1Dof(EnvironmentTcpPositionCtrlPtP):
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(1,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(7,), dtype=np.float32),
         # Target configuration
-        'tgt_config_pos': DEFAULT_TARGET_LIN_POS,
-        'tgt_config_ang': DEFAULT_PLUG_ANG_POS,
-        # Start configuration relative to target configuration
-        'start_config_pos': (0.0, 0.2, 0.0),
-        'start_config_ang': (0.0, 0.0, 0.0),
+        'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
+        # Start configuration relative to target configuration'
+        'start_config': Pose(Translation(0.0, 0.2, 0.0), Quaternion()),
         # Reset variance of the start pose
         'reset_variance': ((0.0, 0.025, 0.0), (0.0, 0.0, 0.0)),
         }
@@ -79,11 +84,10 @@ class EnvironmentTcpPositionCtrlPtP3Dof(EnvironmentTcpPositionCtrlPtP):
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(3,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(7,), dtype=np.float32),
         # Target configuration
-        'tgt_config_pos': DEFAULT_TARGET_LIN_POS,
-        'tgt_config_ang': DEFAULT_PLUG_ANG_POS,
-        # Start configuration relative to target configuration
-        'start_config_pos': (0.0, 0.2, 0.0),
-        'start_config_ang': (0.0, 0.0, 0.0),
+        # Target configuration
+        'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
+        # Start configuration relative to target configuration'
+        'start_config': Pose(Translation(0.0, 0.2, 0.0), Quaternion()),
         # Reset variance of the start pose
         'reset_variance': ((0.01, 0.05, 0.01), (0.0, 0.0, 0.0)),
         }
@@ -116,11 +120,9 @@ class EnvironmentTcpPositionCtrlPtP6Dof(EnvironmentTcpPositionCtrlPtP):
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(7,), dtype=np.float32),
         # Target configuration
-        'tgt_config_pos': DEFAULT_TARGET_LIN_POS,
-        'tgt_config_ang': DEFAULT_PLUG_ANG_POS,
-        # Start configuration relative to target configuration
-        'start_config_pos': (0.0, 0.2, 0.0),
-        'start_config_ang': (0.0, 0.0, 0.0),
+        'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
+        # Start configuration relative to target configuration'
+        'start_config': Pose(Translation(0.0, 0.2, 0.0), Quaternion()),
         # Reset variance of the start pose
         'reset_variance': ((0.05, 0.05, 0.05), (0.1, 0.1, 0.1)),
         }
@@ -152,50 +154,11 @@ class EnvironmentTcpPositionCtrlPiH6Dof(EnvironmentTcpPositionCtrlPiH):
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(7,), dtype=np.float32),
         # Target configuration
-        'tgt_config_pos': DEFAULT_TARGET_LIN_POS,
-        'tgt_config_ang': DEFAULT_PLUG_ANG_POS,
-        # Start configuration relative to target configuration
-        'start_config_pos': (0.0, 0.10, 0.0),
-        'start_config_ang': (0.0, 0.0, 0.0),
+        'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
+        # Start configuration relative to target configuration'
+        'start_config': Pose(Translation(0.0, 0.1, 0.0), Quaternion()),
         # Reset variance of the start pose
         'reset_variance': ((0.01, 0.005, 0.01), (0.05, 0.05, 0.05)),
-        }
-
-    config_world = {
-        'hz_ctrl': 40,
-    }
-
-    # configuration low-level controller
-    config_low_level_control = {
-        'wa_lin': 0.01,  # action scaling in linear directions [m]
-        'wa_ang': 0.01 * np.pi,  # action scaling in angular directions [rad]
-        }
-
-    def __init__(self, **kwargs: Any):
-        # Update configuration
-        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_env', config_dict=self.config_env)
-        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_world', config_dict=self.config_world)
-        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_low_level_control', config_dict=self.config_low_level_control)
-        # Create environment
-        super().__init__(**kwargs)
-
-
-class EnvironmentTcpPositionCtrlTdt6DofV0(EnvironmentTcpPositionCtrlTdt):
-
-    # configuration environment
-    config_env = {
-        'T': 200,
-        'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
-        'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(7,), dtype=np.float32),
-        # Target configuration
-        'tgt_config_pos': (0.5, 0.8, 0.0),
-        'tgt_config_ang': (np.pi, 0.0, 0.0),
-        # Start configuration relative to target configuration
-        'start_config_pos': (0.0, 0.0, 0.02+0.095),
-        'start_config_ang': (0.0, 0.0, 0.0),
-        # Reset variance of the start pose
-        'reset_variance': ((0.01, 0.01, 0.001), (0.05, 0.05, 0.05)),
-        # 'reset_variance': ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
         }
 
     config_world = {
@@ -225,11 +188,9 @@ class EnvironmentTcpPositionCtrlPiH6DofV1(EnvironmentTcpPositionCtrlPiH):
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(7,), dtype=np.float32),
         # Target configuration
-        'tgt_config_pos': DEFAULT_TARGET_LIN_POS,
-        'tgt_config_ang': DEFAULT_PLUG_ANG_POS,
-        # Start configuration relative to target configuration
-        'start_config_pos': (0.0, 0.075, 0.0),
-        'start_config_ang': (0.0, 0.0, 0.0),
+        'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
+        # Start configuration relative to target configuration'
+        'start_config': Pose(Translation(0.0, 0.075, 0.0), Quaternion()),
         # Reset variance of the start pose
         'reset_variance': ((0.01, 0.005, 0.01), (0.05, 0.05, 0.05)),
         # 'reset_variance': ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
@@ -267,11 +228,9 @@ class EnvironmentTcpPositionCtrlPiH6DofV2(EnvironmentTcpPositionCtrlPiH):
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(7,), dtype=np.float32),
         # Target configuration
-        'tgt_config_pos': DEFAULT_TARGET_LIN_POS,
-        'tgt_config_ang': DEFAULT_PLUG_ANG_POS,
-        # Start configuration relative to target configuration
-        'start_config_pos': (0.0, 0.075, 0.0),
-        'start_config_ang': (0.0, 0.0, 0.0),
+        'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
+        # Start configuration relative to target configuration'
+        'start_config': Pose(Translation(0.0, 0.075, 0.0), Quaternion()),
         # Reset variance of the start pose
         'reset_variance': ((0.01, 0.005, 0.01), (0.05, 0.05, 0.05)),
         # 'reset_variance': ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
@@ -282,6 +241,41 @@ class EnvironmentTcpPositionCtrlPiH6DofV2(EnvironmentTcpPositionCtrlPiH):
         'robot_urdf': f'cpm_fix_rod_{rod_diameter}.urdf',
         'adapter_station_urdf': 'adapter_station_octa_socket.urdf',
         'adpstd_start_pos': [0.0, -0.1/2.0, 0.0],
+    }
+
+    # configuration low-level controller
+    config_low_level_control = {
+        'wa_lin': 0.01,  # action scaling in linear directions [m]
+        'wa_ang': 0.01 * np.pi,  # action scaling in angular directions [rad]
+        }
+
+    def __init__(self, **kwargs: Any):
+        # Update configuration
+        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_env', config_dict=self.config_env)
+        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_world', config_dict=self.config_world)
+        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_low_level_control', config_dict=self.config_low_level_control)
+        # Create environment
+        super().__init__(**kwargs)
+
+
+class EnvironmentTcpPositionCtrlTdt6DofV0(EnvironmentTcpPositionCtrlTdt):
+
+    # configuration environment
+    config_env = {
+        'T': 200,
+        'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
+        'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(7,), dtype=np.float32),
+        # Target configuration
+        'target_config': Pose(Translation(0.5, 0.8, 0.0), ROT_PI_X),
+        # Start configuration relative to target configuration
+        'start_config': Pose(Translation(0.0, 0.0, 0.02+0.095), Quaternion()),
+        # Reset variance of the start pose
+        'reset_variance': ((0.01, 0.01, 0.001), (0.05, 0.05, 0.05)),
+        # 'reset_variance': ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
+        }
+
+    config_world = {
+        'hz_ctrl': 40,
     }
 
     # configuration low-level controller
@@ -312,11 +306,9 @@ class EnvironmentTcpVelocityCtrlPtP1Dof(EnvironmentTcpVelocityCtrlPtP):
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(1,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(13,), dtype=np.float32),
         # Target configuration
-        'tgt_config_pos': DEFAULT_TARGET_LIN_POS,
-        'tgt_config_ang': DEFAULT_PLUG_ANG_POS,
-        # Start configuration relative to target configuration
-        'start_config_pos': (0.0, 0.2, 0.0),
-        'start_config_ang': (0.0, 0.0, 0.0),
+        'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
+        # Start configuration relative to target configuration'
+        'start_config': Pose(Translation(0.0, 0.2, 0.0), Quaternion()),
         # Reset variance of the start pose
         'reset_variance': ((0.0, 0.05, 0.0), (0.0, 0.0, 0.0)),
         }
@@ -349,11 +341,9 @@ class EnvironmentTcpVelocityCtrlPtP3Dof(EnvironmentTcpVelocityCtrlPtP):
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(3,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(13,), dtype=np.float32),
         # Target configuration
-        'tgt_config_pos': DEFAULT_TARGET_LIN_POS,
-        'tgt_config_ang': DEFAULT_PLUG_ANG_POS,
-        # Start configuration relative to target configuration
-        'start_config_pos': (0.0, 0.2, 0.0),
-        'start_config_ang': (0.0, 0.0, 0.0),
+        'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
+        # Start configuration relative to target configuration'
+        'start_config': Pose(Translation(0.0, 0.2, 0.0), Quaternion()),
         # Reset variance of the start pose
         'reset_variance': ((0.01, 0.05, 0.01), (0.0, 0.0, 0.0)),
         }
@@ -386,11 +376,9 @@ class EnvironmentTcpVelocityCtrlPtP6Dof(EnvironmentTcpVelocityCtrlPtP):
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(13,), dtype=np.float32),
         # Target configuration
-        'tgt_config_pos': DEFAULT_TARGET_LIN_POS,
-        'tgt_config_ang': DEFAULT_PLUG_ANG_POS,
-        # Start configuration relative to target configuration
-        'start_config_pos': (0.0, 0.2, 0.0),
-        'start_config_ang': (0.0, 0.0, 0.0),
+        'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
+        # Start configuration relative to target configuration'
+        'start_config': Pose(Translation(0.0, 0.2, 0.0), Quaternion()),
         # Reset variance of the start pose
         'reset_variance': ((0.05, 0.05, 0.05), (0.1, 0.1, 0.1)),
         }

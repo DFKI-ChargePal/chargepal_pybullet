@@ -1,5 +1,7 @@
 # global
 import numpy as np
+import pybullet as p
+import quaternionic as quat
 
 # local
 from gym_chargepal.envs.env import Environment
@@ -10,6 +12,7 @@ from gym_chargepal.sensors.sensor_plug import PlugSensor
 from gym_chargepal.sensors.sensor_socket import SocketSensor
 from gym_chargepal.controllers.controller_tcp_pos import TcpPositionController
 from gym_chargepal.eval.eval_dist import EvalDistance
+from gym_chargepal.utility.tf import Quaternion
 
 # mypy
 import numpy.typing as npt
@@ -35,18 +38,14 @@ class EnvironmentTcpPositionCtrlTdt(Environment):
         config_socket_sensor = {} if 'config_socket_sensor' not in kwargs else kwargs['config_socket_sensor']
 
         # start configuration in world coordinates
-        self.pos_world_0 = tuple(
-            [sum(ep) for ep in zip(self.hyperparams['tgt_config_pos'], self.hyperparams['start_config_pos'])]
-            )
-        self.ang_world_0 = tuple(
-            [sum(ep) for ep in zip(self.hyperparams['tgt_config_ang'], self.hyperparams['start_config_ang'])]
-            )
-        # reset variance
-        self.pos_var_0 = self.hyperparams['reset_variance'][0]
-        self.ang_var_0 = self.hyperparams['reset_variance'][1]
+        self.x0_WP: Tuple[float, ...] = tuple(self.cfg.target_config.pos.as_array() + self.cfg.start_config.pos.as_array())
+        q0_SP= self.cfg.start_config.ori.as_quaternionic()
+        q0_WS = self.cfg.target_config.ori.as_quaternionic()
+        q0_WP = tuple((q0_WS * q0_SP).ndarray)
+        self.q0_WP = Quaternion(*q0_WP)
         # resolve cross references
-        config_low_level_control['plug_lin_config'] = self.pos_world_0
-        config_low_level_control['plug_ang_config'] = self.ang_world_0
+        config_low_level_control['plug_lin_config'] = self.x0_WP
+        config_low_level_control['plug_ang_config'] = p.getEulerFromQuaternion(self.q0_WP.as_tuple(order='xyzw'))
         # render option can be enabled with render() function
         self.is_render = False
         self.toggle_render_mode = False
@@ -63,9 +62,6 @@ class EnvironmentTcpPositionCtrlTdt(Environment):
             self.plug_sensor
         )
         self.eval = EvalDistance(config_eval, self.clock)
-        # logging
-        self.error_pos = np.inf
-        self.error_ang = np.inf
 
     def reset(self) -> npt.NDArray[np.float32]:
         # reset environment
@@ -76,10 +72,12 @@ class EnvironmentTcpPositionCtrlTdt(Environment):
         # reset robot by default joint configuration
         self.world.reset(render=self.is_render)
         # get start joint configuration by inverse kinematic
-        pos_0 = tuple(np.array(self.pos_world_0) + np.array(self.pos_var_0) * self.rs.randn(3))  # type: ignore
-        ang_0 = tuple(np.array(self.ang_world_0) + np.array(self.ang_var_0) * self.rs.randn(3))  # type: ignore
-        ori_0 = self.world.bullet_client.getQuaternionFromEuler(ang_0)
-        joint_config_0 = self.ik_solver.solve((pos_0, ori_0))
+        mean_q0_WP = self.q0_WP.as_quaternionic()
+        cov_q0_WP = quat.array(self.reset_rnd_gen.rand_quat(order='wxyz'))
+        q0_WP = tuple((mean_q0_WP * cov_q0_WP).ndarray)
+        ori = Quaternion(*q0_WP).as_tuple(order='xyzw')
+        pos: Tuple[float, ...] = tuple(self.x0_WP + self.reset_rnd_gen.rand_linear())
+        joint_config_0 = self.ik_solver.solve((pos, ori))
         # reset robot again
         self.world.reset(joint_config_0)
         # update sensors states
@@ -97,7 +95,7 @@ class EnvironmentTcpPositionCtrlTdt(Environment):
         self.update_sensors()
         obs = self.get_obs()
         # evaluate environment
-        done = self.eval.is_done()
+        done = self.done
         reward = self.eval.calc_reward(
             pos_ee=self.plug_sensor.get_pos(),
             ori_ee=self.plug_sensor.get_ori(),
@@ -139,6 +137,6 @@ class EnvironmentTcpPositionCtrlTdt(Environment):
         info = {
             'error_pos': self.error_pos,
             'error_ang': self.error_ang,
-            'solved': self.eval.is_solved(self.error_pos, self.error_ang),
+            'solved': self.solved,
         }
         return info

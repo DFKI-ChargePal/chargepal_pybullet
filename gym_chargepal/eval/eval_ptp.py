@@ -15,7 +15,7 @@ from typing import (
 
 
 class EvalPtP:
-    """ Evalation parent class """
+    """ Evaluation parent class """
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, hyperparams: Dict[str, Any], env_clock: EnvironmentClock):
@@ -25,7 +25,7 @@ class EvalPtP:
         self.hyperparams = config
 
     def eval_done(self) -> bool:
-        return self.clock.is_at_time_horizon()
+        return self.clock.check_for_time_horizon()
 
     def eval_solve(self, scalar_pos_error: float, scalar_ang_err: float) -> bool:
         """ Check if error is small enough """

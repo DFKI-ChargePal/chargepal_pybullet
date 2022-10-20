@@ -23,7 +23,7 @@ class EvalDistance:
         self.hyperparams = config
 
     def is_done(self) -> bool:
-        return self.clock.is_at_time_horizon()
+        return self.clock.check_for_time_horizon()
 
     def is_solved(self, scalar_pos_error: float, scalar_ang_err: float) -> bool:
         """ Check if error is small enough """

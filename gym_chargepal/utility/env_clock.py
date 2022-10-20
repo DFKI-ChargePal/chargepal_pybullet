@@ -14,5 +14,5 @@ class EnvironmentClock:
         self.t = 0
         self.fin = False
 
-    def is_at_time_horizon(self) -> bool:
+    def check_for_time_horizon(self) -> bool:
         return self.fin
