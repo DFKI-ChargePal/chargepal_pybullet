@@ -30,7 +30,6 @@ class WorldPoint2Point(World):
         self.target_id = -1
 
         self.ur_joint_idx_dict: Dict[str, int] = {}
-        self.plug_ref_frame_idx_dict: Dict[str, int] = {}
         self.plug_reference_frame_idx: int = -1
 
         self.ur_joint_start_config: Dict[str, float] = self._hyperparams['ur_joint_start_config']
@@ -54,11 +53,6 @@ class WorldPoint2Point(World):
             self.ur_joint_idx_dict = create_joint_index_dict(
                 body_id=self.robot_id,
                 joint_names=self._hyperparams['ur_joint_names'],
-                bullet_client=self.bullet_client
-                )
-            self.plug_ref_frame_idx_dict = create_link_index_dict(
-                body_id=self.robot_id,
-                link_names=self._hyperparams['plug_ref_frame_names'],
                 bullet_client=self.bullet_client
                 )
 

@@ -32,18 +32,6 @@ ur_link_names = [
     'wrist_3_link',
 ]
 
-plug_ref_frame_names = [
-    'virt_tool_frame_x',
-    'virt_tool_frame_y',
-    'virt_tool_frame_z',
-]
-
-adpstd_ref_frame_names = [
-    'virt_tgt_frame_x',
-    'virt_tgt_frame_y',
-    'virt_tgt_frame_z',
-]
-
 WORLD = {
     'hz_sim': 240,  # frequency physic engine !not recommended to changing this value!
     'hz_ctrl': 60,
@@ -59,7 +47,6 @@ WORLD_PTP = {
     'robot_start_pos': [0.0, 1.15, 0.0],
     'robot_start_ori': p.getQuaternionFromEuler([0.0, 0.0, 0.0]),
     'plug_reference_frame': 'plug_reference_frame',
-    'plug_ref_frame_names': plug_ref_frame_names,
     'target_pos': None,
     'target_ori': None,
 }
@@ -74,8 +61,6 @@ WORLD_PIH = {
     'ft_sensor_joint': 'mounting_to_wrench',
     'plug_reference_frame': 'plug_reference_frame',
     'adpstd_reference_frame': 'target_reference_frame',
-    'plug_ref_frame_names': plug_ref_frame_names,
-    'adpstd_ref_frame_names': adpstd_ref_frame_names,
 }
 
 WORLD_TDT = {

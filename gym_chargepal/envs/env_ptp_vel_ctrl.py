@@ -12,8 +12,6 @@ from gym_chargepal.bullet.joint_velocity_motor_control import JointVelocityMotor
 from gym_chargepal.sensors.sensor_plug import PlugSensor
 from gym_chargepal.sensors.sensor_joints import JointSensor
 from gym_chargepal.sensors.sensor_target_ptp import TargetSensor
-from gym_chargepal.sensors.sensor_virtual_plug import VirtualPlugSensor
-from gym_chargepal.sensors.sensor_virtual_ptp import VirtualTargetSensor
 from gym_chargepal.controllers.controller_tcp_vel import TcpVelocityController
 from gym_chargepal.reward.reward_dist_speed import DistanceSpeedReward
 from gym_chargepal.utility.tf import Quaternion, Translation, Twist, Pose
@@ -21,7 +19,6 @@ from gym_chargepal.utility.tf import Quaternion, Translation, Twist, Pose
 # mypy
 from numpy import typing as npt
 from typing import Any, Callable, Dict, Tuple
-
 
 
 class EnvironmentTcpVelocityCtrlPtP(Environment):

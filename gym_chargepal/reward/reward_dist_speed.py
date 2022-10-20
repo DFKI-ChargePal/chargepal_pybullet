@@ -18,7 +18,7 @@ class DistanceSpeedRewardCfg(ConfigHandler):
     spatial_pt_distance: float = 1.0
     dist_weight: float = 1.0
     dist_bound: float = 0.1
-    speed_weight: float = 0.1
+    speed_weight: float = 0.01
     speed_bound: float = 0.001
     exp_weight: float = 0.4
 

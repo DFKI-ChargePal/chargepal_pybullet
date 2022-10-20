@@ -32,8 +32,6 @@ class WorldPegInHole(World):
 
         # links and joints
         self.ur_joint_idx_dict: Dict[str, int] = {}
-        self.plug_ref_frame_idx_dict: Dict[str, int] = {}
-        self.adpstd_ref_frame_idx_dict: Dict[str, int] = {}
         self.ft_sensor_joint_idx: int = -1
         self.plug_reference_frame_idx: int = -1
         self.adpstd_reference_frame_idx: int = -1
@@ -66,17 +64,6 @@ class WorldPegInHole(World):
                 joint_names=self._hyperparams['ur_joint_names'],
                 bullet_client=self.bullet_client
                 )
-            self.plug_ref_frame_idx_dict = create_link_index_dict(
-                body_id=self.robot_id,
-                link_names=self._hyperparams['plug_ref_frame_names'],
-                bullet_client=self.bullet_client
-                )
-            self.adpstd_ref_frame_idx_dict = create_link_index_dict(
-                body_id=self.adpstd_id,
-                link_names=self._hyperparams['adpstd_ref_frame_names'],
-                bullet_client=self.bullet_client
-                )
-
 
     def reset(self, joint_conf: Union[None, Tuple[float, ...]] = None, render: bool = False) -> None:
 
