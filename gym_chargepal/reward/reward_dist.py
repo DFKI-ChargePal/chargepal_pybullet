@@ -5,8 +5,8 @@ from dataclasses import dataclass
 
 # local
 from gym_chargepal.utility.tf import Pose
-from gym_chargepal.utility.cfg_handler import ConfigHandler
 from gym_chargepal.utility.env_clock import EnvironmentClock
+from gym_chargepal.reward.reward import RewardCfg, Reward
 
 # mypy
 from numpy import typing as npt
@@ -14,20 +14,20 @@ from typing import Any, Dict
 
 
 @dataclass
-class DistanceRewardCfg(ConfigHandler):
+class DistanceRewardCfg(RewardCfg):
     spatial_pt_distance: float = 1.0
     dist_weight: float = 1.0
     exp_weight: float = 0.4
 
 
-class DistanceReward:
+class DistanceReward(Reward):
     """ Evaluation class for spatial distances. """
     def __init__(self, config: Dict[str, Any], env_clock: EnvironmentClock):
+        # Call super class
+        super().__init__(config=config, env_clock=env_clock)
         # Create configuration and override values
-        self.cfg = DistanceRewardCfg()
+        self.cfg: DistanceRewardCfg = DistanceRewardCfg()
         self.cfg.update(**config)
-        # Save references
-        self.clock = env_clock
 
     def compute(self, X_tcp: Pose, X_tgt: Pose, done: bool) -> float:
         """ Compute state action reward """
