@@ -1,7 +1,6 @@
 """ This file defines the reward base class. """
 # global
 import abc
-import copy
 from dataclasses import dataclass
 
 # local

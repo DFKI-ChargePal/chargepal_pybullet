@@ -1,21 +1,27 @@
 """ This file defines the sensors base class. """
+# global
 import abc
-import copy
+from dataclasses import dataclass
+
+# local
+from gym_chargepal.utility.cfg_handler import ConfigHandler
 
 # mypy
 from typing import Dict, Any
 
-from gym_chargepal.sensors.config import SENSOR
+
+@dataclass
+class SensorCfg(ConfigHandler):
+    pass
 
 
-class Sensor(object):
+class Sensor(metaclass=abc.ABCMeta):
     """ Sensor superclass. """
-    __metaclass__ = abc.ABCMeta
-
-    def __init__(self, hyperparams: Dict[str, Any]):
-        config: Dict[str, Any] = copy.deepcopy(SENSOR)
-        config.update(hyperparams)
-        self._hyperparams = config
+    
+    def __init__(self, config: Dict[str, Any]):
+        # Create configuration and override values
+        self.cfg = SensorCfg()
+        self.cfg.update(**config)
 
     @abc.abstractmethod
     def update(self) -> None:

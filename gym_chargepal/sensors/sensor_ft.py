@@ -1,27 +1,38 @@
 """ This file defines the force torque sensors class. """
+# global
 import logging
-import copy
+from dataclasses import dataclass
+
+# local
+from gym_chargepal.bullet.config import BulletJointState
+from gym_chargepal.worlds.world_pih import WorldPegInHole
+from gym_chargepal.sensors.sensor import SensorCfg, Sensor
 
 # mypy
 from typing import Dict, Any, Tuple, Optional
-from gym_chargepal.worlds.world_pih import WorldPegInHole
 
-from gym_chargepal.sensors.sensor import Sensor
-from gym_chargepal.sensors.config import FT_SENSOR
-from gym_chargepal.bullet.config import BulletJointState
 
 LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
+class FTSensorCfg(SensorCfg):
+    sensor_id: str = 'ft_sensor'
+    force_id: str = 'f'
+    moment_id: str = 'm'
+
+
 class FTSensor(Sensor):
     """ Force Torque Sensor. """
-    def __init__(self, hyperparams: Dict[str, Any], world: WorldPegInHole):
-        config: Dict[str, Any] = copy.deepcopy(FT_SENSOR)
-        config.update(hyperparams)
-        Sensor.__init__(self, config)
-        # params
+    def __init__(self, config: Dict[str, Any], world: WorldPegInHole):
+        # Call super class
+        super().__init__(config=config)
+        # Create configuration and override values
+        self.cfg: FTSensorCfg = FTSensorCfg()
+        self.cfg.update(**config)
+        # Safe references
         self.world = world
-        # intern sensors state
+        # Intern sensors state
         self.sensor_state: Optional[Tuple[Tuple[float, ...], ...]] = None
 
     def update(self) -> None:

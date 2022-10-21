@@ -1,27 +1,35 @@
 """ This file defines the sensors target class. """
 # global
-import copy
 import logging
+from dataclasses import dataclass
 
 # local
-from gym_chargepal.sensors.sensor import Sensor
-from gym_chargepal.sensors.config import TARGET_SENSOR
+from gym_chargepal.sensors.sensor import SensorCfg, Sensor
+from gym_chargepal.worlds.world_ptp import WorldPoint2Point
 
 # mypy
 from typing import Dict, Any, Tuple
-from gym_chargepal.worlds.world_ptp import WorldPoint2Point
 
 
 LOGGER = logging.getLogger(__name__)
 
 
-class TargetSensor(Sensor):
+@dataclass
+class VirtTgtSensorCfg(SensorCfg):
+    sensor_id: str = 'virt_tgt_sensor'
+    pos_id: str = 'x'
+    ori_id: str = 'q'
+
+
+class VirtTgtSensor(Sensor):
     """ Sensor of the target frame. """
-    def __init__(self, hyperparams: Dict[str, Any], world: WorldPoint2Point):
-        config = copy.deepcopy(TARGET_SENSOR)
-        config.update(hyperparams)
-        Sensor.__init__(self, config)
-        # params
+    def __init__(self, config: Dict[str, Any], world: WorldPoint2Point):
+        # Call super class
+        super().__init__(config=config)
+        # Create configuration and override values
+        self.cfg: VirtTgtSensorCfg = VirtTgtSensorCfg()
+        self.cfg.update(**config)
+        # Safe references
         self.world = world
         # intern sensors state
         self.sensor_state = (self.world.target_pos, self.world.target_ori)

@@ -1,27 +1,38 @@
 """ This file defines the sensors joint class. """
+# global
 import logging
-import copy
+from dataclasses import dataclass
+
+# local
+from gym_chargepal.bullet.config import BulletJointState
+from gym_chargepal.worlds.world_pih import WorldPegInHole
+from gym_chargepal.sensors.sensor import SensorCfg, Sensor
+from gym_chargepal.worlds.world_ptp import WorldPoint2Point
 
 # mypy
 from typing import Dict, Any, List, Tuple, Union, Optional
-from gym_chargepal.worlds.world_ptp import WorldPoint2Point
-from gym_chargepal.worlds.world_pih import WorldPegInHole
-
-from gym_chargepal.sensors.sensor import Sensor
-from gym_chargepal.sensors.config import JOINT_SENSOR
-from gym_chargepal.bullet.config import BulletJointState
 
 
 LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
+class JointSensorCfg(SensorCfg):
+    sensor_id: str = 'joint_sensor'
+    pos_id: str = 'joint_pos'
+    vel_id: str = 'joint_vel'
+    acc_id: str = 'joint_acc'
+
+
 class JointSensor(Sensor):
     """ Sensor of the arm joints. """
-    def __init__(self, hyperparams: Dict[str, Any], world: Union[WorldPoint2Point, WorldPegInHole]):
-        config: Dict[str, Any] = copy.deepcopy(JOINT_SENSOR)
-        config.update(hyperparams)
-        Sensor.__init__(self, config)
-        # params
+    def __init__(self, config: Dict[str, Any], world: Union[WorldPoint2Point, WorldPegInHole]):
+        # Call super class
+        super().__init__(config=config)
+        # Create configuration and override values
+        self.cfg: JointSensorCfg = JointSensorCfg()
+        self.cfg.update(**config)
+        # Safe references
         self.world = world
         # intern sensors state
         self._sensor_state: Optional[Tuple[Tuple[float, ...], ...]] = None

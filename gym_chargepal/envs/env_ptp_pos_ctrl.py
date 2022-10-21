@@ -9,7 +9,7 @@ from gym_chargepal.worlds.world_ptp import WorldPoint2Point
 from gym_chargepal.bullet.ik_solver import IKSolver
 from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotorControl
 from gym_chargepal.sensors.sensor_plug import PlugSensor
-from gym_chargepal.sensors.sensor_target_ptp import TargetSensor
+from gym_chargepal.sensors.sensor_target_ptp import VirtTgtSensor
 from gym_chargepal.controllers.controller_tcp_pos import TcpPositionController
 from gym_chargepal.reward.reward_dist import DistanceReward
 from gym_chargepal.utility.tf import Quaternion, Translation, Pose
@@ -59,7 +59,7 @@ class EnvironmentTcpPositionCtrlPtP(Environment):
         self.ik_solver = IKSolver(config_ik_solver, self.world)
         self.control_interface = JointPositionMotorControl(config_control_interface, self.world)
         self.plug_sensor = PlugSensor(config_plug_sensor, self.world)
-        self.target_sensor = TargetSensor(config_target_sensor, self.world)
+        self.target_sensor = VirtTgtSensor(config_target_sensor, self.world)
         self._low_level_control = TcpPositionController(
             config_low_level_control,
             self.ik_solver,

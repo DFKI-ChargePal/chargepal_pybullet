@@ -11,7 +11,7 @@ from gym_chargepal.bullet.ik_solver import IKSolver
 from gym_chargepal.bullet.joint_velocity_motor_control import JointVelocityMotorControl
 from gym_chargepal.sensors.sensor_plug import PlugSensor
 from gym_chargepal.sensors.sensor_joints import JointSensor
-from gym_chargepal.sensors.sensor_target_ptp import TargetSensor
+from gym_chargepal.sensors.sensor_target_ptp import VirtTgtSensor
 from gym_chargepal.controllers.controller_tcp_vel import TcpVelocityController
 from gym_chargepal.reward.reward_dist_speed import DistanceSpeedReward
 from gym_chargepal.utility.tf import Quaternion, Translation, Twist, Pose
@@ -65,7 +65,7 @@ class EnvironmentTcpVelocityCtrlPtP(Environment):
         self.control_interface = JointVelocityMotorControl(config_control_interface, self.world)
         self.joint_sensor = JointSensor(config_joint_sensor, self.world)
         self.plug_sensor = PlugSensor(config_plug_sensor, self.world)
-        self.target_sensor = TargetSensor(config_target_sensor, self.world)
+        self.target_sensor = VirtTgtSensor(config_target_sensor, self.world)
         self.low_level_control = TcpVelocityController(
             config_low_level_control,
             self.jacobian, 

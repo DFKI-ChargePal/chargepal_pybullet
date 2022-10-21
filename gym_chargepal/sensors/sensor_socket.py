@@ -1,28 +1,36 @@
 """ This file defines the socket sensor class. """
 # global
-import copy
 import logging
+from dataclasses import dataclass
 
 # local
-from gym_chargepal.sensors.sensor import Sensor
-from gym_chargepal.sensors.config import SOCKET_SENSOR
 from gym_chargepal.bullet.config import BulletLinkState
+from gym_chargepal.sensors.sensor import SensorCfg, Sensor
+from gym_chargepal.worlds.world_tdt import WorldTopDownTask
 
 # mypy
 from typing import Any, Dict, Optional, Tuple
-from gym_chargepal.worlds.world_tdt import WorldTopDownTask
 
 
 LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
+class SocketSensorCfg(SensorCfg):
+    sensor_id: str = 'socket_sensor'
+    pos_id: str = 'x'
+    ori_id: str = 'q'
+
+
 class SocketSensor(Sensor):
     """ Sensor class for a fake socket observation. """
-    def __init__(self, hyperparams: Dict[str, Any], world: WorldTopDownTask):
-        config = copy.deepcopy(SOCKET_SENSOR)
-        config.update(hyperparams)
-        super().__init__(config)
-        # params
+    def __init__(self, config: Dict[str, Any], world: WorldTopDownTask):
+        # Call super class
+        super().__init__(config=config)
+        # Create configuration and override values
+        self.cfg: SocketSensorCfg = SocketSensorCfg()
+        self.cfg.update(**config)
+        # Safe references
         self.world = world
         # intern sensor state
         self.sensor_state: Optional[Tuple[Tuple[float, ...], ...]] = None

@@ -28,13 +28,13 @@ class WorldPegInHole(World):
         World.__init__(self, config)
         self.plane_id = -1
         self.robot_id = -1
-        self.adpstd_id = -1
+        self.adp_std_id = -1
 
         # links and joints
         self.ur_joint_idx_dict: Dict[str, int] = {}
         self.ft_sensor_joint_idx: int = -1
         self.plug_reference_frame_idx: int = -1
-        self.adpstd_reference_frame_idx: int = -1
+        self.adp_std_reference_frame_idx: int = -1
 
         self.ur_joint_start_config: Dict[str, float] = self._hyperparams['ur_joint_start_config']
 
@@ -54,8 +54,8 @@ class WorldPegInHole(World):
                 link_name=self._hyperparams['plug_reference_frame'],
                 bullet_client=self.bullet_client
                 )
-            self.adpstd_reference_frame_idx = get_link_idx(
-                body_id=self.adpstd_id, 
+            self.adp_std_reference_frame_idx = get_link_idx(
+                body_id=self.adp_std_id, 
                 link_name=self._hyperparams['adpstd_reference_frame'],
                 bullet_client=self.bullet_client
                 )
@@ -82,7 +82,7 @@ class WorldPegInHole(World):
                 )
             # load adapter station
             f_path_adpstd_urdf = os.path.join(self.urdf_pkg_path, self._hyperparams['adapter_station_urdf'])
-            self.adpstd_id = self.bullet_client.loadURDF(
+            self.adp_std_id = self.bullet_client.loadURDF(
                 fileName=f_path_adpstd_urdf, 
                 basePosition=self._hyperparams['adpstd_start_pos'],
                 baseOrientation=self._hyperparams['adpstd_start_ori']
