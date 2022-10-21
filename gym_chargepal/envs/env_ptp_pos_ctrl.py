@@ -9,7 +9,7 @@ from gym_chargepal.worlds.world_ptp import WorldPoint2Point
 from gym_chargepal.bullet.ik_solver import IKSolver
 from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotorControl
 from gym_chargepal.sensors.sensor_plug import PlugSensor
-from gym_chargepal.sensors.sensor_target_ptp import VirtTgtSensor
+from gym_chargepal.sensors.sensor_virt_tgt import VirtTgtSensor
 from gym_chargepal.controllers.controller_tcp_pos import TcpPositionController
 from gym_chargepal.reward.reward_dist import DistanceReward
 from gym_chargepal.utility.tf import Quaternion, Translation, Pose

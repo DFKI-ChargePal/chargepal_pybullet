@@ -83,5 +83,4 @@ WORLD_TDT = {
     'ft_sensor_joint': 'mounting_to_wrench',
     'plug_link_name': 'plug',
     'socket_link_name': 'socket',
-
 }

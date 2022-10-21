@@ -34,8 +34,8 @@ class EnvironmentTcpPositionCtrlTdt(Environment):
         config_ik_solver = extract_config('config_ik_solver')
         config_control_interface = extract_config('config_control_interface')
         config_low_level_control = extract_config('config_low_level_control')
-        config_plug_sensor = {} if 'config_plug_sensor' not in kwargs else kwargs['config_plug_sensor']
-        config_socket_sensor = {} if 'config_socket_sensor' not in kwargs else kwargs['config_socket_sensor']
+        config_plug_sensor = extract_config('config_plug_sensor')
+        config_socket_sensor = extract_config('config_socket_sensor')
 
         # start configuration in world coordinates
         self.x0_WP: Tuple[float, ...] = tuple(self.cfg.target_config.pos.as_array() + self.cfg.start_config.pos.as_array())

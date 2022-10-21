@@ -11,7 +11,7 @@ from gym_chargepal.bullet.ik_solver import IKSolver
 from gym_chargepal.bullet.joint_velocity_motor_control import JointVelocityMotorControl
 from gym_chargepal.sensors.sensor_plug import PlugSensor
 from gym_chargepal.sensors.sensor_joints import JointSensor
-from gym_chargepal.sensors.sensor_target_ptp import VirtTgtSensor
+from gym_chargepal.sensors.sensor_virt_tgt import VirtTgtSensor
 from gym_chargepal.controllers.controller_tcp_vel import TcpVelocityController
 from gym_chargepal.reward.reward_dist_speed import DistanceSpeedReward
 from gym_chargepal.utility.tf import Quaternion, Translation, Twist, Pose
