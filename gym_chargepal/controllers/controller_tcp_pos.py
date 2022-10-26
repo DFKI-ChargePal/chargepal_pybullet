@@ -1,58 +1,69 @@
-import copy
+# global
 import logging
 import numpy as np
 import pybullet as p
+from dataclasses import dataclass
 
+# local
+from gym_chargepal.bullet.ik_solver import IKSolver
 from gym_chargepal.utility.constants import MotionAxis
-from gym_chargepal.controllers.controller import Controller
-from gym_chargepal.controllers.config import TCP_POSITION_CONTROLLER
+from gym_chargepal.sensors.sensor_plug import PlugSensor
+from gym_chargepal.controllers.controller import Controller, ControllerCfg
+from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotorControl
 
 # mypy
 import numpy.typing as npt
-from typing import Any, Dict, List
-from gym_chargepal.sensors.sensor_plug import PlugSensor
-from gym_chargepal.bullet.ik_solver import IKSolver
-from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotorControl
+from typing import Any, Dict, List, Optional, Tuple
 
 
 LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
+class TcpPositionControllerCfg(ControllerCfg):
+    linear_enabled_motion_axis: Tuple[bool, ...] = (True, True, True)
+    angular_enabled_motion_axis: Tuple[bool, ...] = (True, True, True)
+    # Absolute default positions for disabled motion directions
+    plug_lin_config: Optional[Tuple[float, ...]] = None
+    plug_ang_config: Optional[Tuple[float, ...]] = None
+
+
 class TcpPositionController(Controller):
     """ Cartesian tool center point position controller """
     def __init__(self,
-        hyperparams: Dict[str, Any],
+        config: Dict[str, Any],
         ik_solver: IKSolver,
         controller_interface: JointPositionMotorControl,
         plug_sensor: PlugSensor
         ) -> None:
-        # parameter update
-        config: Dict[str, Any] = copy.deepcopy(TCP_POSITION_CONTROLLER)
-        config.update(hyperparams)
-        Controller.__init__(self, config)
+        # Call super class
+        super().__init__(config=config)
+        # Create configuration and override values
+        self.cfg: TcpPositionControllerCfg = TcpPositionControllerCfg()
+        self.cfg.update(**config)
         # object references
         self.plug_sensor = plug_sensor
         self._ik_solver = ik_solver
         self._controller_interface = controller_interface
         # constants
-        self._wa_lin: float = self._hyperparams['wa_lin']
-        self._wa_ang: float = self._hyperparams['wa_ang']
-        assert self._hyperparams['plug_lin_config']
-        assert self._hyperparams['plug_ang_config']
-        self._plug_lin_config = np.array(self._hyperparams['plug_lin_config'])
-        self._plug_ang_config = np.array(self._hyperparams['plug_ang_config'])
+        self._wa_lin = self.cfg.wa_lin
+        self._wa_ang = self.cfg.wa_ang
+        assert self.cfg.plug_lin_config
+        assert self.cfg.plug_ang_config
+        self._plug_lin_config = np.array(self.cfg.plug_lin_config)
+        self._plug_ang_config = np.array(self.cfg.plug_ang_config)
         # mapping of the enabled motion axis to the indices
         self._lin_motion_axis: Dict[bool, List[int]] = {
             MotionAxis.ENABLED: [], 
             MotionAxis.DISABLED: [],
             }
-        for axis, mode in enumerate(self._hyperparams['linear_enabled_motion_axis']):
+        for axis, mode in enumerate(self.cfg.linear_enabled_motion_axis):
             self._lin_motion_axis[mode].append(axis)
         self._ang_motion_axis: Dict[bool, List[int]] = {
             MotionAxis.ENABLED: [], 
             MotionAxis.DISABLED: [],
             }
-        for axis, mode in enumerate(self._hyperparams['angular_enabled_motion_axis']):
+        for axis, mode in enumerate(self.cfg.angular_enabled_motion_axis):
             self._ang_motion_axis[mode].append(axis)
         # Slices for the linear and angular actions.
         start_idx = 0

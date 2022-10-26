@@ -1,16 +1,16 @@
+# global
 import copy
 import logging
-
 import numpy as np
-import pybullet as p
+from dataclasses import dataclass
 
+# local
 from gym_chargepal.utility.constants import MotionAxis
-from gym_chargepal.controllers.controller import Controller
-from gym_chargepal.controllers.config import TCP_VELOCITY_CONTROLLER
+from gym_chargepal.controllers.controller import Controller, ControllerCfg
 
 # mypy
 import numpy.typing as npt
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 from gym_chargepal.bullet.jacobian import Jacobian
 from gym_chargepal.sensors.sensor_plug import PlugSensor
 from gym_chargepal.sensors.sensor_joints import JointSensor
@@ -19,39 +19,46 @@ from gym_chargepal.bullet.joint_velocity_motor_control import JointVelocityMotor
 LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
+class TcpVelocityControllerCfg(ControllerCfg):
+    linear_enabled_motion_axis: Tuple[bool, ...] = (True, True, True)
+    angular_enabled_motion_axis: Tuple[bool, ...] = (True, True, True)
+
+
 class TcpVelocityController(Controller):
     """ Cartesian tool center point velocity controller """
     def __init__(self,
-        hyperparams: Dict[str, Any],
+        config: Dict[str, Any],
         jacobian: Jacobian,
         control_interface: JointVelocityMotorControl,
         plug_sensor: PlugSensor,
         joint_sensor: JointSensor
         ) -> None:
-        # parameter update
-        config: Dict[str, Any] = copy.deepcopy(TCP_VELOCITY_CONTROLLER)
-        config.update(hyperparams)
-        Controller.__init__(self, config)
+        # Call super class
+        super().__init__(config=config)
+        # Create configuration and override values
+        self.cfg: TcpVelocityControllerCfg = TcpVelocityControllerCfg()
+        self.cfg.update(**config)
         # object references
         self._jacobian = jacobian
         self._control_interface = control_interface
         self._plug_sensor = plug_sensor
         self._joint_sensor = joint_sensor
         # constants
-        self._wa_lin: float = self._hyperparams['wa_lin']
-        self._wa_ang: float = self._hyperparams['wa_ang']
+        self._wa_lin = self.cfg.wa_lin
+        self._wa_ang = self.cfg.wa_ang
         # mapping of the enabled motion axis to the indices
         self._lin_motion_axis: Dict[bool, List[int]] = {
             MotionAxis.ENABLED: [],
             MotionAxis.DISABLED: [],
             }
-        for axis, mode in enumerate(self._hyperparams['linear_enabled_motion_axis']):
+        for axis, mode in enumerate(self.cfg.linear_enabled_motion_axis):
             self._lin_motion_axis[mode].append(axis)
         self._ang_motion_axis: Dict[bool, List[int]] = {
             MotionAxis.ENABLED: [], 
             MotionAxis.DISABLED: [],
             }
-        for axis, mode in enumerate(self._hyperparams['angular_enabled_motion_axis']):
+        for axis, mode in enumerate(self.cfg.angular_enabled_motion_axis):
             self._ang_motion_axis[mode].append(axis)
         # Slices for the linear and angular actions.
         start_idx = 0

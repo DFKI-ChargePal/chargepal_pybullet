@@ -1,18 +1,24 @@
 """ This file defines the controllers base class. """
+# global
 import abc
-import copy
+from dataclasses import dataclass
+
+# local
+from gym_chargepal.utility.cfg_handler import ConfigHandler
 
 # mypy
 from typing import Dict, Any
 
-from gym_chargepal.controllers.config import CONTROLLER
+
+@dataclass
+class ControllerCfg(ConfigHandler):
+    wa_lin: float = 1.0  # action scaling in linear directions [m]
+    wa_ang: float = 1.0  # action scaling in angular directions [rad]
 
 
-class Controller(object):
+class Controller(metaclass=abc.ABCMeta):
     """ Controller superclass. """
-    __metaclass__ = abc.ABCMeta
-
-    def __init__(self, hyperparams: Dict[str, Any]):
-        config: Dict[str, Any] = copy.deepcopy(CONTROLLER)
-        config.update(hyperparams)
-        self._hyperparams = config
+    def __init__(self, config: Dict[str, Any]):
+        # Create configuration and override values
+        self.cfg = ControllerCfg()
+        self.cfg.update(**config)
