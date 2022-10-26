@@ -5,12 +5,11 @@ from gym import spaces
 
 
 # local
-from gym_chargepal.utility.tf import Euler, Quaternion, Translation, Pose
+from gym_chargepal.utility.tf import Quaternion, Translation, Pose
 # base environments
-from gym_chargepal.envs.env_ptp_pos_ctrl import EnvironmentTcpPositionCtrlPtP
-from gym_chargepal.envs.env_pih_pos_ctrl import EnvironmentTcpPositionCtrlPiH
-from gym_chargepal.envs.env_tdt_pos_ctrl import EnvironmentTcpPositionCtrlTdt
-from gym_chargepal.envs.env_ptp_vel_ctrl import EnvironmentTcpVelocityCtrlPtP
+from gym_chargepal.envs.env_reacher_pos_ctrl import EnvironmentReacherPositionCtrl
+from gym_chargepal.envs.env_plugger_pos_ctrl import EnvironmentPluggerPositionCtrl
+from gym_chargepal.envs.env_plugger_vel_ctrl import EnvironmentPluggerVelocityCtrl
 
 # mypy
 from typing import Any, Dict
@@ -41,7 +40,7 @@ DEFAULT_TARGET_POS = Translation(0.0, 0.0, 1.2)
 # ///   Environments with TCP position controller   /// #
 # ///                                               /// #
 # ///////////////////////////////////////////////////// #
-class EnvironmentTcpPositionCtrlPtP1Dof(EnvironmentTcpPositionCtrlPtP):
+class EnvironmentReacherPositionCtrl1Dof(EnvironmentReacherPositionCtrl):
 
     # configuration environment
     config_env = {
@@ -60,6 +59,11 @@ class EnvironmentTcpPositionCtrlPtP1Dof(EnvironmentTcpPositionCtrlPtP):
         'hz_ctrl': 20,
     }
 
+    config_ur_arm = {
+        'tcp_link_name': 'plug_reference_frame',
+        'ft_joint_name': 'mounting_to_wrench',
+    }
+
     # configuration low-level controller
     config_low_level_control = {
         'wa_lin': 0.025,  # action scaling in linear directions [m]
@@ -71,12 +75,13 @@ class EnvironmentTcpPositionCtrlPtP1Dof(EnvironmentTcpPositionCtrlPtP):
         # Update configuration
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_env', config_dict=self.config_env)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_world', config_dict=self.config_world)
+        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_ur_arm', config_dict=self.config_ur_arm)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_low_level_control', config_dict=self.config_low_level_control)
         # Create environment
         super().__init__(**kwargs)
 
 
-class EnvironmentTcpPositionCtrlPtP3Dof(EnvironmentTcpPositionCtrlPtP):
+class EnvironmentReacherPositionCtrl3Dof(EnvironmentReacherPositionCtrl):
 
     # configuration environment
     config_env = {
@@ -96,6 +101,11 @@ class EnvironmentTcpPositionCtrlPtP3Dof(EnvironmentTcpPositionCtrlPtP):
         'hz_ctrl': 20,
     }
 
+    config_ur_arm = {
+        'tcp_link_name': 'plug_reference_frame',
+        'ft_joint_name': 'mounting_to_wrench',
+    }
+
     # configuration low-level controller
     config_low_level_control = {
         'wa_lin': 0.025,  # action scaling in linear directions [m]
@@ -107,12 +117,13 @@ class EnvironmentTcpPositionCtrlPtP3Dof(EnvironmentTcpPositionCtrlPtP):
         # Update configuration
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_env', config_dict=self.config_env)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_world', config_dict=self.config_world)
+        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_ur_arm', config_dict=self.config_ur_arm)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_low_level_control', config_dict=self.config_low_level_control)
         # Create environment
         super().__init__(**kwargs)
 
 
-class EnvironmentTcpPositionCtrlPtP6Dof(EnvironmentTcpPositionCtrlPtP):
+class EnvironmentReacherPositionCtrl6Dof(EnvironmentReacherPositionCtrl):
 
     # configuration environment
     config_env = {
@@ -131,6 +142,11 @@ class EnvironmentTcpPositionCtrlPtP6Dof(EnvironmentTcpPositionCtrlPtP):
         'hz_ctrl': 20,
     }
 
+    config_ur_arm = {
+        'tcp_link_name': 'plug_reference_frame',
+        'ft_joint_name': 'mounting_to_wrench',
+    }
+
     # configuration low-level controller
     config_low_level_control = {
         'wa_lin': 0.025,  # action scaling in linear directions [m]
@@ -141,12 +157,13 @@ class EnvironmentTcpPositionCtrlPtP6Dof(EnvironmentTcpPositionCtrlPtP):
         # Update configuration
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_env', config_dict=self.config_env)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_world', config_dict=self.config_world)
+        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_ur_arm', config_dict=self.config_ur_arm)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_low_level_control', config_dict=self.config_low_level_control)
         # Create environment
         super().__init__(**kwargs)
 
 
-class EnvironmentTcpPositionCtrlPiH6Dof(EnvironmentTcpPositionCtrlPiH):
+class EnvironmentPluggerPositionCtrl6DofV0(EnvironmentPluggerPositionCtrl):
 
     # configuration environment
     config_env = {
@@ -165,6 +182,15 @@ class EnvironmentTcpPositionCtrlPiH6Dof(EnvironmentTcpPositionCtrlPiH):
         'hz_ctrl': 40,
     }
 
+    config_ur_arm = {
+        'tcp_link_name': 'plug_reference_frame',
+        'ft_joint_name': 'mounting_to_wrench',
+    }
+
+    config_socket = {
+        'socket_link_name': 'target_reference_frame',
+    }
+
     # configuration low-level controller
     config_low_level_control = {
         'wa_lin': 0.01,  # action scaling in linear directions [m]
@@ -175,12 +201,17 @@ class EnvironmentTcpPositionCtrlPiH6Dof(EnvironmentTcpPositionCtrlPiH):
         # Update configuration
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_env', config_dict=self.config_env)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_world', config_dict=self.config_world)
+        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_ur_arm', config_dict=self.config_ur_arm)
+        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_socket', config_dict=self.config_socket)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_low_level_control', config_dict=self.config_low_level_control)
         # Create environment
         super().__init__(**kwargs)
 
 
-class EnvironmentTcpPositionCtrlPiH6DofV1(EnvironmentTcpPositionCtrlPiH):
+SOCKET_POS = Translation(0.0, -0.1/2.0, 0.0)
+SOCKET_ORI = Quaternion()
+SOCKET_ORI.from_euler_angles(0.0, 0.0, np.pi)
+class EnvironmentPluggerPositionCtrl6DofV1(EnvironmentPluggerPositionCtrl):
 
     # configuration environment
     config_env = {
@@ -201,9 +232,19 @@ class EnvironmentTcpPositionCtrlPiH6DofV1(EnvironmentTcpPositionCtrlPiH):
     config_world = {
         'hz_ctrl': 40,
         'robot_urdf': f'cpm_fix_rod_{rod_diameter}.urdf',
-        'adapter_station_urdf': 'adapter_station_square_socket.urdf',
-        'adpstd_start_pos': [0.0, -0.1/2.0, 0.0],
+        'socket_urdf': 'adapter_station_square_socket.urdf',
+        'socket_config': Pose(SOCKET_POS, SOCKET_ORI),
     }
+
+    config_ur_arm = {
+        'tcp_link_name': 'plug_reference_frame',
+        'ft_joint_name': 'mounting_to_wrench',
+    }
+
+    config_socket = {
+        'socket_link_name': 'target_reference_frame',
+    }
+
 
     # configuration low-level controller
     config_low_level_control = {
@@ -215,12 +256,14 @@ class EnvironmentTcpPositionCtrlPiH6DofV1(EnvironmentTcpPositionCtrlPiH):
         # Update configuration
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_env', config_dict=self.config_env)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_world', config_dict=self.config_world)
+        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_ur_arm', config_dict=self.config_ur_arm)
+        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_socket', config_dict=self.config_socket)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_low_level_control', config_dict=self.config_low_level_control)
         # Create environment
         super().__init__(**kwargs)
 
 
-class EnvironmentTcpPositionCtrlPiH6DofV2(EnvironmentTcpPositionCtrlPiH):
+class EnvironmentPluggerPositionCtrl6DofV2(EnvironmentPluggerPositionCtrl):
 
     # configuration environment
     config_env = {
@@ -239,8 +282,17 @@ class EnvironmentTcpPositionCtrlPiH6DofV2(EnvironmentTcpPositionCtrlPiH):
     config_world = {
         'hz_ctrl': 40,
         'robot_urdf': f'cpm_fix_rod_{rod_diameter}.urdf',
-        'adapter_station_urdf': 'adapter_station_octa_socket.urdf',
-        'adpstd_start_pos': [0.0, -0.1/2.0, 0.0],
+        'socket_urdf': 'adapter_station_square_socket.urdf',
+        'socket_config': Pose(SOCKET_POS, SOCKET_ORI),
+    }
+
+    config_ur_arm = {
+        'tcp_link_name': 'plug_reference_frame',
+        'ft_joint_name': 'mounting_to_wrench',
+    }
+
+    config_socket = {
+        'socket_link_name': 'target_reference_frame',
     }
 
     # configuration low-level controller
@@ -253,12 +305,14 @@ class EnvironmentTcpPositionCtrlPiH6DofV2(EnvironmentTcpPositionCtrlPiH):
         # Update configuration
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_env', config_dict=self.config_env)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_world', config_dict=self.config_world)
+        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_ur_arm', config_dict=self.config_ur_arm)
+        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_socket', config_dict=self.config_socket)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_low_level_control', config_dict=self.config_low_level_control)
         # Create environment
         super().__init__(**kwargs)
 
 
-class EnvironmentTcpPositionCtrlTdt6DofV0(EnvironmentTcpPositionCtrlTdt):
+class EnvironmentTestbedPluggerPositionCtrl6DofV0(EnvironmentPluggerPositionCtrl):
 
     # configuration environment
     config_env = {
@@ -276,6 +330,24 @@ class EnvironmentTcpPositionCtrlTdt6DofV0(EnvironmentTcpPositionCtrlTdt):
 
     config_world = {
         'hz_ctrl': 40,
+        'robot_urdf': 'chargepal_testbed_tdt.urdf',
+        'socket_urdf': 'tdt_socket.urdf',
+        'plane_config': Pose(Translation(0.0, 0.0, -0.8136), Quaternion()),
+        'robot_config': Pose(Translation(), Quaternion()),
+        'socket_config': Pose(Translation(0.5, 0.8, 0.0), Quaternion()),
+    }
+
+    config_ur_arm = {
+        'tcp_link_name': 'plug',
+        'ft_joint_name': 'mounting_to_wrench',
+        'joint_default_values': {
+            'shoulder_pan_joint': np.pi,
+            'shoulder_lift_joint': -7*np.pi/36,
+            'elbow_joint': -np.pi/2 - 7*np.pi/36,
+            'wrist_1_joint': -np.pi/2 - 4*np.pi/36,
+            'wrist_2_joint': np.pi/2,
+            'wrist_3_joint': -np.pi/2,
+        },
     }
 
     # configuration low-level controller
@@ -288,6 +360,7 @@ class EnvironmentTcpPositionCtrlTdt6DofV0(EnvironmentTcpPositionCtrlTdt):
         # Update configuration
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_env', config_dict=self.config_env)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_world', config_dict=self.config_world)
+        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_ur_arm', config_dict=self.config_ur_arm)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_low_level_control', config_dict=self.config_low_level_control)
         # Create environment
         super().__init__(**kwargs)
@@ -298,7 +371,7 @@ class EnvironmentTcpPositionCtrlTdt6DofV0(EnvironmentTcpPositionCtrlTdt):
 # ///   Environments with TCP velocity controller   /// #
 # ///                                               /// #
 # ///////////////////////////////////////////////////// #
-class EnvironmentTcpVelocityCtrlPtP1Dof(EnvironmentTcpVelocityCtrlPtP):
+class EnvironmentReacherVelocityCtrl1Dof(EnvironmentPluggerVelocityCtrl):
 
     # configuration environment
     config_env = {
@@ -317,6 +390,11 @@ class EnvironmentTcpVelocityCtrlPtP1Dof(EnvironmentTcpVelocityCtrlPtP):
         'hz_ctrl': 20,
     }
 
+    config_ur_arm = {
+        'tcp_link_name': 'plug_reference_frame',
+        'ft_joint_name': 'mounting_to_wrench',
+    }
+
     # configuration low-level controller
     config_low_level_control = {
         'wa_lin': 0.25,  # action scaling in linear directions [m]
@@ -328,12 +406,13 @@ class EnvironmentTcpVelocityCtrlPtP1Dof(EnvironmentTcpVelocityCtrlPtP):
         # Update configuration
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_env', config_dict=self.config_env)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_world', config_dict=self.config_world)
+        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_ur_arm', config_dict=self.config_ur_arm)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_low_level_control', config_dict=self.config_low_level_control)
         # Create environment
         super().__init__(**kwargs)
 
 
-class EnvironmentTcpVelocityCtrlPtP3Dof(EnvironmentTcpVelocityCtrlPtP):
+class EnvironmentReacherVelocityCtrl3Dof(EnvironmentPluggerVelocityCtrl):
 
     # configuration environment
     config_env = {
@@ -352,6 +431,11 @@ class EnvironmentTcpVelocityCtrlPtP3Dof(EnvironmentTcpVelocityCtrlPtP):
         'hz_ctrl': 20,
     }
 
+    config_ur_arm = {
+        'tcp_link_name': 'plug_reference_frame',
+        'ft_joint_name': 'mounting_to_wrench',
+    }
+
     # configuration low-level controller
     config_low_level_control = {
         'wa_lin': 0.25,  # action scaling in linear directions [m]
@@ -363,12 +447,13 @@ class EnvironmentTcpVelocityCtrlPtP3Dof(EnvironmentTcpVelocityCtrlPtP):
         # Update configuration
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_env', config_dict=self.config_env)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_world', config_dict=self.config_world)
+        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_ur_arm', config_dict=self.config_ur_arm)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_low_level_control', config_dict=self.config_low_level_control)
         # Create environment
         super().__init__(**kwargs)
 
 
-class EnvironmentTcpVelocityCtrlPtP6Dof(EnvironmentTcpVelocityCtrlPtP):
+class EnvironmentReacherVelocityCtrl6Dof(EnvironmentPluggerVelocityCtrl):
 
     # configuration environment
     config_env = {
@@ -387,6 +472,11 @@ class EnvironmentTcpVelocityCtrlPtP6Dof(EnvironmentTcpVelocityCtrlPtP):
         'hz_ctrl': 20,
     }
 
+    config_ur_arm = {
+        'tcp_link_name': 'plug_reference_frame',
+        'ft_joint_name': 'mounting_to_wrench',
+    }
+
     # configuration low-level controller
     config_low_level_control = {
         'wa_lin': 0.25,  # action scaling in linear directions [m]
@@ -397,6 +487,7 @@ class EnvironmentTcpVelocityCtrlPtP6Dof(EnvironmentTcpVelocityCtrlPtP):
         # Update configuration
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_env', config_dict=self.config_env)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_world', config_dict=self.config_world)
+        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_ur_arm', config_dict=self.config_ur_arm)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_low_level_control', config_dict=self.config_low_level_control)
         # Create environment
         super().__init__(**kwargs)

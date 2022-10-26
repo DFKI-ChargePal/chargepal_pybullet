@@ -5,37 +5,37 @@ import quaternionic as quat
 
 # local
 from gym_chargepal.envs.env import Environment
-from gym_chargepal.worlds.world_pih import WorldPegInHole
 from gym_chargepal.bullet.ik_solver import IKSolver
-from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotorControl
 from gym_chargepal.sensors.sensor_plug import PlugSensor
-from gym_chargepal.sensors.sensor_adp_std import AdpStdSensor
-from gym_chargepal.controllers.controller_tcp_pos import TcpPositionController
 from gym_chargepal.reward.reward_dist import DistanceReward
+from gym_chargepal.worlds.world_reacher import WorldReacher
+from gym_chargepal.sensors.sensor_virt_tgt import VirtTgtSensor
 from gym_chargepal.utility.tf import Quaternion, Translation, Pose
+from gym_chargepal.controllers.controller_tcp_pos import TcpPositionController
+from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotorControl
 
-# mypy
+# MyPy
 from numpy import typing as npt
-from typing import Any, Callable, Dict, Tuple 
+from typing import Callable, Dict, Any, Tuple
 
 
-class EnvironmentTcpPositionCtrlPiH(Environment):
-    """ Cartesian environment with position controller - Task: Peg in Hole """
-
+class EnvironmentReacherPositionCtrl(Environment):
+    """ Cartesian Environment with position controller - Task: point to point """
     def __init__(self, **kwargs: Dict[str, Any]):
         # Update environment configuration
         config_env = {} if 'config_env' not in kwargs else kwargs['config_env']
         Environment.__init__(self, config_env)
-        
+
         # extract component hyperparameter from kwargs
         extract_config: Callable[[str], Dict[str, Any]] = lambda name: {} if name not in kwargs else kwargs[name]
-        config_reward = extract_config('config_reward')
         config_world = extract_config('config_world')
+        config_ur_arm = extract_config('config_ur_arm')
+        config_reward = extract_config('config_reward')
         config_ik_solver = extract_config('config_ik_solver')
-        config_control_interface = extract_config('config_control_interface')
-        config_low_level_control = extract_config('config_low_level_control')
         config_plug_sensor = extract_config('config_plug_sensor')
         config_target_sensor = extract_config('config_target_sensor')
+        config_control_interface = extract_config('config_control_interface')
+        config_low_level_control = extract_config('config_low_level_control')
 
         # start configuration in world coordinates
         self.x0_WP: Tuple[float, ...] = tuple(self.cfg.target_config.pos.as_array() + self.cfg.start_config.pos.as_array())
@@ -45,6 +45,10 @@ class EnvironmentTcpPositionCtrlPiH(Environment):
         self.q0_WP = Quaternion(*q0_WP)
 
         # resolve cross references
+        config_world['ur_arm'] = config_ur_arm
+        config_world['target_pos'] = self.cfg.target_config.pos.as_tuple()
+        config_world['target_ori'] = self.cfg.target_config.ori.as_tuple(order='xyzw')
+
         config_low_level_control['plug_lin_config'] = self.x0_WP
         config_low_level_control['plug_ang_config'] = p.getEulerFromQuaternion(self.q0_WP.as_tuple(order='xyzw'))
 
@@ -53,11 +57,11 @@ class EnvironmentTcpPositionCtrlPiH(Environment):
         self.toggle_render_mode = False
 
         # components
-        self.world = WorldPegInHole(config_world)
-        self.ik_solver = IKSolver(config_ik_solver, self.world)
-        self.control_interface = JointPositionMotorControl(config_control_interface, self.world)
-        self.plug_sensor = PlugSensor(config_plug_sensor, self.world)
-        self.target_sensor = AdpStdSensor(config_target_sensor, self.world)
+        self.world = WorldReacher(config_world)
+        self.ik_solver = IKSolver(config_ik_solver, self.world.ur_arm)
+        self.control_interface = JointPositionMotorControl(config_control_interface, self.world.ur_arm)
+        self.plug_sensor = PlugSensor(config_plug_sensor, self.world.ur_arm)
+        self.target_sensor = VirtTgtSensor(config_target_sensor, self.world)
         self._low_level_control = TcpPositionController(
             config_low_level_control,
             self.ik_solver,
@@ -76,7 +80,6 @@ class EnvironmentTcpPositionCtrlPiH(Environment):
 
         # reset robot by default joint configuration
         self.world.reset(render=self.is_render)
-
         # get start joint configuration by inverse kinematic
         mean_q0_WP = self.q0_WP.as_quaternionic()
         cov_q0_WP = quat.array(self.reset_rnd_gen.rand_quat(order='wxyz'))
@@ -84,10 +87,8 @@ class EnvironmentTcpPositionCtrlPiH(Environment):
         ori = Quaternion(*q0_WP).as_tuple(order='xyzw')
         pos: Tuple[float, ...] = tuple(self.x0_WP + self.reset_rnd_gen.rand_linear())
         joint_config_0 = self.ik_solver.solve((pos, ori))
-
         # reset robot again
         self.world.reset(joint_config_0)
-
         # update sensors states
         self.update_sensors(target_sensor=True)
         return self.get_obs()
@@ -103,6 +104,7 @@ class EnvironmentTcpPositionCtrlPiH(Environment):
         # update states
         self.update_sensors()
         obs = self.get_obs()
+
         # evaluate environment
         done = self.done
         X_tcp = Pose(
@@ -115,6 +117,7 @@ class EnvironmentTcpPositionCtrlPiH(Environment):
             )
         reward = self.reward.compute(X_tcp, X_tgt, done)
         info = self.compose_info()
+        
         return obs, reward, done, info
 
     def render(self, mode: str = "human") -> None:
@@ -127,7 +130,6 @@ class EnvironmentTcpPositionCtrlPiH(Environment):
     def update_sensors(self, target_sensor: bool=False) -> None:
         if target_sensor:
             self.target_sensor.update()
-        self.plug_sensor.update()
 
     def get_obs(self) -> npt.NDArray[np.float32]:
         tgt_pos = np.array(self.target_sensor.get_pos())

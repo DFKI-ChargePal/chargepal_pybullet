@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 # local
 from gym_chargepal.sensors.sensor import SensorCfg, Sensor
-from gym_chargepal.worlds.world_ptp import WorldPoint2Point
+from gym_chargepal.worlds.world_reacher import WorldReacher
 
 # mypy
 from typing import Dict, Any, Tuple
@@ -23,7 +23,7 @@ class VirtTgtSensorCfg(SensorCfg):
 
 class VirtTgtSensor(Sensor):
     """ Sensor of the target frame. """
-    def __init__(self, config: Dict[str, Any], world: WorldPoint2Point):
+    def __init__(self, config: Dict[str, Any], world: WorldReacher):
         # Call super class
         super().__init__(config=config)
         # Create configuration and override values

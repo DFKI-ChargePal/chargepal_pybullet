@@ -2,10 +2,8 @@ import logging
 import copy
 
 # mypy
-from typing import Dict, Any, Union, Tuple, List
-from gym_chargepal.worlds.world_ptp import WorldPoint2Point
-from gym_chargepal.worlds.world_pih import WorldPegInHole
-from gym_chargepal.worlds.world_tdt import WorldTopDownTask
+from typing import Any, Dict, List, Optional, Tuple
+from gym_chargepal.bullet.ur_arm import URArm
 
 from gym_chargepal.bullet.config import IK_SOLVER
 from gym_chargepal.utility.general_utils import wrap
@@ -15,13 +13,13 @@ LOGGER = logging.getLogger(__name__)
 
 class IKSolver:
     """ Inverse kinematics solver. """
-    def __init__(self, hyperparams: Dict[str, Any], world: Union[WorldPoint2Point, WorldPegInHole, WorldTopDownTask]):
+    def __init__(self, hyperparams: Dict[str, Any], ur_arm: URArm):
         config: Dict[str, Any] = copy.deepcopy(IK_SOLVER)
         config.update(hyperparams)
         self._hyperparams = config
         # get attributes of the world
-        self.world = world
-        self.rest_pos = [x0 for x0 in self.world.ur_joint_start_config.values()]
+        self.ur_arm = ur_arm
+        self.rest_pos = [x0 for x0 in self.ur_arm.cfg.joint_default_values.values()]
         # constants
         self.lo_limits: List[float] = self._hyperparams['lower_limits']
         self.up_limits: List[float] = self._hyperparams['upper_limits']
@@ -40,9 +38,9 @@ class IKSolver:
         assert len(pose[0]) == 3
         assert len(pose[1]) == 4
         
-        joints: Tuple[float, ...] = self.world.bullet_client.calculateInverseKinematics(
-            bodyUniqueId=self.world.robot_id,
-            endEffectorLinkIndex=self.world.plug_reference_frame_idx,
+        joints: Tuple[float, ...] = self.ur_arm.bc.calculateInverseKinematics(
+            bodyUniqueId=self.ur_arm.body_id,
+            endEffectorLinkIndex=self.ur_arm.tcp.link_idx,
             targetPosition=pose[0],
             targetOrientation=pose[1],
             lowerLimits=self.lo_limits,

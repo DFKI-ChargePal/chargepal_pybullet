@@ -5,24 +5,23 @@ import quaternionic as quat
 
 # local
 from gym_chargepal.envs.env import Environment
-from gym_chargepal.worlds.world_ptp import WorldPoint2Point
-from gym_chargepal.bullet.jacobian import Jacobian
 from gym_chargepal.bullet.ik_solver import IKSolver
-from gym_chargepal.bullet.joint_velocity_motor_control import JointVelocityMotorControl
 from gym_chargepal.sensors.sensor_plug import PlugSensor
-from gym_chargepal.sensors.sensor_joints import JointSensor
-from gym_chargepal.sensors.sensor_virt_tgt import VirtTgtSensor
-from gym_chargepal.controllers.controller_tcp_vel import TcpVelocityController
-from gym_chargepal.reward.reward_dist_speed import DistanceSpeedReward
-from gym_chargepal.utility.tf import Quaternion, Translation, Twist, Pose
+from gym_chargepal.worlds.world_plugger import WorldPlugger
+from gym_chargepal.reward.reward_dist import DistanceReward
+from gym_chargepal.sensors.sensor_socket import SocketSensor
+from gym_chargepal.utility.tf import Quaternion, Translation, Pose
+from gym_chargepal.controllers.controller_tcp_pos import TcpPositionController
+from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotorControl
 
 # mypy
 from numpy import typing as npt
-from typing import Any, Callable, Dict, Tuple
+from typing import Any, Callable, Dict, Tuple 
 
 
-class EnvironmentTcpVelocityCtrlPtP(Environment):
-    """ Cartesian Environment with velocity controller - Task: point to point """
+class EnvironmentPluggerPositionCtrl(Environment):
+    """ Cartesian environment with position controller - Task: Peg in Hole """
+
     def __init__(self, **kwargs: Dict[str, Any]):
         # Update environment configuration
         config_env = {} if 'config_env' not in kwargs else kwargs['config_env']
@@ -30,15 +29,15 @@ class EnvironmentTcpVelocityCtrlPtP(Environment):
         
         # extract component hyperparameter from kwargs
         extract_config: Callable[[str], Dict[str, Any]] = lambda name: {} if name not in kwargs else kwargs[name]
-        config_reward = extract_config('config_reward')
         config_world = extract_config('config_world')
-        config_jacobian = extract_config('config_jacobian')
+        config_ur_arm = extract_config('config_ur_arm')
+        config_socket = extract_config('config_socket')
+        config_reward = extract_config('config_reward')
         config_ik_solver = extract_config('config_ik_solver')
+        config_plug_sensor = extract_config('config_plug_sensor')
+        config_socket_sensor = extract_config('config_socket_sensor')
         config_control_interface = extract_config('config_control_interface')
         config_low_level_control = extract_config('config_low_level_control')
-        config_joint_sensor = extract_config('config_joint_sensor')
-        config_plug_sensor = extract_config('config_plug_sensor')
-        config_target_sensor = extract_config('config_target_sensor')
 
         # start configuration in world coordinates
         self.x0_WP: Tuple[float, ...] = tuple(self.cfg.target_config.pos.as_array() + self.cfg.start_config.pos.as_array())
@@ -48,9 +47,8 @@ class EnvironmentTcpVelocityCtrlPtP(Environment):
         self.q0_WP = Quaternion(*q0_WP)
 
         # resolve cross references
-        config_world['target_pos'] = self.cfg.target_config.pos.as_tuple()
-        config_world['target_ori'] = self.cfg.target_config.ori.as_tuple(order='xyzw')
-
+        config_world['ur_arm'] = config_ur_arm
+        config_world['socket'] = config_socket
         config_low_level_control['plug_lin_config'] = self.x0_WP
         config_low_level_control['plug_ang_config'] = p.getEulerFromQuaternion(self.q0_WP.as_tuple(order='xyzw'))
 
@@ -59,21 +57,18 @@ class EnvironmentTcpVelocityCtrlPtP(Environment):
         self.toggle_render_mode = False
 
         # components
-        self.world = WorldPoint2Point(config_world)
-        self.jacobian = Jacobian(config_jacobian, self.world)
-        self.ik_solver = IKSolver(config_ik_solver, self.world)
-        self.control_interface = JointVelocityMotorControl(config_control_interface, self.world)
-        self.joint_sensor = JointSensor(config_joint_sensor, self.world)
-        self.plug_sensor = PlugSensor(config_plug_sensor, self.world)
-        self.target_sensor = VirtTgtSensor(config_target_sensor, self.world)
-        self.low_level_control = TcpVelocityController(
+        self.world = WorldPlugger(config_world)
+        self.ik_solver = IKSolver(config_ik_solver, self.world.ur_arm)
+        self.control_interface = JointPositionMotorControl(config_control_interface, self.world.ur_arm)
+        self.plug_sensor = PlugSensor(config_plug_sensor, self.world.ur_arm)
+        self.socket_sensor = SocketSensor(config_socket_sensor, self.world.socket)
+        self.low_level_control = TcpPositionController(
             config_low_level_control,
-            self.jacobian, 
+            self.ik_solver,
             self.control_interface,
-            self.plug_sensor, 
-            self.joint_sensor
+            self.plug_sensor
         )
-        self.reward = DistanceSpeedReward(config_reward, self.clock)
+        self.reward = DistanceReward(config_reward, self.clock)
 
     def reset(self) -> npt.NDArray[np.float32]:
         # reset environment
@@ -85,6 +80,7 @@ class EnvironmentTcpVelocityCtrlPtP(Environment):
 
         # reset robot by default joint configuration
         self.world.reset(render=self.is_render)
+
         # get start joint configuration by inverse kinematic
         mean_q0_WP = self.q0_WP.as_quaternionic()
         cov_q0_WP = quat.array(self.reset_rnd_gen.rand_quat(order='wxyz'))
@@ -92,38 +88,34 @@ class EnvironmentTcpVelocityCtrlPtP(Environment):
         ori = Quaternion(*q0_WP).as_tuple(order='xyzw')
         pos: Tuple[float, ...] = tuple(self.x0_WP + self.reset_rnd_gen.rand_linear())
         joint_config_0 = self.ik_solver.solve((pos, ori))
+
         # reset robot again
         self.world.reset(joint_config_0)
-        # update sensors states
-        self.update_sensors(target_sensor=True)
+
         return self.get_obs()
 
     def step(self, action: npt.NDArray[np.float32]) -> Tuple[npt.NDArray[np.float32], float, bool, Dict[Any, Any]]:
         """ Execute environment/simulation step. """
         # apply action
         self.low_level_control.update(action=np.array(action))
-
+        
         # step simulation
         self.world.step(render=self.is_render)
         self.clock.tick()
-        # update states
-        self.update_sensors()
+        # Get new observation
         obs = self.get_obs()
-
-        # evaluate environment
+        # Evaluate environment
         done = self.done
         X_tcp = Pose(
             Translation(*self.plug_sensor.get_pos()), 
             Quaternion(*(self.plug_sensor.get_ori()) + ('xyzw',))
             )
         X_tgt = Pose(
-            Translation(*self.target_sensor.get_pos()),
-            Quaternion(*(self.target_sensor.get_ori()) + ('xyzw',))
+            Translation(*self.socket_sensor.get_pos()),
+            Quaternion(*(self.socket_sensor.get_ori()) + ('xyzw',))
             )
-        V_tcp = Twist(*(self.plug_sensor.get_lin_vel() + self.plug_sensor.get_ang_vel()))
-        reward = self.reward.compute(X_tcp=X_tcp, V_tcp=V_tcp, X_tgt=X_tgt, done=done)
+        reward = self.reward.compute(X_tcp, X_tgt, done)
         info = self.compose_info()
-
         return obs, reward, done, info
 
     def render(self, mode: str = "human") -> None:
@@ -133,35 +125,21 @@ class EnvironmentTcpVelocityCtrlPtP(Environment):
     def close(self) -> None:
         self.world.disconnect()
 
-    def update_sensors(self, target_sensor: bool=False) -> None:
-        if target_sensor:
-            self.target_sensor.update()
-        self.plug_sensor.update()
-        self.joint_sensor.update()
-
     def get_obs(self) -> npt.NDArray[np.float32]:
-        # get position signals
-        tgt_pos = np.array(self.target_sensor.get_pos())
+        tgt_pos = np.array(self.socket_sensor.get_pos())
         plg_pos = np.array(self.plug_sensor.get_pos())
         dif_pos: Tuple[float, ...] = tuple(tgt_pos - plg_pos)
 
-        tgt_ori = self.target_sensor.get_ori()
+        tgt_ori = self.socket_sensor.get_ori()
         plg_ori = self.plug_sensor.get_ori()
         dif_ori = self.world.bullet_client.getDifferenceQuaternion(plg_ori, tgt_ori)
-
-        # get velocity signal
-        lin_vel = self.plug_sensor.get_lin_vel()
-        ang_vel = self.plug_sensor.get_ang_vel()
-
-        # build observation
-        obs = (dif_pos + dif_ori + lin_vel + ang_vel)
-        obs_nd = np.array(obs, dtype=np.float32)
+        obs = np.array((dif_pos + dif_ori), dtype=np.float32)
 
         tgt_ori_ = np.array(tgt_ori)
         plg_ori_ = np.array(plg_ori)
         self.error_pos = np.sqrt(np.sum(np.square(dif_pos)))
         self.error_ang = np.arccos(np.clip((2 * (tgt_ori_.dot(plg_ori_))**2 - 1), -1.0, 1.0))
-        return obs_nd
+        return obs
 
     def compose_info(self) -> Dict[str, Any]:
         info = {

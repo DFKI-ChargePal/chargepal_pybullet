@@ -1,16 +1,16 @@
 from gym_chargepal.envs.env_register import (
-    EnvironmentTcpPositionCtrlPtP1Dof,
-    EnvironmentTcpPositionCtrlPtP3Dof,
-    EnvironmentTcpPositionCtrlPtP6Dof,
+    EnvironmentReacherPositionCtrl1Dof,
+    EnvironmentReacherPositionCtrl3Dof,
+    EnvironmentReacherPositionCtrl6Dof,
     
-    EnvironmentTcpPositionCtrlPiH6Dof,
-    EnvironmentTcpPositionCtrlPiH6DofV1,
-    EnvironmentTcpPositionCtrlPiH6DofV2,
+    EnvironmentPluggerPositionCtrl6DofV0,
+    EnvironmentPluggerPositionCtrl6DofV1,
+    EnvironmentPluggerPositionCtrl6DofV2,
 
-    EnvironmentTcpPositionCtrlTdt6DofV0,
+    EnvironmentTestbedPluggerPositionCtrl6DofV0,
     
-    EnvironmentTcpVelocityCtrlPtP1Dof,
-    EnvironmentTcpVelocityCtrlPtP3Dof,
-    EnvironmentTcpVelocityCtrlPtP6Dof,
+    EnvironmentReacherVelocityCtrl1Dof,
+    EnvironmentReacherVelocityCtrl3Dof,
+    EnvironmentReacherVelocityCtrl6Dof,
 
 )

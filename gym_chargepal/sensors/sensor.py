@@ -17,13 +17,12 @@ class SensorCfg(ConfigHandler):
 
 class Sensor(metaclass=abc.ABCMeta):
     """ Sensor superclass. """
-    
     def __init__(self, config: Dict[str, Any]):
         # Create configuration and override values
         self.cfg = SensorCfg()
         self.cfg.update(**config)
 
-    @abc.abstractmethod
-    def update(self) -> None:
-        """ Update sensors state. """
-        raise NotImplementedError('Must be implemented in subclass.')
+    # @abc.abstractmethod
+    # def update(self) -> None:
+    #     """ Update sensors state. """
+    #     raise NotImplementedError('Must be implemented in subclass.')

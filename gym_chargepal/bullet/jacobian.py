@@ -2,9 +2,8 @@ import copy
 import logging
 
 # mypy
-from typing import Dict, Any, Union, Tuple
-from gym_chargepal.worlds.world_ptp import WorldPoint2Point
-from gym_chargepal.worlds.world_pih import WorldPegInHole
+from typing import Dict, Any, Tuple
+from gym_chargepal.bullet.ur_arm import URArm
 
 from gym_chargepal.bullet.config import JACOBIAN
 
@@ -15,15 +14,12 @@ LOGGER = logging.getLogger(__name__)
 class Jacobian:
     """ Class to calculate the jacobians of the end effector. """
 
-    def __init__(self, hyperparams: Dict[str, Any], world: Union[WorldPoint2Point, WorldPegInHole]):
+    def __init__(self, hyperparams: Dict[str, Any], ur_arm: URArm):
         config: Dict[str, Any] = copy.deepcopy(JACOBIAN)
         config.update(hyperparams)
         self.hyperparams = config
-        # get attributes of the world
-        self.world = world
-        # self._physics_client_id = -1
-        # self._robot_id = -1
-        # self._ee_tip = -1
+        # Save references
+        self.ur_arm = ur_arm
 
     def calculate(self, pos: Tuple[float, ...], vel: Tuple[float, ...], acc: Tuple[float, ...]) -> Tuple[Tuple[float, ...], Tuple[float, ...]]:
         """
@@ -34,14 +30,14 @@ class Jacobian:
         :return: translational and rotational jacobians
         """
         # get link state to get the local inertial frame position of the end effector link
-        ee_link_state = self.world.bullet_client.getLinkState(self.world.robot_id, self.world.plug_reference_frame_idx, True, True)
+        ee_link_state = self.ur_arm.bc.getLinkState(self.ur_arm.body_id, self.ur_arm.tcp.link_idx, True, True)
         local_inertial_trn = ee_link_state[2]
 
         # Important to omit segmentation faults...
         # pos, vel, acc must be of type list or tuple
-        jac: Tuple[Tuple[float], Tuple[float]] = self.world.bullet_client.calculateJacobian(
-            bodyUniqueId=self.world.robot_id,
-            linkIndex=self.world.plug_reference_frame_idx,
+        jac: Tuple[Tuple[float], Tuple[float]] = self.ur_arm.bc.calculateJacobian(
+            bodyUniqueId=self.ur_arm.body_id,
+            linkIndex=self.ur_arm.tcp.link_idx,
             localPosition=local_inertial_trn,
             objPositions=pos,
             objVelocities=vel,

@@ -43,16 +43,16 @@ def main(env_name: str, gui: bool) -> None:
 
 if __name__ == '__main__':
     env_names = [
-        'ChargePal-P2P-1D-PositionControl-v0',
-        'ChargePal-P2P-3D-PositionControl-v0',
-        'ChargePal-P2P-6D-PositionControl-v0',
-        'ChargePal-PiH-6D-PositionControl-v0',
-        'ChargePal-PiH-6D-PositionControl-v1',
-        'ChargePal-PiH-6D-PositionControl-v2',
-        'ChargePal-Tdt-6D-PositionControl-v0',
-        'ChargePal-P2P-1D-VelocityControl-v0',
-        'ChargePal-P2P-3D-VelocityControl-v0',
-        'ChargePal-P2P-6D-VelocityControl-v0',
+        'ChargePal-Reacher-1D-PositionControl-v0',
+        'ChargePal-Reacher-3D-PositionControl-v0',
+        'ChargePal-Reacher-6D-PositionControl-v0',
+        'ChargePal-Plugger-6D-PositionControl-v0',
+        'ChargePal-Plugger-6D-PositionControl-v1',
+        'ChargePal-Plugger-6D-PositionControl-v2',
+        'ChargePal-Reacher-1D-VelocityControl-v0',
+        'ChargePal-Reacher-3D-VelocityControl-v0',
+        'ChargePal-Reacher-6D-VelocityControl-v0',
+        'ChargePal-Testbed-Plugger-6D-PositionControl-v0',
     ]
 
     for env_ in env_names:

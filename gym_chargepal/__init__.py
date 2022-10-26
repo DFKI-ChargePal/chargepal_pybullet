@@ -4,71 +4,71 @@ from gym.envs.registration import register
 logger = logging.getLogger(__name__)
 
 register(
-    id='ChargePal-P2P-1D-PositionControl-v0',
-    entry_point='gym_chargepal.envs:EnvironmentTcpPositionCtrlPtP1Dof',
+    id='ChargePal-Reacher-1D-PositionControl-v0',
+    entry_point='gym_chargepal.envs:EnvironmentReacherPositionCtrl1Dof',
     reward_threshold=1.0,
     nondeterministic=True,
 )
 
 register(
-    id='ChargePal-P2P-3D-PositionControl-v0',
-    entry_point='gym_chargepal.envs:EnvironmentTcpPositionCtrlPtP3Dof',
+    id='ChargePal-Reacher-3D-PositionControl-v0',
+    entry_point='gym_chargepal.envs:EnvironmentReacherPositionCtrl3Dof',
     reward_threshold=1.0,
     nondeterministic=True,
 )
 
 register(
-    id='ChargePal-P2P-6D-PositionControl-v0',
-    entry_point='gym_chargepal.envs:EnvironmentTcpPositionCtrlPtP6Dof',
+    id='ChargePal-Reacher-6D-PositionControl-v0',
+    entry_point='gym_chargepal.envs:EnvironmentReacherPositionCtrl6Dof',
     reward_threshold=1.0,
     nondeterministic=True,
 )
 
 register(
-    id='ChargePal-PiH-6D-PositionControl-v0',
-    entry_point='gym_chargepal.envs:EnvironmentTcpPositionCtrlPiH6Dof',
+    id='ChargePal-Plugger-6D-PositionControl-v0',
+    entry_point='gym_chargepal.envs:EnvironmentPluggerPositionCtrl6DofV0',
     reward_threshold=1.0,
     nondeterministic=True,
 )
 
 register(
-    id='ChargePal-PiH-6D-PositionControl-v1',
-    entry_point='gym_chargepal.envs:EnvironmentTcpPositionCtrlPiH6DofV1',
+    id='ChargePal-Plugger-6D-PositionControl-v1',
+    entry_point='gym_chargepal.envs:EnvironmentPluggerPositionCtrl6DofV1',
     reward_threshold=1.0,
     nondeterministic=True,
 )
 
 register(
-    id='ChargePal-PiH-6D-PositionControl-v2',
-    entry_point='gym_chargepal.envs:EnvironmentTcpPositionCtrlPiH6DofV2',
+    id='ChargePal-Plugger-6D-PositionControl-v2',
+    entry_point='gym_chargepal.envs:EnvironmentPluggerPositionCtrl6DofV2',
     reward_threshold=1.0,
     nondeterministic=True,
 )
 
 register(
-    id='ChargePal-Tdt-6D-PositionControl-v0',
-    entry_point='gym_chargepal.envs:EnvironmentTcpPositionCtrlTdt6DofV0',
+    id='ChargePal-Testbed-Plugger-6D-PositionControl-v0',
+    entry_point='gym_chargepal.envs:EnvironmentTestbedPluggerPositionCtrl6DofV0',
     reward_threshold=1.0,
     nondeterministic=True,
 )
 
 register(
-    id='ChargePal-P2P-1D-VelocityControl-v0',
-    entry_point='gym_chargepal.envs:EnvironmentTcpVelocityCtrlPtP1Dof',
+    id='ChargePal-Reacher-1D-VelocityControl-v0',
+    entry_point='gym_chargepal.envs:EnvironmentReacherVelocityCtrl1Dof',
     reward_threshold=1.0,
     nondeterministic=True,
 )
 
 register(
-    id='ChargePal-P2P-3D-VelocityControl-v0',
-    entry_point='gym_chargepal.envs:EnvironmentTcpVelocityCtrlPtP3Dof',
+    id='ChargePal-Reacher-3D-VelocityControl-v0',
+    entry_point='gym_chargepal.envs:EnvironmentReacherVelocityCtrl3Dof',
     reward_threshold=1.0,
     nondeterministic=True,
 )
 
 register(
-    id='ChargePal-P2P-6D-VelocityControl-v0',
-    entry_point='gym_chargepal.envs:EnvironmentTcpVelocityCtrlPtP6Dof',
+    id='ChargePal-Reacher-6D-VelocityControl-v0',
+    entry_point='gym_chargepal.envs:EnvironmentReacherVelocityCtrl6Dof',
     reward_threshold=1.0,
     nondeterministic=True,
 )
