@@ -21,7 +21,7 @@ from numpy import typing as npt
 from typing import Any, Callable, Dict, Tuple
 
 
-class EnvironmentPluggerVelocityCtrl(Environment):
+class EnvironmentReacherVelocityCtrl(Environment):
     """ Cartesian Environment with velocity controller - Task: point to point """
     def __init__(self, **kwargs: Dict[str, Any]):
         # Update environment configuration

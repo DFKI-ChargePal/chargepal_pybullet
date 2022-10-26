@@ -9,7 +9,7 @@ from gym_chargepal.utility.tf import Quaternion, Translation, Pose
 # base environments
 from gym_chargepal.envs.env_reacher_pos_ctrl import EnvironmentReacherPositionCtrl
 from gym_chargepal.envs.env_plugger_pos_ctrl import EnvironmentPluggerPositionCtrl
-from gym_chargepal.envs.env_plugger_vel_ctrl import EnvironmentPluggerVelocityCtrl
+from gym_chargepal.envs.env_reacher_vel_ctrl import EnvironmentReacherVelocityCtrl
 
 # mypy
 from typing import Any, Dict
@@ -371,7 +371,7 @@ class EnvironmentTestbedPluggerPositionCtrl6DofV0(EnvironmentPluggerPositionCtrl
 # ///   Environments with TCP velocity controller   /// #
 # ///                                               /// #
 # ///////////////////////////////////////////////////// #
-class EnvironmentReacherVelocityCtrl1Dof(EnvironmentPluggerVelocityCtrl):
+class EnvironmentReacherVelocityCtrl1Dof(EnvironmentReacherVelocityCtrl):
 
     # configuration environment
     config_env = {
@@ -412,7 +412,7 @@ class EnvironmentReacherVelocityCtrl1Dof(EnvironmentPluggerVelocityCtrl):
         super().__init__(**kwargs)
 
 
-class EnvironmentReacherVelocityCtrl3Dof(EnvironmentPluggerVelocityCtrl):
+class EnvironmentReacherVelocityCtrl3Dof(EnvironmentReacherVelocityCtrl):
 
     # configuration environment
     config_env = {
@@ -453,7 +453,7 @@ class EnvironmentReacherVelocityCtrl3Dof(EnvironmentPluggerVelocityCtrl):
         super().__init__(**kwargs)
 
 
-class EnvironmentReacherVelocityCtrl6Dof(EnvironmentPluggerVelocityCtrl):
+class EnvironmentReacherVelocityCtrl6Dof(EnvironmentReacherVelocityCtrl):
 
     # configuration environment
     config_env = {
