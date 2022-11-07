@@ -1,23 +1,29 @@
-import copy
+# global
 import logging
+from dataclasses import dataclass
+
+# local
+from gym_chargepal.bullet.ur_arm import URArm
+from gym_chargepal.utility.cfg_handler import ConfigHandler
 
 # mypy
 from typing import Dict, Any, Tuple
-from gym_chargepal.bullet.ur_arm import URArm
-
-from gym_chargepal.bullet.config import JACOBIAN
 
 
 LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
+class JacobianCfg(ConfigHandler):
+    pass
+
+
 class Jacobian:
     """ Class to calculate the jacobians of the end effector. """
-
-    def __init__(self, hyperparams: Dict[str, Any], ur_arm: URArm):
-        config: Dict[str, Any] = copy.deepcopy(JACOBIAN)
-        config.update(hyperparams)
-        self.hyperparams = config
+    def __init__(self, config: Dict[str, Any], ur_arm: URArm):
+        # Create configuration object and update values
+        self.cfg = JacobianCfg()
+        self.cfg.update(**config)
         # Save references
         self.ur_arm = ur_arm
 

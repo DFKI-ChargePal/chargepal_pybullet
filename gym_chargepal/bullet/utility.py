@@ -1,11 +1,9 @@
+# global
 import logging
 import pybullet as p
 
-
-from gym_chargepal.bullet.config import (
-    BulletJointInfo,
-)
-
+# local
+from gym_chargepal.bullet import BulletJointInfo
 
 # mypy
 from pybullet_utils.bullet_client import BulletClient

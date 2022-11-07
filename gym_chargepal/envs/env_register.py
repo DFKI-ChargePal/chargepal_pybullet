@@ -288,7 +288,6 @@ class EnvironmentPluggerPositionCtrl6DofV2(EnvironmentPluggerPositionCtrl):
 
     config_ur_arm = {
         'tcp_link_name': 'plug_reference_frame',
-        'ft_joint_name': 'mounting_to_wrench',
     }
 
     config_socket = {
@@ -338,8 +337,6 @@ class EnvironmentTestbedPluggerPositionCtrl6DofV0(EnvironmentPluggerPositionCtrl
     }
 
     config_ur_arm = {
-        'tcp_link_name': 'plug',
-        'ft_joint_name': 'mounting_to_wrench',
         'joint_default_values': {
             'shoulder_pan_joint': np.pi,
             'shoulder_lift_joint': -7*np.pi/36,

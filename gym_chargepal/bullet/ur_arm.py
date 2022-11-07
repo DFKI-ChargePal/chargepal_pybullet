@@ -26,8 +26,8 @@ class URArmCfg(ConfigHandler):
     arm_joint_names: List[str] = field(default_factory=lambda: ARM_JOINT_NAMES)
     joint_default_values: Dict[str, float] = field(default_factory=lambda: ARM_JOINT_DEFAULT_VALUES)
     joint_limits: Dict[str, Tuple[float, float]] = field(default_factory=lambda: ARM_JOINT_LIMITS)
-    tcp_link_name: str = 'tcp_link'
-    ft_joint_name: str = 'ft_joint'
+    tcp_link_name: str = 'plug'
+    ft_joint_name: str = 'mounting_to_wrench'
 
 
 class URArm:

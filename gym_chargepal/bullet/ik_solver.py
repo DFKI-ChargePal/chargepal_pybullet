@@ -1,31 +1,38 @@
+# global
 import logging
-import copy
+from numpy import pi
+from dataclasses import dataclass
+
+# local
+from gym_chargepal.bullet.ur_arm import URArm
+from gym_chargepal.utility.general_utils import wrap
+from gym_chargepal.utility.cfg_handler import ConfigHandler
 
 # mypy
-from typing import Any, Dict, List, Optional, Tuple
-from gym_chargepal.bullet.ur_arm import URArm
+from typing import Any, Dict, Tuple
 
-from gym_chargepal.bullet.config import IK_SOLVER
-from gym_chargepal.utility.general_utils import wrap
 
 LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
+class IKSolverCfg(ConfigHandler):
+    lower_limits: Tuple[float, ...] = (-pi, -pi, -pi, -pi, -pi, -pi)
+    upper_limits: Tuple[float, ...] = (pi, pi, pi, pi, pi, pi)
+    joint_ranges: Tuple[float, ...] = (2*pi, 2*pi, 2*pi, 2*pi, 2*pi, 2*pi)
+    max_num_iterations: int = 100
+    residual_threshold: float = 1e-7
+
+
 class IKSolver:
     """ Inverse kinematics solver. """
-    def __init__(self, hyperparams: Dict[str, Any], ur_arm: URArm):
-        config: Dict[str, Any] = copy.deepcopy(IK_SOLVER)
-        config.update(hyperparams)
-        self._hyperparams = config
+    def __init__(self, config: Dict[str, Any], ur_arm: URArm):
+        self.cfg = IKSolverCfg()
+        self.cfg.update(**config)
+
         # get attributes of the world
         self.ur_arm = ur_arm
         self.rest_pos = [x0 for x0 in self.ur_arm.cfg.joint_default_values.values()]
-        # constants
-        self.lo_limits: List[float] = self._hyperparams['lower_limits']
-        self.up_limits: List[float] = self._hyperparams['upper_limits']
-        self.j_ranges: List[float] = self._hyperparams['joint_ranges']
-        self.max_iter: float = self._hyperparams['max_num_iterations']
-        self.residual_threshold: float = self._hyperparams['residual_threshold']
 
     def solve(self, pose: Tuple[Tuple[float, ...], Tuple[float, ...]]) -> Tuple[float, ...]:
         """
@@ -43,12 +50,12 @@ class IKSolver:
             endEffectorLinkIndex=self.ur_arm.tcp.link_idx,
             targetPosition=pose[0],
             targetOrientation=pose[1],
-            lowerLimits=self.lo_limits,
-            upperLimits=self.up_limits,
-            jointRanges=self.j_ranges,
+            lowerLimits=self.cfg.lower_limits,
+            upperLimits=self.cfg.upper_limits,
+            jointRanges=self.cfg.joint_ranges,
             restPoses=self.rest_pos,
-            maxNumIterations=self.max_iter,
-            residualThreshold=self.residual_threshold
+            maxNumIterations=self.cfg.max_num_iterations,
+            residualThreshold=self.cfg.residual_threshold
         )
         return joints
         # bring joint configuration in range between - 2 pi and + 2 pi
