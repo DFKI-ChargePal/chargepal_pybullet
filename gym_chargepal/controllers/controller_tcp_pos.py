@@ -26,6 +26,9 @@ class TcpPositionControllerCfg(ControllerCfg):
     # Absolute default positions for disabled motion directions
     plug_lin_config: Optional[Tuple[float, ...]] = None
     plug_ang_config: Optional[Tuple[float, ...]] = None
+    # Action scaling
+    wa_lin: float = 0.01  # action scaling in linear directions [m]
+    wa_ang: float = 0.01 * np.pi  # action scaling in angular directions [rad]
 
 
 class TcpPositionController(Controller):

@@ -59,11 +59,6 @@ class EnvironmentReacherPositionCtrl1Dof(EnvironmentReacherPositionCtrl):
         'hz_ctrl': 20,
     }
 
-    config_ur_arm = {
-        'tcp_link_name': 'plug_reference_frame',
-        'ft_joint_name': 'mounting_to_wrench',
-    }
-
     # configuration low-level controller
     config_low_level_control = {
         'wa_lin': 0.025,  # action scaling in linear directions [m]
@@ -75,7 +70,6 @@ class EnvironmentReacherPositionCtrl1Dof(EnvironmentReacherPositionCtrl):
         # Update configuration
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_env', config_dict=self.config_env)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_world', config_dict=self.config_world)
-        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_ur_arm', config_dict=self.config_ur_arm)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_low_level_control', config_dict=self.config_low_level_control)
         # Create environment
         super().__init__(**kwargs)
@@ -101,11 +95,6 @@ class EnvironmentReacherPositionCtrl3Dof(EnvironmentReacherPositionCtrl):
         'hz_ctrl': 20,
     }
 
-    config_ur_arm = {
-        'tcp_link_name': 'plug_reference_frame',
-        'ft_joint_name': 'mounting_to_wrench',
-    }
-
     # configuration low-level controller
     config_low_level_control = {
         'wa_lin': 0.025,  # action scaling in linear directions [m]
@@ -117,7 +106,6 @@ class EnvironmentReacherPositionCtrl3Dof(EnvironmentReacherPositionCtrl):
         # Update configuration
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_env', config_dict=self.config_env)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_world', config_dict=self.config_world)
-        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_ur_arm', config_dict=self.config_ur_arm)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_low_level_control', config_dict=self.config_low_level_control)
         # Create environment
         super().__init__(**kwargs)
@@ -142,11 +130,6 @@ class EnvironmentReacherPositionCtrl6Dof(EnvironmentReacherPositionCtrl):
         'hz_ctrl': 20,
     }
 
-    config_ur_arm = {
-        'tcp_link_name': 'plug_reference_frame',
-        'ft_joint_name': 'mounting_to_wrench',
-    }
-
     # configuration low-level controller
     config_low_level_control = {
         'wa_lin': 0.025,  # action scaling in linear directions [m]
@@ -157,7 +140,6 @@ class EnvironmentReacherPositionCtrl6Dof(EnvironmentReacherPositionCtrl):
         # Update configuration
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_env', config_dict=self.config_env)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_world', config_dict=self.config_world)
-        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_ur_arm', config_dict=self.config_ur_arm)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_low_level_control', config_dict=self.config_low_level_control)
         # Create environment
         super().__init__(**kwargs)
@@ -182,28 +164,10 @@ class EnvironmentPluggerPositionCtrl6DofV0(EnvironmentPluggerPositionCtrl):
         'hz_ctrl': 40,
     }
 
-    config_ur_arm = {
-        'tcp_link_name': 'plug_reference_frame',
-        'ft_joint_name': 'mounting_to_wrench',
-    }
-
-    config_socket = {
-        'socket_link_name': 'target_reference_frame',
-    }
-
-    # configuration low-level controller
-    config_low_level_control = {
-        'wa_lin': 0.01,  # action scaling in linear directions [m]
-        'wa_ang': 0.01 * np.pi,  # action scaling in angular directions [rad]
-        }
-
     def __init__(self, **kwargs: Any):
         # Update configuration
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_env', config_dict=self.config_env)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_world', config_dict=self.config_world)
-        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_ur_arm', config_dict=self.config_ur_arm)
-        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_socket', config_dict=self.config_socket)
-        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_low_level_control', config_dict=self.config_low_level_control)
         # Create environment
         super().__init__(**kwargs)
 
@@ -228,7 +192,6 @@ class EnvironmentPluggerPositionCtrl6DofV1(EnvironmentPluggerPositionCtrl):
         }
 
     rod_diameter = "32d5"
-
     config_world = {
         'hz_ctrl': 40,
         'robot_urdf': f'cpm_fix_rod_{rod_diameter}.urdf',
@@ -236,29 +199,10 @@ class EnvironmentPluggerPositionCtrl6DofV1(EnvironmentPluggerPositionCtrl):
         'socket_config': Pose(SOCKET_POS, SOCKET_ORI),
     }
 
-    config_ur_arm = {
-        'tcp_link_name': 'plug_reference_frame',
-        'ft_joint_name': 'mounting_to_wrench',
-    }
-
-    config_socket = {
-        'socket_link_name': 'target_reference_frame',
-    }
-
-
-    # configuration low-level controller
-    config_low_level_control = {
-        'wa_lin': 0.01,  # action scaling in linear directions [m]
-        'wa_ang': 0.01 * np.pi,  # action scaling in angular directions [rad]
-        }
-
     def __init__(self, **kwargs: Any):
         # Update configuration
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_env', config_dict=self.config_env)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_world', config_dict=self.config_world)
-        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_ur_arm', config_dict=self.config_ur_arm)
-        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_socket', config_dict=self.config_socket)
-        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_low_level_control', config_dict=self.config_low_level_control)
         # Create environment
         super().__init__(**kwargs)
 
@@ -286,27 +230,10 @@ class EnvironmentPluggerPositionCtrl6DofV2(EnvironmentPluggerPositionCtrl):
         'socket_config': Pose(SOCKET_POS, SOCKET_ORI),
     }
 
-    config_ur_arm = {
-        'tcp_link_name': 'plug_reference_frame',
-    }
-
-    config_socket = {
-        'socket_link_name': 'target_reference_frame',
-    }
-
-    # configuration low-level controller
-    config_low_level_control = {
-        'wa_lin': 0.01,  # action scaling in linear directions [m]
-        'wa_ang': 0.01 * np.pi,  # action scaling in angular directions [rad]
-        }
-
     def __init__(self, **kwargs: Any):
         # Update configuration
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_env', config_dict=self.config_env)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_world', config_dict=self.config_world)
-        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_ur_arm', config_dict=self.config_ur_arm)
-        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_socket', config_dict=self.config_socket)
-        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_low_level_control', config_dict=self.config_low_level_control)
         # Create environment
         super().__init__(**kwargs)
 
@@ -347,18 +274,11 @@ class EnvironmentTestbedPluggerPositionCtrl6DofV0(EnvironmentPluggerPositionCtrl
         },
     }
 
-    # configuration low-level controller
-    config_low_level_control = {
-        'wa_lin': 0.01,  # action scaling in linear directions [m]
-        'wa_ang': 0.01 * np.pi,  # action scaling in angular directions [rad]
-        }
-
     def __init__(self, **kwargs: Any):
         # Update configuration
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_env', config_dict=self.config_env)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_world', config_dict=self.config_world)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_ur_arm', config_dict=self.config_ur_arm)
-        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_low_level_control', config_dict=self.config_low_level_control)
         # Create environment
         super().__init__(**kwargs)
 
@@ -387,14 +307,8 @@ class EnvironmentReacherVelocityCtrl1Dof(EnvironmentReacherVelocityCtrl):
         'hz_ctrl': 20,
     }
 
-    config_ur_arm = {
-        'tcp_link_name': 'plug_reference_frame',
-        'ft_joint_name': 'mounting_to_wrench',
-    }
-
     # configuration low-level controller
     config_low_level_control = {
-        'wa_lin': 0.25,  # action scaling in linear directions [m]
         'linear_enabled_motion_axis': (False, True, False),
         'angular_enabled_motion_axis': (False, False, False),
         }
@@ -403,7 +317,6 @@ class EnvironmentReacherVelocityCtrl1Dof(EnvironmentReacherVelocityCtrl):
         # Update configuration
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_env', config_dict=self.config_env)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_world', config_dict=self.config_world)
-        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_ur_arm', config_dict=self.config_ur_arm)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_low_level_control', config_dict=self.config_low_level_control)
         # Create environment
         super().__init__(**kwargs)
@@ -428,14 +341,8 @@ class EnvironmentReacherVelocityCtrl3Dof(EnvironmentReacherVelocityCtrl):
         'hz_ctrl': 20,
     }
 
-    config_ur_arm = {
-        'tcp_link_name': 'plug_reference_frame',
-        'ft_joint_name': 'mounting_to_wrench',
-    }
-
     # configuration low-level controller
     config_low_level_control = {
-        'wa_lin': 0.25,  # action scaling in linear directions [m]
         'linear_enabled_motion_axis': (True, True, True),
         'angular_enabled_motion_axis': (False, False, False),
         }
@@ -444,7 +351,6 @@ class EnvironmentReacherVelocityCtrl3Dof(EnvironmentReacherVelocityCtrl):
         # Update configuration
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_env', config_dict=self.config_env)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_world', config_dict=self.config_world)
-        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_ur_arm', config_dict=self.config_ur_arm)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_low_level_control', config_dict=self.config_low_level_control)
         # Create environment
         super().__init__(**kwargs)
@@ -469,22 +375,9 @@ class EnvironmentReacherVelocityCtrl6Dof(EnvironmentReacherVelocityCtrl):
         'hz_ctrl': 20,
     }
 
-    config_ur_arm = {
-        'tcp_link_name': 'plug_reference_frame',
-        'ft_joint_name': 'mounting_to_wrench',
-    }
-
-    # configuration low-level controller
-    config_low_level_control = {
-        'wa_lin': 0.25,  # action scaling in linear directions [m]
-        'wa_ang': 0.25 * np.pi,  # action scaling in angular directions [rad]
-        }
-
     def __init__(self, **kwargs: Any):
         # Update configuration
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_env', config_dict=self.config_env)
         update_kwargs_dict(kwargs_dict=kwargs, config_name='config_world', config_dict=self.config_world)
-        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_ur_arm', config_dict=self.config_ur_arm)
-        update_kwargs_dict(kwargs_dict=kwargs, config_name='config_low_level_control', config_dict=self.config_low_level_control)
         # Create environment
         super().__init__(**kwargs)

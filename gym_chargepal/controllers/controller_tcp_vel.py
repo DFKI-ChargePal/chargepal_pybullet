@@ -23,6 +23,8 @@ LOGGER = logging.getLogger(__name__)
 class TcpVelocityControllerCfg(ControllerCfg):
     linear_enabled_motion_axis: Tuple[bool, ...] = (True, True, True)
     angular_enabled_motion_axis: Tuple[bool, ...] = (True, True, True)
+    wa_lin: float = 0.2  # action scaling in linear directions [m]
+    wa_ang: float = 0.2 * np.pi  # action scaling in angular directions [rad]
 
 
 class TcpVelocityController(Controller):
