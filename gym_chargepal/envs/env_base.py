@@ -18,7 +18,7 @@ from typing import Dict, Any, Optional, Tuple
 class EnvironmentCfg(ConfigHandler):
     T: int = 100  # time horizon
     task_pos_eps: float = 0.003  # position task criterion [m]
-    task_ang_eps: float = 1.0  # angular task criterion [rad]
+    task_ang_eps: float = 0.0175  # angular task criterion [rad]
     action_space: Optional[gym.spaces.Space] = None
     observation_space: Optional[gym.spaces.Space] = None
     start_config: Pose = Pose(Translation(), Quaternion())
