@@ -4,7 +4,8 @@ import pybullet as p
 import quaternionic as quat
 
 # local
-from gym_chargepal.envs.env import Environment
+import gym_chargepal.utility.cfg_handler as ch
+from gym_chargepal.envs.env_base import Environment
 from gym_chargepal.bullet.ik_solver import IKSolver
 from gym_chargepal.sensors.sensor_plug import PlugSensor
 from gym_chargepal.worlds.world_plugger import WorldPlugger
@@ -16,7 +17,7 @@ from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotor
 
 # mypy
 from numpy import typing as npt
-from typing import Any, Callable, Dict, Tuple 
+from typing import Any, Dict, Tuple 
 
 
 class EnvironmentPluggerPositionCtrl(Environment):
@@ -24,20 +25,19 @@ class EnvironmentPluggerPositionCtrl(Environment):
 
     def __init__(self, **kwargs: Dict[str, Any]):
         # Update environment configuration
-        config_env = {} if 'config_env' not in kwargs else kwargs['config_env']
+        config_env = ch.search(kwargs, 'environment')
         Environment.__init__(self, config_env)
         
         # extract component hyperparameter from kwargs
-        extract_config: Callable[[str], Dict[str, Any]] = lambda name: {} if name not in kwargs else kwargs[name]
-        config_world = extract_config('config_world')
-        config_ur_arm = extract_config('config_ur_arm')
-        config_socket = extract_config('config_socket')
-        config_reward = extract_config('config_reward')
-        config_ik_solver = extract_config('config_ik_solver')
-        config_plug_sensor = extract_config('config_plug_sensor')
-        config_socket_sensor = extract_config('config_socket_sensor')
-        config_control_interface = extract_config('config_control_interface')
-        config_low_level_control = extract_config('config_low_level_control')
+        config_world = ch.search(kwargs, 'world')
+        config_ur_arm = ch.search(kwargs, 'ur_arm')
+        config_socket = ch.search(kwargs, 'socket')
+        config_reward = ch.search(kwargs, 'reward')
+        config_ik_solver = ch.search(kwargs, 'ik_solver')
+        config_plug_sensor = ch.search(kwargs, 'plug_sensor')
+        config_socket_sensor = ch.search(kwargs, 'socket_sensor')
+        config_control_interface = ch.search(kwargs, 'control_interface')
+        config_low_level_control = ch.search(kwargs, 'low_level_control')
 
         # start configuration in world coordinates
         self.x0_WP: Tuple[float, ...] = tuple(self.cfg.target_config.pos.as_array() + self.cfg.start_config.pos.as_array())

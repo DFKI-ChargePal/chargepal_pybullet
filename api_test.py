@@ -1,3 +1,4 @@
+# global imports
 import gym
 import numpy as np
 
@@ -42,18 +43,9 @@ def main(env_name: str, gui: bool) -> None:
 
 
 if __name__ == '__main__':
-    env_names = [
-        'ChargePal-Reacher-1D-PositionControl-v0',
-        'ChargePal-Reacher-3D-PositionControl-v0',
-        'ChargePal-Reacher-6D-PositionControl-v0',
-        'ChargePal-Plugger-6D-PositionControl-v0',
-        'ChargePal-Plugger-6D-PositionControl-v1',
-        'ChargePal-Plugger-6D-PositionControl-v2',
-        'ChargePal-Reacher-1D-VelocityControl-v0',
-        'ChargePal-Reacher-3D-VelocityControl-v0',
-        'ChargePal-Reacher-6D-VelocityControl-v0',
-        'ChargePal-Testbed-Plugger-6D-PositionControl-v0',
-    ]
 
-    for env_ in env_names:
+    # test for all registered environments
+    from gym_chargepal.envs import environment_register
+
+    for env_ in environment_register:
         main(env_name=env_, gui=True)

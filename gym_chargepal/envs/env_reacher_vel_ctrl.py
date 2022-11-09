@@ -4,17 +4,18 @@ import pybullet as p
 import quaternionic as quat
 
 # local
-from gym_chargepal.envs.env import Environment
-from gym_chargepal.worlds.world_reacher import WorldReacher
+import gym_chargepal.utility.cfg_handler as ch
+from gym_chargepal.envs.env_base import Environment
 from gym_chargepal.bullet.jacobian import Jacobian
 from gym_chargepal.bullet.ik_solver import IKSolver
-from gym_chargepal.bullet.joint_velocity_motor_control import JointVelocityMotorControl
 from gym_chargepal.sensors.sensor_plug import PlugSensor
+from gym_chargepal.worlds.world_reacher import WorldReacher
 from gym_chargepal.sensors.sensor_joints import JointSensor
 from gym_chargepal.sensors.sensor_virt_tgt import VirtTgtSensor
-from gym_chargepal.controllers.controller_tcp_vel import TcpVelocityController
 from gym_chargepal.reward.reward_dist_speed import DistanceSpeedReward
 from gym_chargepal.utility.tf import Quaternion, Translation, Twist, Pose
+from gym_chargepal.controllers.controller_tcp_vel import TcpVelocityController
+from gym_chargepal.bullet.joint_velocity_motor_control import JointVelocityMotorControl
 
 # mypy
 from numpy import typing as npt
@@ -25,21 +26,20 @@ class EnvironmentReacherVelocityCtrl(Environment):
     """ Cartesian Environment with velocity controller - Task: point to point """
     def __init__(self, **kwargs: Dict[str, Any]):
         # Update environment configuration
-        config_env = {} if 'config_env' not in kwargs else kwargs['config_env']
+        config_env = ch.search(kwargs, 'environment')
         Environment.__init__(self, config_env)
         
         # extract component hyperparameter from kwargs
-        extract_config: Callable[[str], Dict[str, Any]] = lambda name: {} if name not in kwargs else kwargs[name]
-        config_world = extract_config('config_world')  
-        config_ur_arm = extract_config('config_ur_arm')    
-        config_reward = extract_config('config_reward')
-        config_jacobian = extract_config('config_jacobian')
-        config_ik_solver = extract_config('config_ik_solver')
-        config_plug_sensor = extract_config('config_plug_sensor')
-        config_joint_sensor = extract_config('config_joint_sensor')
-        config_target_sensor = extract_config('config_target_sensor')
-        config_control_interface = extract_config('config_control_interface')
-        config_low_level_control = extract_config('config_low_level_control')
+        config_world = ch.search(kwargs, 'world')
+        config_ur_arm = ch.search(kwargs, 'ur_arm')
+        config_reward = ch.search(kwargs, 'reward')
+        config_jacobian = ch.search(kwargs, 'jacobian')
+        config_ik_solver = ch.search(kwargs, 'ik_solver')
+        config_plug_sensor = ch.search(kwargs, 'plug_sensor')
+        config_joint_sensor = ch.search(kwargs, 'joint_sensor')
+        config_target_sensor = ch.search(kwargs, 'target_sensor')
+        config_control_interface = ch.search(kwargs, 'control_interface')
+        config_low_level_control = ch.search(kwargs, 'low_level_control')
 
         # start configuration in world coordinates
         self.x0_WP: Tuple[float, ...] = tuple(self.cfg.target_config.pos.as_array() + self.cfg.start_config.pos.as_array())
