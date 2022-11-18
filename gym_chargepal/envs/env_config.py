@@ -199,12 +199,20 @@ testbed_plugger_position_ctrl_v0 = {
         },
 
     'world': {
-        'hz_ctrl': 40,
+        'freq_ctrl': 40,
         'robot_urdf': 'chargepal_testbed_tdt.urdf',
         'socket_urdf': 'tdt_socket.urdf',
+        'cam_distance': 0.75,
+        'cam_yaw': 105,
+        'cam_pitch': -15.0,
+        'cam_x': 0.8,
+        'cam_y': 0.8,
+        'cam_z': 0.15,
         'plane_config': Pose(Translation(0.0, 0.0, -0.8136), Quaternion()),
         'robot_config': Pose(Translation(), Quaternion()),
         'socket_config': Pose(Translation(0.5, 0.8, 0.0), Quaternion()),
+        'gui_txt': "",
+        'gui_txt_pos': (0.75, 1.25, 0.6),
         },
 
     'ur_arm': {

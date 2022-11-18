@@ -9,7 +9,7 @@ N_EPISODES = 1
 def main(env_name: str, gui: bool) -> None:
 
     print(3 * '\n' + f"Start test with environment: {env_name}")
-    env = gym.make("gym_chargepal:" + env_name)
+    env = gym.make("gym_chargepal:" + env_name, kwargs={})
     env.action_space.seed(42)
     if gui: env.render()
     obs = env.reset()
@@ -47,5 +47,6 @@ if __name__ == '__main__':
     # test for all registered environments
     from gym_chargepal.envs import environment_register
 
+    # main(env_name="ChargePal-Testbed-Plugger-PositionControl-v0", gui=True)
     for env_ in environment_register:
         main(env_name=env_, gui=True)
