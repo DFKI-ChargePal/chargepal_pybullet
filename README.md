@@ -26,9 +26,10 @@ mkdir chargepal && cd ~/ros_ws/src/chargepal
 git clone git@git.ni.dfki.de:chargepal/chargepal_description.git
 git clone git@git.ni.dfki.de:chargepal/manipulation/chargepal_pybullet.git
 
-# set soft-link
+# set soft-links
 cd ~/ros_ws/src/chargepal/chargepal_description
 ln -s ../../universal_robot/ur_description
+ln -s ../../bota_driver/rokubimini_description/
 
 cd ~/ros_ws
 catkin build
