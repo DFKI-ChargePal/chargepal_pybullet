@@ -24,14 +24,14 @@ class EnvironmentFactory:
         """
         # remap
         config = copy.deepcopy(kwargs)
-        config_kwargs = copy.deepcopy(config['kwargs'])
-        del config['kwargs']
+        if 'kwargs' in config:
+            config_kwargs = copy.deepcopy(config['kwargs'])
+            del config['kwargs']
 
-        for class_cfg in config:
-            if class_cfg in config_kwargs:
-                config[class_cfg].update(config_kwargs[class_cfg])
-            else:
-                pass
+            for class_cfg in config:
+                if class_cfg in config_kwargs:
+                    config[class_cfg].update(config_kwargs[class_cfg])
+
 
         # extract environment type
         env_type = config['environment']['type']
