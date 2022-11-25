@@ -5,11 +5,20 @@ import numpy as np
 # constants
 N_EPISODES = 1
 
+# typing
+from typing import Any, Dict
+
 
 def main(env_name: str, gui: bool) -> None:
 
     print(3 * '\n' + f"Start test with environment: {env_name}")
-    env = gym.make("gym_chargepal:" + env_name, kwargs={})
+    # kwargs_cfg = {
+    #     'world': {
+    #         'gui_txt': 'Hello World'
+    #     }
+    # }
+    kwargs_cfg: Dict[str, Any] = {}
+    env = gym.make("gym_chargepal:" + env_name, **{'kwargs': kwargs_cfg})
     env.action_space.seed(42)
     if gui: env.render()
     obs = env.reset()
