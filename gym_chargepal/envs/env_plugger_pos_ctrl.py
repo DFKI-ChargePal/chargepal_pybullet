@@ -7,6 +7,7 @@ import quaternionic as quat
 import gym_chargepal.utility.cfg_handler as ch
 from gym_chargepal.envs.env_base import Environment
 from gym_chargepal.bullet.ik_solver import IKSolver
+from gym_chargepal.sensors.sensor_ft import FTSensor
 from gym_chargepal.sensors.sensor_plug import PlugSensor
 from gym_chargepal.worlds.world_plugger import WorldPlugger
 from gym_chargepal.reward.reward_dist import DistanceReward
@@ -34,6 +35,7 @@ class EnvironmentPluggerPositionCtrl(Environment):
         config_socket = ch.search(kwargs, 'socket')
         config_reward = ch.search(kwargs, 'reward')
         config_ik_solver = ch.search(kwargs, 'ik_solver')
+        config_ft_sensor = ch.search(kwargs, 'ft_sensor')
         config_plug_sensor = ch.search(kwargs, 'plug_sensor')
         config_socket_sensor = ch.search(kwargs, 'socket_sensor')
         config_control_interface = ch.search(kwargs, 'control_interface')
@@ -45,6 +47,9 @@ class EnvironmentPluggerPositionCtrl(Environment):
         q0_WS = self.cfg.target_config.ori.as_quaternionic()
         q0_WP = tuple((q0_WS * q0_SP).ndarray)
         self.q0_WP = Quaternion(*q0_WP)
+        # target sensor state
+        self.tgt_pos: Tuple[float, ...] = tuple()
+        self.tgt_ori: Tuple[float, ...] = tuple()
 
         # resolve cross references
         config_world['ur_arm'] = config_ur_arm
@@ -60,6 +65,7 @@ class EnvironmentPluggerPositionCtrl(Environment):
         self.world = WorldPlugger(config_world)
         self.ik_solver = IKSolver(config_ik_solver, self.world.ur_arm)
         self.control_interface = JointPositionMotorControl(config_control_interface, self.world.ur_arm)
+        self.ft_sensor = FTSensor(config_ft_sensor, self.world.ur_arm)
         self.plug_sensor = PlugSensor(config_plug_sensor, self.world.ur_arm)
         self.socket_sensor = SocketSensor(config_socket_sensor, self.world.socket)
         self.low_level_control = TcpPositionController(
@@ -91,7 +97,9 @@ class EnvironmentPluggerPositionCtrl(Environment):
 
         # reset robot again
         self.world.reset(joint_config_0)
-
+        # Set new target pose
+        self.tgt_pos = self.socket_sensor.meas_pos()
+        self.tgt_ori = self.socket_sensor.meas_ori()
         return self.get_obs()
 
     def step(self, action: npt.NDArray[np.float32]) -> Tuple[npt.NDArray[np.float32], float, bool, Dict[Any, Any]]:
@@ -126,14 +134,17 @@ class EnvironmentPluggerPositionCtrl(Environment):
         self.world.disconnect()
 
     def get_obs(self) -> npt.NDArray[np.float32]:
-        tgt_pos = np.array(self.socket_sensor.get_pos())
+        tgt_pos = np.array(self.tgt_pos)
         plg_pos = np.array(self.plug_sensor.get_pos())
         dif_pos: Tuple[float, ...] = tuple(tgt_pos - plg_pos)
 
-        tgt_ori = self.socket_sensor.get_ori()
+        tgt_ori = self.tgt_ori
         plg_ori = self.plug_sensor.get_ori()
         dif_ori = self.world.bullet_client.getDifferenceQuaternion(plg_ori, tgt_ori)
-        obs = np.array((dif_pos + dif_ori), dtype=np.float32)
+
+        ft_meas = self.ft_sensor.meas_wrench()
+
+        obs = np.array((dif_pos + dif_ori + ft_meas), dtype=np.float32)
 
         tgt_ori_ = np.array(tgt_ori)
         plg_ori_ = np.array(plg_ori)

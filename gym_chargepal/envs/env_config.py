@@ -112,7 +112,7 @@ plugger_position_ctrl_v0 = {
         'type': EnvironmentPluggerPositionCtrl,
         'T': 200,
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
-        'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(7,), dtype=np.float32),
+        'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(13,), dtype=np.float32),
         # Target configuration
         'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
         # Start configuration relative to target configuration'
@@ -138,7 +138,7 @@ plugger_position_ctrl_v1 = {
         'type': EnvironmentPluggerPositionCtrl,
         'T': 200,
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
-        'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(7,), dtype=np.float32),
+        'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(13,), dtype=np.float32),
         # Target configuration
         'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
         # Start configuration relative to target configuration'
@@ -163,7 +163,7 @@ plugger_position_ctrl_v2 = {
         'type': EnvironmentPluggerPositionCtrl,
         'T': 200,
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
-        'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(7,), dtype=np.float32),
+        'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(13,), dtype=np.float32),
         # Target configuration
         'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
         # Start configuration relative to target configuration'
@@ -188,7 +188,7 @@ testbed_plugger_position_ctrl_v0 = {
         'type': EnvironmentPluggerPositionCtrl,
         'T': 200,
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
-        'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(7,), dtype=np.float32),
+        'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(13,), dtype=np.float32),
         # Target configuration
         'target_config': Pose(Translation(0.5, 0.8, 0.0), ROT_PI_X),
         # Start configuration relative to target configuration
@@ -225,6 +225,13 @@ testbed_plugger_position_ctrl_v0 = {
             'wrist_3_joint': -np.pi/2,
             },
         },
+
+    'socket_sensor': {
+        'pos_noise': (0.005, 0.005, 0.010),
+        'pos_bias': (0.003, -0.02, 0.001),
+        'ori_noise': (2*np.pi*0.001, 2*np.pi*0.001, 2*np.pi*0.001),
+        'ori_bias': (-0.005, 0.001, -0.0025),
+    }
 }
 
 

@@ -1,6 +1,7 @@
 """ This file defines the socket sensor class. """
 # global
 import logging
+import numpy as np
 from dataclasses import dataclass
 
 # local
@@ -8,7 +9,8 @@ from gym_chargepal.bullet.socket import Socket
 from gym_chargepal.sensors.sensor import SensorCfg, Sensor
 
 # mypy
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Tuple
+from numpy import typing as npt
 
 
 LOGGER = logging.getLogger(__name__)
@@ -19,6 +21,10 @@ class SocketSensorCfg(SensorCfg):
     sensor_id: str = 'socket_sensor'
     pos_id: str = 'x'
     ori_id: str = 'q'
+    pos_noise: Tuple[float, ...] = (0.0, 0.0, 0.0)  # linear position sensor noise
+    pos_bias: Tuple[float, ...] = (0.0, 0.0, 0.0)   # linear position sensor bias
+    ori_noise: Tuple[float, ...] = (0.0, 0.0, 0.0)  # angular (euler) sensor noise 
+    ori_bias: Tuple[float, ...] = (0.0, 0.0, 0.0)   # angular (euler) sensor bias
 
 
 class SocketSensor(Sensor):
@@ -31,9 +37,26 @@ class SocketSensor(Sensor):
         self.cfg.update(**config)
         # Safe references
         self.socket = socket
+        self.pos_noise = np.array(self.cfg.pos_noise, dtype=np.float32)
+        self.pos_bias = np.array(self.cfg.pos_bias, dtype=np.float32)
+        self.ori_noise = np.array(self.cfg.ori_noise, dtype=np.float32)
+        self.ori_bias = np.array(self.cfg.ori_bias, dtype=np.float32)
+
 
     def get_pos(self) -> Tuple[float, ...]:
         return self.socket.socket.get_pos()
 
     def get_ori(self) -> Tuple[float, ...]:
         return self.socket.socket.get_ori()
+
+    def meas_pos(self) -> Tuple[float, ...]:
+        gt_pos = np.array(self.get_pos(), dtype=np.float32)
+        pos_meas: npt.NDArray[np.float32] = gt_pos + np.random.randn(3) * self.pos_noise + self.pos_bias
+        return tuple(pos_meas.tolist())
+
+    def meas_ori(self) -> Tuple[float, ...]:
+        gt_ori = self.get_ori()
+        gt_ori_eul = np.array(self.socket.bc.getEulerFromQuaternion(gt_ori), dtype=np.float32)
+        ori_eul_meas: npt.NDArray[np.float32] = gt_ori_eul + np.random.randn(3) * self.ori_noise + self.ori_bias
+        ori_meas: Tuple[float, ...] = self.socket.bc.getQuaternionFromEuler(ori_eul_meas.tolist())
+        return ori_meas
