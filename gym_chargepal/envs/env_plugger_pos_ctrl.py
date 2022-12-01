@@ -18,7 +18,7 @@ from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotor
 
 # mypy
 from numpy import typing as npt
-from typing import Any, Dict, Tuple 
+from typing import Any, Dict, Tuple
 
 
 class EnvironmentPluggerPositionCtrl(Environment):
@@ -110,6 +110,7 @@ class EnvironmentPluggerPositionCtrl(Environment):
         # step simulation
         self.world.step(render=self.is_render)
         self.clock.tick()
+        self.ft_sensor.render_ft_bar(render=self.is_render)
         # Get new observation
         obs = self.get_obs()
         # Evaluate environment
@@ -143,6 +144,8 @@ class EnvironmentPluggerPositionCtrl(Environment):
         dif_ori = self.world.bullet_client.getDifferenceQuaternion(plg_ori, tgt_ori)
 
         ft_meas = self.ft_sensor.meas_wrench()
+        # self.ft_norm = np.sqrt(np.sum(np.square(ft_meas)))
+        # print(self.ft_norm)
 
         obs = np.array((dif_pos + dif_ori + ft_meas), dtype=np.float32)
 
@@ -154,6 +157,7 @@ class EnvironmentPluggerPositionCtrl(Environment):
 
     def compose_info(self) -> Dict[str, Any]:
         info = {
+            # 'ft_norm': self.ft_norm,
             'error_pos': self.task_pos_error,
             'error_ang': self.task_ang_error,
             'solved': self.solved,
