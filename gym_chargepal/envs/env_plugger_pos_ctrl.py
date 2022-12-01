@@ -144,8 +144,6 @@ class EnvironmentPluggerPositionCtrl(Environment):
         dif_ori = self.world.bullet_client.getDifferenceQuaternion(plg_ori, tgt_ori)
 
         ft_meas = self.ft_sensor.meas_wrench()
-        # self.ft_norm = np.sqrt(np.sum(np.square(ft_meas)))
-        # print(self.ft_norm)
 
         obs = np.array((dif_pos + dif_ori + ft_meas), dtype=np.float32)
 
@@ -157,7 +155,6 @@ class EnvironmentPluggerPositionCtrl(Environment):
 
     def compose_info(self) -> Dict[str, Any]:
         info = {
-            # 'ft_norm': self.ft_norm,
             'error_pos': self.task_pos_error,
             'error_ang': self.task_ang_error,
             'solved': self.solved,
