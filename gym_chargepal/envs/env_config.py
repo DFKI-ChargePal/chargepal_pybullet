@@ -226,12 +226,16 @@ testbed_plugger_position_ctrl_v0 = {
             },
         },
 
+    'ft_sensor': {
+        'render_bar': False,
+        },
+
     'socket_sensor': {
         'pos_noise': (0.005, 0.005, 0.010),
         'pos_bias': (0.003, -0.02, 0.001),
         'ori_noise': (2*np.pi*0.001, 2*np.pi*0.001, 2*np.pi*0.001),
         'ori_bias': (-0.005, 0.001, -0.0025),
-    }
+        },
 }
 
 

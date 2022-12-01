@@ -24,6 +24,7 @@ class FTSensorCfg(SensorCfg):
     moment_id: str = 'm'
     ft_range: Tuple[float, ...] = (500.0, 500.0, 1200.0, 15.0, 15.0, 12.0)
     overload: Tuple[float, ...] = (2000.0, 2000.0, 4000.0, 30.0, 30.0, 30.0)
+    render_bar: bool = False
     render_bar_length: int = 35
     color_bound_med: float = 0.7
     color_bound_high: float = 0.95
@@ -57,7 +58,7 @@ class FTSensor(Sensor):
         return meas
 
     def render_ft_bar(self, render: bool) -> None:
-        if render:
+        if render and self.cfg.render_bar:
             wrench = self.get_wrench()
             # Find outliers 
             ft_max = max(wrench)
