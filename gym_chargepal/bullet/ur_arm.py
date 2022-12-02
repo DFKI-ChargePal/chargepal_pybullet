@@ -28,10 +28,11 @@ class URArmCfg(ConfigHandler):
     joint_limits: Dict[str, Tuple[float, float]] = field(default_factory=lambda: ARM_JOINT_LIMITS)
     tcp_link_name: str = 'plug'
     ft_joint_name: str = 'mounting_to_wrench'
+    ft_buffer_size: int = 1
 
 
 class URArm:
-    
+
     def __init__(self, config: Dict[str, Any]):
         # Create configuration and override values
         self.cfg = URArmCfg()
@@ -42,12 +43,12 @@ class URArm:
         self.bc = bullet_client
         self.body_id = body_id
         self.joint_idx_dict = create_joint_index_dict(
-            body_id, 
-            self.cfg.arm_joint_names, 
+            body_id,
+            self.cfg.arm_joint_names,
             bullet_client
             )
         self.tcp = BodyLink(self.cfg.tcp_link_name, bullet_client, body_id)
-        self.fts = FTSensor(self.cfg.ft_joint_name, bullet_client, body_id) if enable_fts else None
+        self.fts = FTSensor(self.cfg.ft_joint_name, bullet_client, body_id, self.cfg.ft_buffer_size) if enable_fts else None
 
     def reset(self, joint_cfg: Optional[Tuple[float, ...]] = None) -> None:
         """ Hard arm reset in either default or given joint configuration """

@@ -108,7 +108,6 @@ plugger_position_ctrl_v0 = {
         # Reset variance of the start pose
         'reset_variance': ((0.01, 0.005, 0.01), (0.05, 0.05, 0.05)),
         },
-
 }
 
 
@@ -208,7 +207,7 @@ testbed_plugger_position_ctrl_v0 = {
         },
 
     'ft_sensor': {
-        'render_bar': False,
+        'render_bar': True,
         },
 
     'socket_sensor': {

@@ -52,6 +52,7 @@ class WorldPlugger(World):
         self.robot_id = -1
         self.socket_id = -1
         ur_arm_config = cfg_helper.search(config, 'ur_arm')
+        ur_arm_config['ft_buffer_size'] = self.sim_steps + 1
         self.ur_arm = URArm(ur_arm_config)
         socket_config = cfg_helper.search(config, 'socket')
         self.socket = Socket(socket_config)
