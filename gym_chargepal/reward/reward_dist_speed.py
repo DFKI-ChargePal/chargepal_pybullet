@@ -4,11 +4,11 @@ import numpy as np
 from dataclasses import dataclass
 
 # local
-from gym_chargepal.utility.tf import Twist, Pose
-from gym_chargepal.utility.env_clock import EnvironmentClock
+from gym_chargepal.utility.tf import Pose, Twist
 from gym_chargepal.reward.reward import RewardCfg, Reward
+from gym_chargepal.utility.env_clock import EnvironmentClock
 
-# mypy
+# typing
 from numpy import typing as npt
 from typing import Any, Dict
 

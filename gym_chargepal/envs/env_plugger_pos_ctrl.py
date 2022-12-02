@@ -10,9 +10,10 @@ from gym_chargepal.bullet.ik_solver import IKSolver
 from gym_chargepal.sensors.sensor_ft import FTSensor
 from gym_chargepal.sensors.sensor_plug import PlugSensor
 from gym_chargepal.worlds.world_plugger import WorldPlugger
-from gym_chargepal.reward.reward_dist import DistanceReward
+# from gym_chargepal.reward.reward_dist import DistanceReward
 from gym_chargepal.sensors.sensor_socket import SocketSensor
 from gym_chargepal.utility.tf import Quaternion, Translation, Pose
+from gym_chargepal.reward.reward_pose_wrench import PoseWrenchReward
 from gym_chargepal.controllers.controller_tcp_pos import TcpPositionController
 from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotorControl
 
@@ -74,7 +75,8 @@ class EnvironmentPluggerPositionCtrl(Environment):
             self.control_interface,
             self.plug_sensor
         )
-        self.reward = DistanceReward(config_reward, self.clock)
+        self.reward = PoseWrenchReward(config_reward, self.clock)
+        # self.reward = DistanceReward(config_reward, self.clock)
 
     def reset(self) -> npt.NDArray[np.float32]:
         # reset environment
@@ -116,8 +118,10 @@ class EnvironmentPluggerPositionCtrl(Environment):
         # Evaluate environment
         done = self.done
         X_tcp = Pose(self.plug_sensor.get_pos(), self.plug_sensor.get_ori())
-        X_tgt = Pose(self.plug_sensor.get_pos(), self.plug_sensor.get_ori())
-        reward = self.reward.compute(X_tcp, X_tgt, done)
+        X_tgt = Pose(self.socket_sensor.get_pos(), self.socket_sensor.get_ori())
+        F_tcp = self.ft_sensor.get_wrench()
+        reward = self.reward.compute(X_tcp, X_tgt, F_tcp, done)
+        # reward = self.reward.compute(X_tcp, X_tgt, done)
         info = self.compose_info()
         return obs, reward, done, info
 
