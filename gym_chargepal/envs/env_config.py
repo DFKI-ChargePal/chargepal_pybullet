@@ -40,10 +40,6 @@ reacher_1dof_position_ctrl_v0 = {
         'reset_variance': ((0.0, 0.025, 0.0), (0.0, 0.0, 0.0)),
     },
 
-    'world': {
-        'hz_ctrl': 20,
-    },
-
     'low_level_control': {
         'wa_lin': 0.025,  # action scaling in linear directions [m]
         'linear_enabled_motion_axis': (False, True, False),
@@ -66,10 +62,6 @@ reacher_3dof_position_ctrl_v0 = {
         'start_config': Pose(Translation(0.0, 0.2, 0.0), Quaternion()),
         # Reset variance of the start pose
         'reset_variance': ((0.01, 0.05, 0.01), (0.0, 0.0, 0.0)),
-        },
-
-    'world': {
-        'hz_ctrl': 20,
         },
 
     'low_level_control': {
@@ -95,10 +87,6 @@ reacher_6dof_position_ctrl_v0 = {
         'reset_variance': ((0.05, 0.05, 0.05), (0.1, 0.1, 0.1)),
         },
 
-    'world': {
-        'hz_ctrl': 20,
-        },
-
     'low_level_control': {
         'wa_lin': 0.025,  # action scaling in linear directions [m]
         'wa_ang': 0.05,  # action scaling in angular directions [rad]
@@ -119,10 +107,6 @@ plugger_position_ctrl_v0 = {
         'start_config': Pose(Translation(0.0, 0.1, 0.0), Quaternion()),
         # Reset variance of the start pose
         'reset_variance': ((0.01, 0.005, 0.01), (0.05, 0.05, 0.05)),
-        },
-
-    'world': {
-        'hz_ctrl': 40,
         },
 
 }
@@ -149,7 +133,6 @@ plugger_position_ctrl_v1 = {
         },
 
     'world': {
-        'hz_ctrl': 40,
         'robot_urdf': f'cpm_fix_rod_{ROD_DIAMETER}.urdf',
         'socket_urdf': 'adapter_station_square_socket.urdf',
         'socket_config': Pose(SOCKET_POS, SOCKET_ORI),
@@ -174,7 +157,6 @@ plugger_position_ctrl_v2 = {
         },
 
     'world': {
-        'hz_ctrl': 40,
         'robot_urdf': f'cpm_fix_rod_{ROD_DIAMETER}.urdf',
         'socket_urdf': 'adapter_station_square_socket.urdf',
         'socket_config': Pose(SOCKET_POS, SOCKET_ORI),
@@ -199,7 +181,6 @@ testbed_plugger_position_ctrl_v0 = {
         },
 
     'world': {
-        'freq_ctrl': 40,
         'robot_urdf': 'chargepal_testbed_tdt.urdf',
         'socket_urdf': 'tdt_socket.urdf',
         'cam_distance': 0.75,
@@ -258,10 +239,6 @@ reacher_3dof_velocity_ctrl_v0 = {
         'reset_variance': ((0.01, 0.05, 0.01), (0.0, 0.0, 0.0)),
         },
 
-    'world': {
-        'hz_ctrl': 20,
-        },
-
     'low_level_control': {
         'linear_enabled_motion_axis': (True, True, True),
         'angular_enabled_motion_axis': (False, False, False),
@@ -280,9 +257,5 @@ reacher_6dof_velocity_ctrl_v0 = {
         'start_config': Pose(Translation(0.0, 0.2, 0.0), Quaternion()),
         # Reset variance of the start pose
         'reset_variance': ((0.05, 0.05, 0.05), (0.1, 0.1, 0.1)),
-        },
-
-    'world': {
-        'hz_ctrl': 20,
         },
 }

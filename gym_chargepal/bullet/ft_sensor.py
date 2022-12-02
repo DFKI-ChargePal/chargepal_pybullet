@@ -1,4 +1,5 @@
 # global
+from collections import deque
 from pybullet_utils.bullet_client import BulletClient
 
 # local

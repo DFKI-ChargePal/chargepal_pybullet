@@ -24,7 +24,7 @@ LOGGER = logging.getLogger(__name__)
 @dataclass
 class WorldCfg(ConfigHandler):
     freq_sim: int = 240
-    freq_ctrl: int = 60
+    freq_ctrl: int = 40
     gravity: Tuple[float, ...] = (0.0, 0.0, -9.81)
     urdf_model_dir: str = '_bullet_urdf_models'
     model_description_pkg = 'chargepal_description'
