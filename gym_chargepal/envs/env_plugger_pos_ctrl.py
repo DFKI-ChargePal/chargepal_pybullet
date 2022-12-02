@@ -48,8 +48,8 @@ class EnvironmentPluggerPositionCtrl(Environment):
         q0_WP = tuple((q0_WS * q0_SP).ndarray)
         self.q0_WP = Quaternion(*q0_WP)
         # target sensor state
-        self.tgt_pos: Tuple[float, ...] = tuple()
-        self.tgt_ori: Tuple[float, ...] = tuple()
+        self.tgt_pos = Translation()
+        self.tgt_ori = Quaternion()
 
         # resolve cross references
         config_world['ur_arm'] = config_ur_arm
@@ -115,14 +115,8 @@ class EnvironmentPluggerPositionCtrl(Environment):
         obs = self.get_obs()
         # Evaluate environment
         done = self.done
-        X_tcp = Pose(
-            Translation(*self.plug_sensor.get_pos()), 
-            Quaternion(*(self.plug_sensor.get_ori()) + ('xyzw',))
-            )
-        X_tgt = Pose(
-            Translation(*self.socket_sensor.get_pos()),
-            Quaternion(*(self.socket_sensor.get_ori()) + ('xyzw',))
-            )
+        X_tcp = Pose(self.plug_sensor.get_pos(), self.plug_sensor.get_ori())
+        X_tgt = Pose(self.plug_sensor.get_pos(), self.plug_sensor.get_ori())
         reward = self.reward.compute(X_tcp, X_tgt, done)
         info = self.compose_info()
         return obs, reward, done, info
@@ -135,12 +129,12 @@ class EnvironmentPluggerPositionCtrl(Environment):
         self.world.disconnect()
 
     def get_obs(self) -> npt.NDArray[np.float32]:
-        tgt_pos = np.array(self.tgt_pos)
-        plg_pos = np.array(self.plug_sensor.get_pos())
+        tgt_pos = self.tgt_pos.as_array()
+        plg_pos = self.plug_sensor.get_pos().as_array()
         dif_pos: Tuple[float, ...] = tuple(tgt_pos - plg_pos)
 
-        tgt_ori = self.tgt_ori
-        plg_ori = self.plug_sensor.get_ori()
+        tgt_ori = self.tgt_ori.as_tuple(order='xyzw')
+        plg_ori = self.plug_sensor.get_ori().as_tuple(order='xyzw')
         dif_ori = self.world.bullet_client.getDifferenceQuaternion(plg_ori, tgt_ori)
 
         ft_meas = self.ft_sensor.meas_wrench()

@@ -8,12 +8,12 @@ import gym_chargepal.utility.cfg_handler as ch
 from gym_chargepal.envs.env_base import Environment
 from gym_chargepal.bullet.jacobian import Jacobian
 from gym_chargepal.bullet.ik_solver import IKSolver
+from gym_chargepal.utility.tf import Quaternion, Pose
 from gym_chargepal.sensors.sensor_plug import PlugSensor
 from gym_chargepal.worlds.world_reacher import WorldReacher
 from gym_chargepal.sensors.sensor_joints import JointSensor
 from gym_chargepal.sensors.sensor_virt_tgt import VirtTgtSensor
 from gym_chargepal.reward.reward_dist_speed import DistanceSpeedReward
-from gym_chargepal.utility.tf import Quaternion, Translation, Twist, Pose
 from gym_chargepal.controllers.controller_tcp_vel import TcpVelocityController
 from gym_chargepal.bullet.joint_velocity_motor_control import JointVelocityMotorControl
 
@@ -114,15 +114,9 @@ class EnvironmentReacherVelocityCtrl(Environment):
 
         # evaluate environment
         done = self.done
-        X_tcp = Pose(
-            Translation(*self.plug_sensor.get_pos()), 
-            Quaternion(*(self.plug_sensor.get_ori()) + ('xyzw',))
-            )
-        X_tgt = Pose(
-            Translation(*self.target_sensor.get_pos()),
-            Quaternion(*(self.target_sensor.get_ori()) + ('xyzw',))
-            )
-        V_tcp = Twist(*(self.plug_sensor.get_lin_vel() + self.plug_sensor.get_ang_vel()))
+        X_tcp = Pose(self.plug_sensor.get_pos(), self.plug_sensor.get_ori())
+        X_tgt = Pose(self.plug_sensor.get_pos(), self.plug_sensor.get_ori())
+        V_tcp = self.plug_sensor.get_twist()
         reward = self.reward.compute(X_tcp=X_tcp, V_tcp=V_tcp, X_tgt=X_tgt, done=done)
         info = self.compose_info()
 
@@ -141,20 +135,19 @@ class EnvironmentReacherVelocityCtrl(Environment):
 
     def get_obs(self) -> npt.NDArray[np.float32]:
         # get position signals
-        tgt_pos = np.array(self.target_sensor.get_pos())
-        plg_pos = np.array(self.plug_sensor.get_pos())
+        tgt_pos = self.target_sensor.get_pos().as_array()
+        plg_pos = self.plug_sensor.get_pos().as_array()
         dif_pos: Tuple[float, ...] = tuple(tgt_pos - plg_pos)
 
-        tgt_ori = self.target_sensor.get_ori()
-        plg_ori = self.plug_sensor.get_ori()
+        tgt_ori = self.target_sensor.get_ori().as_tuple(order='xyzw')
+        plg_ori = self.plug_sensor.get_ori().as_tuple(order='xyzw')
         dif_ori = self.world.bullet_client.getDifferenceQuaternion(plg_ori, tgt_ori)
 
         # get velocity signal
-        lin_vel = self.plug_sensor.get_lin_vel()
-        ang_vel = self.plug_sensor.get_ang_vel()
+        twist = self.plug_sensor.get_twist().as_tuple()
 
         # build observation
-        obs = (dif_pos + dif_ori + lin_vel + ang_vel)
+        obs = (dif_pos + dif_ori + twist)
         obs_nd = np.array(obs, dtype=np.float32)
 
         tgt_ori_ = np.array(tgt_ori)

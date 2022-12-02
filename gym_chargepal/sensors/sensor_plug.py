@@ -6,9 +6,10 @@ from dataclasses import dataclass
 # local
 from gym_chargepal.bullet.ur_arm import URArm
 from gym_chargepal.sensors.sensor import SensorCfg, Sensor
+from gym_chargepal.utility.tf import Quaternion, Translation, Twist
 
 # mypy
-from typing import Dict, Any, Tuple, Union, Optional
+from typing import Any, Dict
 
 
 LOGGER = logging.getLogger(__name__)
@@ -34,14 +35,11 @@ class PlugSensor(Sensor):
         # Safe references
         self.ur_arm = ur_arm
 
-    def get_pos(self) -> Tuple[float, ...]:
+    def get_pos(self) -> Translation:
         return self.ur_arm.tcp.get_pos()
 
-    def get_ori(self) -> Tuple[float, ...]:
+    def get_ori(self) -> Quaternion:
         return self.ur_arm.tcp.get_ori()
 
-    def get_lin_vel(self) -> Tuple[float, ...]:
-        return self.ur_arm.tcp.get_lin_vel()
-
-    def get_ang_vel(self) -> Tuple[float, ...]:
-        return self.ur_arm.tcp.get_ang_vel()
+    def get_twist(self) -> Twist:
+        return self.ur_arm.tcp.get_twist()

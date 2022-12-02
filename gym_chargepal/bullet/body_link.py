@@ -3,11 +3,9 @@
 from pybullet_utils.bullet_client import BulletClient
 
 # local
-from gym_chargepal.bullet import BulletLinkState
 import gym_chargepal.bullet.utility as pb_utils
-
-# mypy
-from typing import Tuple
+from gym_chargepal.bullet import BulletLinkState
+from gym_chargepal.utility.tf import Quaternion, Translation, Twist
 
 
 class BodyLink:
@@ -32,26 +30,19 @@ class BodyLink:
             computeForwardKinematics=True
         )
 
-    def get_pos(self) -> Tuple[float, ...]:
+    def get_pos(self) -> Translation:
         # make sure to update the sensor state before calling this method
         state_idx = BulletLinkState.WORLD_LINK_FRAME_POS
-        pos: Tuple[float, ...] = self.state[state_idx]
+        pos = Translation(*self.state[state_idx])
         return pos
 
-    def get_ori(self) -> Tuple[float, ...]:
+    def get_ori(self) -> Quaternion:
         # make sure to update the sensor state before calling this method
         state_idx = BulletLinkState.WORLD_LINK_FRAME_ORI
-        ori: Tuple[float, ...] = self.state[state_idx]
+        ori = Quaternion(*self.state[state_idx] + ('xyzw',))  
         return ori
 
-    def get_lin_vel(self) -> Tuple[float, ...]:
-        # make sure to update the sensor state before calling this method
-        state_idx = BulletLinkState.WORLD_LINK_LIN_VEL
-        vel: Tuple[float, ...] = self.state[state_idx]
-        return vel
-
-    def get_ang_vel(self) -> Tuple[float, ...]:
-        # make sure to update the sensor state before calling this method
-        state_idx = BulletLinkState.WORLD_LINK_ANG_VEL
-        vel: Tuple[float, ...] = self.state[state_idx]
-        return vel
+    def get_twist(self) -> Twist:
+        lin_vel_state_idx = BulletLinkState.WORLD_LINK_LIN_VEL
+        ang_vel_state_idx = BulletLinkState.WORLD_LINK_ANG_VEL
+        return Twist(*self.state[lin_vel_state_idx] + self.state[ang_vel_state_idx])

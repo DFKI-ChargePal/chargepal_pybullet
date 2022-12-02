@@ -53,8 +53,7 @@ class WorldReacher(World):
         # Extract start configurations
         self.robot_pos = self.cfg.robot_config.pos.as_tuple()
         self.robot_ori = self.cfg.robot_config.ori.as_tuple(order='xyzw')
-        self.target_pos = self.cfg.target_config.pos.as_tuple()
-        self.target_ori = self.cfg.target_config.ori.as_tuple(order='xyzw')
+        self.target_pose = self.cfg.target_config
 
     def reset(self, joint_conf: Union[None, Tuple[float, ...]] = None, render: bool = False) -> None:
         if self.bullet_client is None:
@@ -88,8 +87,7 @@ class WorldReacher(World):
             if self.target_id > -1:
                 self.bullet_client.removeBody(self.target_id)
             self.target_id = pb_utils.draw_cylinder_marker(
-                position=self.target_pos, 
-                orientation=self.target_ori,
+                pose=self.target_pose,
                 radius=0.035, 
                 height=0.080,
                 color=(1, 0, 0, 0.75), 

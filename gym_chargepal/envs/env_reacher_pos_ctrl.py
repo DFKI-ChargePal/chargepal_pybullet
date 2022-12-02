@@ -7,11 +7,11 @@ import quaternionic as quat
 import gym_chargepal.utility.cfg_handler as ch
 from gym_chargepal.envs.env_base import Environment
 from gym_chargepal.bullet.ik_solver import IKSolver
+from gym_chargepal.utility.tf import Quaternion, Pose
 from gym_chargepal.sensors.sensor_plug import PlugSensor
 from gym_chargepal.reward.reward_dist import DistanceReward
 from gym_chargepal.worlds.world_reacher import WorldReacher
 from gym_chargepal.sensors.sensor_virt_tgt import VirtTgtSensor
-from gym_chargepal.utility.tf import Quaternion, Translation, Pose
 from gym_chargepal.controllers.controller_tcp_pos import TcpPositionController
 from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotorControl
 
@@ -107,14 +107,8 @@ class EnvironmentReacherPositionCtrl(Environment):
 
         # evaluate environment
         done = self.done
-        X_tcp = Pose(
-            Translation(*self.plug_sensor.get_pos()), 
-            Quaternion(*(self.plug_sensor.get_ori()) + ('xyzw',))
-            )
-        X_tgt = Pose(
-            Translation(*self.target_sensor.get_pos()),
-            Quaternion(*(self.target_sensor.get_ori()) + ('xyzw',))
-            )
+        X_tcp = Pose(self.plug_sensor.get_pos(), self.plug_sensor.get_ori())
+        X_tgt = Pose(self.plug_sensor.get_pos(), self.plug_sensor.get_ori())
         reward = self.reward.compute(X_tcp, X_tgt, done)
         info = self.compose_info()
         
@@ -132,12 +126,12 @@ class EnvironmentReacherPositionCtrl(Environment):
             self.target_sensor.update()
 
     def get_obs(self) -> npt.NDArray[np.float32]:
-        tgt_pos = np.array(self.target_sensor.get_pos())
-        plg_pos = np.array(self.plug_sensor.get_pos())
+        tgt_pos = self.target_sensor.get_pos().as_array()
+        plg_pos = self.plug_sensor.get_pos().as_array()
         dif_pos: Tuple[float, ...] = tuple(tgt_pos - plg_pos)
 
-        tgt_ori = self.target_sensor.get_ori()
-        plg_ori = self.plug_sensor.get_ori()
+        tgt_ori = self.target_sensor.get_ori().as_tuple(order='xyzw')
+        plg_ori = self.plug_sensor.get_ori().as_tuple(order='xyzw')
         dif_ori = self.world.bullet_client.getDifferenceQuaternion(plg_ori, tgt_ori)
         obs = np.array((dif_pos + dif_ori), dtype=np.float32)
 

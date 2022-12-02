@@ -101,8 +101,14 @@ class TcpVelocityController(Controller):
         action[self._lin_action_ids] *= self._wa_lin
         action[self._ang_action_ids] *= self._wa_ang
 
-        tcp_dot_lin = np.array(self._plug_sensor.get_lin_vel())
-        tcp_dot_ang = np.array(self._plug_sensor.get_ang_vel())
+        # Get current tcp velocities
+        tcp_dot_twist = self._plug_sensor.get_twist().as_array()
+        # Separate into linear and angular part
+        tcp_dot_lin = tcp_dot_twist[0:3]
+        tcp_dot_ang = tcp_dot_twist[3:6]
+
+        # tcp_dot_lin = np.array(self._plug_sensor.get_lin_vel())
+        # tcp_dot_ang = np.array(self._plug_sensor.get_ang_vel())
 
         # Calculate difference of commanded tcp velocity and current tcp velocity 
         # to get new disired absolute velocity.

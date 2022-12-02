@@ -46,35 +46,35 @@ class TcpPositionController(Controller):
         self.cfg.update(**config)
         # object references
         self.plug_sensor = plug_sensor
-        self._ik_solver = ik_solver
-        self._controller_interface = controller_interface
+        self.ik_solver = ik_solver
+        self.controller_interface = controller_interface
         # constants
-        self._wa_lin = self.cfg.wa_lin
-        self._wa_ang = self.cfg.wa_ang
+        self.wa_lin = self.cfg.wa_lin
+        self.wa_ang = self.cfg.wa_ang
         assert self.cfg.plug_lin_config
         assert self.cfg.plug_ang_config
-        self._plug_lin_config = np.array(self.cfg.plug_lin_config)
-        self._plug_ang_config = np.array(self.cfg.plug_ang_config)
+        self.plug_lin_config = np.array(self.cfg.plug_lin_config)
+        self.plug_ang_config = np.array(self.cfg.plug_ang_config)
         # mapping of the enabled motion axis to the indices
-        self._lin_motion_axis: Dict[bool, List[int]] = {
+        self.lin_motion_axis: Dict[bool, List[int]] = {
             MotionAxis.ENABLED: [], 
             MotionAxis.DISABLED: [],
             }
         for axis, mode in enumerate(self.cfg.linear_enabled_motion_axis):
-            self._lin_motion_axis[mode].append(axis)
-        self._ang_motion_axis: Dict[bool, List[int]] = {
+            self.lin_motion_axis[mode].append(axis)
+        self.ang_motion_axis: Dict[bool, List[int]] = {
             MotionAxis.ENABLED: [], 
             MotionAxis.DISABLED: [],
             }
         for axis, mode in enumerate(self.cfg.angular_enabled_motion_axis):
-            self._ang_motion_axis[mode].append(axis)
+            self.ang_motion_axis[mode].append(axis)
         # Slices for the linear and angular actions.
         start_idx = 0
-        stop_idx = len(self._lin_motion_axis[MotionAxis.ENABLED])
-        self._lin_action_ids = slice(start_idx, stop_idx)
+        stop_idx = len(self.lin_motion_axis[MotionAxis.ENABLED])
+        self.lin_action_ids = slice(start_idx, stop_idx)
         start_idx = stop_idx
-        stop_idx = start_idx + len(self._ang_motion_axis[MotionAxis.ENABLED])
-        self._ang_action_ids = slice(start_idx, stop_idx)
+        stop_idx = start_idx + len(self.ang_motion_axis[MotionAxis.ENABLED])
+        self.ang_action_ids = slice(start_idx, stop_idx)
 
 
     def update(self, action: npt.NDArray[np.float32]) -> None:
@@ -86,24 +86,24 @@ class TcpPositionController(Controller):
         : return: None
         """
         # Scale action
-        action[self._lin_action_ids] *= self._wa_lin
-        action[self._ang_action_ids] *= self._wa_ang
+        action[self.lin_action_ids] *= self.wa_lin
+        action[self.ang_action_ids] *= self.wa_ang
         # Get current pose
-        plug_lin_pos = np.array(self.plug_sensor.get_pos())
-        plug_ang_pos = np.array(p.getEulerFromQuaternion(self.plug_sensor.get_ori()))
+        plug_lin_pos = self.plug_sensor.get_pos().as_array()
+        plug_ang_pos = np.array(p.getEulerFromQuaternion(self.plug_sensor.get_ori().as_tuple(order='xyzw')))
         # Increment pose by action
-        plug_lin_pos[self._lin_motion_axis[MotionAxis.ENABLED]] += action[self._lin_action_ids]
-        plug_ang_pos[self._ang_motion_axis[MotionAxis.ENABLED]] += action[self._ang_action_ids]
+        plug_lin_pos[self.lin_motion_axis[MotionAxis.ENABLED]] += action[self.lin_action_ids]
+        plug_ang_pos[self.ang_motion_axis[MotionAxis.ENABLED]] += action[self.ang_action_ids]
         # Set disabled axis to default values to avoid pos drift.
-        plug_lin_pos[self._lin_motion_axis[MotionAxis.DISABLED]] = self._plug_lin_config[
-            self._lin_motion_axis[MotionAxis.DISABLED]
+        plug_lin_pos[self.lin_motion_axis[MotionAxis.DISABLED]] = self.plug_lin_config[
+            self.lin_motion_axis[MotionAxis.DISABLED]
             ]
-        plug_ang_pos[self._ang_motion_axis[MotionAxis.DISABLED]] = self._plug_ang_config[
-            self._ang_motion_axis[MotionAxis.DISABLED]
+        plug_ang_pos[self.ang_motion_axis[MotionAxis.DISABLED]] = self.plug_ang_config[
+            self.ang_motion_axis[MotionAxis.DISABLED]
             ]
         # Compose new plug pose
         plug_pose = (tuple(plug_lin_pos), tuple(p.getQuaternionFromEuler(plug_ang_pos)))
         # Transform to joint space positions
-        joint_pos = self._ik_solver.solve(plug_pose)
+        joint_pos = self.ik_solver.solve(plug_pose)
         # Send command to robot
-        self._controller_interface.update(joint_pos)
+        self.controller_interface.update(joint_pos)

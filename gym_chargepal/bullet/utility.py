@@ -4,21 +4,18 @@ import pybullet as p
 
 # local
 from gym_chargepal.bullet import BulletJointInfo
+from gym_chargepal.utility.tf import Translation, Pose
 
 # mypy
 from pybullet_utils.bullet_client import BulletClient
-from typing import (
-    Tuple, 
-    List,
-    Dict,
-)
+from typing import Dict, List, Tuple
 
 
 LOGGER = logging.getLogger(__name__)
 
 
 def draw_sphere_marker(
-        position: Tuple[float, ...],
+        position: Translation,
         radius: float, 
         color: Tuple[float, ...],
         bullet_client: BulletClient
@@ -27,11 +24,11 @@ def draw_sphere_marker(
     """ Function to draw a sphere marker """
     vs_id = bullet_client.createVisualShape(
         p.GEOM_SPHERE, 
-        radius=radius, 
+        radius=radius,
         rgbaColor=color
         )
     marker_id: int = bullet_client.createMultiBody(
-        basePosition=position,
+        basePosition=position.as_tuple(),
         baseCollisionShapeIndex=-1,
         baseVisualShapeIndex=vs_id
         )
@@ -39,8 +36,7 @@ def draw_sphere_marker(
 
 
 def draw_cylinder_marker(
-        position: Tuple[float, ...],
-        orientation: Tuple[float, ...],
+        pose: Pose,
         radius: float, 
         height: float,
         color: Tuple[float, ...],
@@ -57,8 +53,8 @@ def draw_cylinder_marker(
         visualFramePosition=(0.0, 0.0, height/2)
         )
     marker_id: int = bullet_client.createMultiBody(
-        basePosition=position,
-        baseOrientation=orientation,
+        basePosition=pose.pos.as_tuple(),
+        baseOrientation=pose.ori.as_tuple(order='xyzw'),
         baseCollisionShapeIndex=-1,
         baseVisualShapeIndex=vs_id
     )

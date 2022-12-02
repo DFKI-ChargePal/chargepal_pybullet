@@ -7,6 +7,7 @@ from dataclasses import dataclass
 # local
 from gym_chargepal.bullet.socket import Socket
 from gym_chargepal.sensors.sensor import SensorCfg, Sensor
+from gym_chargepal.utility.tf import Quaternion, Translation
 
 # mypy
 from typing import Any, Dict, Tuple
@@ -43,20 +44,20 @@ class SocketSensor(Sensor):
         self.ori_bias = np.array(self.cfg.ori_bias, dtype=np.float32)
 
 
-    def get_pos(self) -> Tuple[float, ...]:
+    def get_pos(self) -> Translation:
         return self.socket.socket.get_pos()
 
-    def get_ori(self) -> Tuple[float, ...]:
+    def get_ori(self) -> Quaternion:
         return self.socket.socket.get_ori()
 
-    def meas_pos(self) -> Tuple[float, ...]:
-        gt_pos = np.array(self.get_pos(), dtype=np.float32)
+    def meas_pos(self) -> Translation:
+        gt_pos = self.get_pos().as_array()
         pos_meas: npt.NDArray[np.float32] = gt_pos + np.random.randn(3) * self.pos_noise + self.pos_bias
-        return tuple(pos_meas.tolist())
+        return Translation(*pos_meas.tolist())
 
-    def meas_ori(self) -> Tuple[float, ...]:
-        gt_ori = self.get_ori()
+    def meas_ori(self) -> Quaternion:
+        gt_ori = self.get_ori().as_tuple(order='xyzw')
         gt_ori_eul = np.array(self.socket.bc.getEulerFromQuaternion(gt_ori), dtype=np.float32)
         ori_eul_meas: npt.NDArray[np.float32] = gt_ori_eul + np.random.randn(3) * self.ori_noise + self.ori_bias
-        ori_meas: Tuple[float, ...] = self.socket.bc.getQuaternionFromEuler(ori_eul_meas.tolist())
+        ori_meas = Quaternion(*self.socket.bc.getQuaternionFromEuler(ori_eul_meas.tolist()) + ('xyzw',))
         return ori_meas

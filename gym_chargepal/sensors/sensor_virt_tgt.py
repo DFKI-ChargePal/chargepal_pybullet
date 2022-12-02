@@ -6,6 +6,7 @@ from dataclasses import dataclass
 # local
 from gym_chargepal.sensors.sensor import SensorCfg, Sensor
 from gym_chargepal.worlds.world_reacher import WorldReacher
+from gym_chargepal.utility.tf import Quaternion, Translation
 
 # mypy
 from typing import Dict, Any, Tuple
@@ -32,13 +33,13 @@ class VirtTgtSensor(Sensor):
         # Safe references
         self.world = world
         # intern sensors state
-        self.sensor_state = (self.world.target_pos, self.world.target_ori)
+        self.sensor_state = self.world.target_pose
 
     def update(self) -> None:
-        self.sensor_state = (self.world.target_pos, self.world.target_ori)
+        self.sensor_state = self.world.target_pose
+        
+    def get_pos(self) -> Translation:
+        return self.sensor_state.pos
 
-    def get_pos(self) -> Tuple[float, ...]:
-        return self.sensor_state[0]
-
-    def get_ori(self) -> Tuple[float, ...]:
-        return self.sensor_state[1]
+    def get_ori(self) -> Quaternion:
+        return self.sensor_state.ori
