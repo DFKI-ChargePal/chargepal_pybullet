@@ -159,6 +159,31 @@ class Twist:
         return np.array(self.as_tuple(), dtype=np.float32)
 
 
+class Wrench:
+    """ Class to represent a 6D cartesian wrench """
+    def __init__(
+        self, 
+        fx: float=0.0, 
+        fy: float=0.0, 
+        fz: float=0.0, 
+        mx: float=0.0, 
+        my: float=0.0, 
+        mz: float=0.0
+        ) -> None:
+        self.fx = fx
+        self.fy = fy
+        self.fz = fz
+        self.mx = mx
+        self.my = my
+        self.mz = mz
+
+    def as_tuple(self) -> Tuple[float, ...]:
+        return (self.fx, self.fy, self.fz, self.mx, self.my, self.mz)
+
+    def as_array(self) -> npt.NDArray[np.float_]:
+        return np.array(self.as_tuple(), dtype=np.float32)
+
+
 class RndPoseGenerator:
     """ Random pose generator class """
     def __init__(self, lin_var: Tuple[float, ...], eul_var: Tuple[float, ...]) -> None:
