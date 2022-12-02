@@ -42,33 +42,33 @@ class TcpVelocityController(Controller):
         self.cfg: TcpVelocityControllerCfg = TcpVelocityControllerCfg()
         self.cfg.update(**config)
         # object references
-        self._jacobian = jacobian
-        self._control_interface = control_interface
-        self._plug_sensor = plug_sensor
-        self._joint_sensor = joint_sensor
+        self.jacobian = jacobian
+        self.control_interface = control_interface
+        self.plug_sensor = plug_sensor
+        self.joint_sensor = joint_sensor
         # constants
-        self._wa_lin = self.cfg.wa_lin
-        self._wa_ang = self.cfg.wa_ang
+        self.wa_lin = self.cfg.wa_lin
+        self.wa_ang = self.cfg.wa_ang
         # mapping of the enabled motion axis to the indices
-        self._lin_motion_axis: Dict[bool, List[int]] = {
+        self.lin_motion_axis: Dict[bool, List[int]] = {
             MotionAxis.ENABLED: [],
             MotionAxis.DISABLED: [],
             }
         for axis, mode in enumerate(self.cfg.linear_enabled_motion_axis):
-            self._lin_motion_axis[mode].append(axis)
-        self._ang_motion_axis: Dict[bool, List[int]] = {
+            self.lin_motion_axis[mode].append(axis)
+        self.ang_motion_axis: Dict[bool, List[int]] = {
             MotionAxis.ENABLED: [], 
             MotionAxis.DISABLED: [],
             }
         for axis, mode in enumerate(self.cfg.angular_enabled_motion_axis):
-            self._ang_motion_axis[mode].append(axis)
+            self.ang_motion_axis[mode].append(axis)
         # Slices for the linear and angular actions.
         start_idx = 0
-        stop_idx = len(self._lin_motion_axis[MotionAxis.ENABLED])
-        self._lin_action_ids = slice(start_idx, stop_idx)
+        stop_idx = len(self.lin_motion_axis[MotionAxis.ENABLED])
+        self.lin_action_ids = slice(start_idx, stop_idx)
         start_idx = stop_idx
-        stop_idx = start_idx + len(self._ang_motion_axis[MotionAxis.ENABLED])
-        self._ang_action_ids = slice(start_idx, stop_idx)
+        stop_idx = start_idx + len(self.ang_motion_axis[MotionAxis.ENABLED])
+        self.ang_action_ids = slice(start_idx, stop_idx)
 
     def update(self, action: npt.NDArray[np.float32]) -> None:
         """
@@ -79,12 +79,12 @@ class TcpVelocityController(Controller):
         : return: None
         """
         # get joint configuration
-        j_pos = self._joint_sensor.get_pos()
-        j_vel = self._joint_sensor.get_vel()
+        j_pos = self.joint_sensor.get_pos()
+        j_vel = self.joint_sensor.get_vel()
         j_acc = tuple([0.0] * 6)
 
         # get Jacobians
-        jac_t, jac_r = self._jacobian.calculate(j_pos, j_vel, j_acc)
+        jac_t, jac_r = self.jacobian.calculate(j_pos, j_vel, j_acc)
         # merge into one jacobian matrix
         jac = np.array(jac_t + jac_r)
 
@@ -98,11 +98,11 @@ class TcpVelocityController(Controller):
             inv_jac = np.linalg.inv(jac)
 
         # scale actions
-        action[self._lin_action_ids] *= self._wa_lin
-        action[self._ang_action_ids] *= self._wa_ang
+        action[self.lin_action_ids] *= self.wa_lin
+        action[self.ang_action_ids] *= self.wa_ang
 
         # Get current tcp velocities
-        tcp_dot_twist = self._plug_sensor.get_twist().as_array()
+        tcp_dot_twist = self.plug_sensor.get_twist().as_array()
         # Separate into linear and angular part
         tcp_dot_lin = tcp_dot_twist[0:3]
         tcp_dot_ang = tcp_dot_twist[3:6]
@@ -115,12 +115,12 @@ class TcpVelocityController(Controller):
         # Degrees of freedom that are not controlled are set to zero.
         tcp_dot_lin_ = np.zeros(3)
         tcp_dot_ang_ = np.zeros(3)
-        tcp_dot_lin_[self._lin_motion_axis[MotionAxis.ENABLED]] = action[self._lin_action_ids] - tcp_dot_lin[self._lin_motion_axis[MotionAxis.ENABLED]]
-        tcp_dot_ang_[self._ang_motion_axis[MotionAxis.ENABLED]] = action[self._ang_action_ids] - tcp_dot_ang[self._ang_motion_axis[MotionAxis.ENABLED]]
+        tcp_dot_lin_[self.lin_motion_axis[MotionAxis.ENABLED]] = action[self.lin_action_ids] - tcp_dot_lin[self.lin_motion_axis[MotionAxis.ENABLED]]
+        tcp_dot_ang_[self.ang_motion_axis[MotionAxis.ENABLED]] = action[self.ang_action_ids] - tcp_dot_ang[self.ang_motion_axis[MotionAxis.ENABLED]]
         tcp_dot = np.concatenate([tcp_dot_lin_, tcp_dot_ang_])
 
         # convert desired velocities from cart space to joint space
         q_dot = np.matmul(inv_jac, tcp_dot)
 
         # send command to robot
-        self._control_interface.update(q_dot)
+        self.control_interface.update(q_dot)
