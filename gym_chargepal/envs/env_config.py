@@ -207,7 +207,7 @@ testbed_plugger_position_ctrl_v0 = {
         },
 
     'ft_sensor': {
-        'render_bar': True,
+        'render_bar': False,
         },
 
     'socket_sensor': {

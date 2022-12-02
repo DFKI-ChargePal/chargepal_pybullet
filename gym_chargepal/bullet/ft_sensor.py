@@ -4,8 +4,9 @@ from collections import deque
 from pybullet_utils.bullet_client import BulletClient
 
 # local
-from gym_chargepal.bullet import BulletJointState
+from gym_chargepal.utility.tf import Wrench
 import gym_chargepal.bullet.utility as pb_utils
+from gym_chargepal.bullet import BulletJointState
 
 # mypy
 from typing import Tuple, Deque
@@ -48,9 +49,9 @@ class FTSensor:
             jointIndex=self.joint_idx
         )
 
-    def get_wrench(self) -> Tuple[float, ...]:
+    def get_wrench(self) -> Wrench:
         state_idx = BulletJointState.JOINT_REACTION_FORCE
         wrench: Tuple[float, ...] = self.state[state_idx]
         self.buffer.append(np.array(wrench, dtype=np.float32))
-        mean_wrench = tuple(np.mean(self.buffer, axis=0, dtype=np.float32).tolist())
+        mean_wrench = Wrench(*np.mean(self.buffer, axis=0, dtype=np.float32).tolist())
         return mean_wrench

@@ -145,7 +145,7 @@ class EnvironmentPluggerPositionCtrl(Environment):
 
         ft_meas = self.ft_sensor.meas_wrench()
 
-        obs = np.array((dif_pos + dif_ori + ft_meas), dtype=np.float32)
+        obs = np.array((dif_pos + dif_ori + ft_meas.as_tuple()), dtype=np.float32)
 
         tgt_ori_ = np.array(tgt_ori)
         plg_ori_ = np.array(plg_ori)
