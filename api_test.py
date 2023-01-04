@@ -59,3 +59,5 @@ if __name__ == '__main__':
     # main(env_name="ChargePal-Testbed-Plugger-PositionControl-v0", gui=True)
     for env_ in environment_register:
         main(env_name=env_, gui=True)
+    
+    print(f"\n\nAPI test finished\n\n")

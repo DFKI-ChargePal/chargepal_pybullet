@@ -3,10 +3,10 @@
 import abc
 import gym
 import numpy as np
+from rigmopy import Pose
 from dataclasses import dataclass
 
 # local
-from gym_chargepal.utility.tf import Quaternion, Translation, Pose, RndPoseGenerator
 from gym_chargepal.utility.env_clock import EnvironmentClock
 from gym_chargepal.utility.cfg_handler import ConfigHandler
 
@@ -21,8 +21,8 @@ class EnvironmentCfg(ConfigHandler):
     task_ang_eps: float = 0.0175  # angular task criterion [rad]
     action_space: Optional[gym.spaces.Space] = None
     observation_space: Optional[gym.spaces.Space] = None
-    start_config: Pose = Pose(Translation(), Quaternion())
-    target_config: Pose = Pose(Translation(), Quaternion()) 
+    start_config: Pose = Pose()
+    target_config: Pose = Pose() 
     reset_variance: Tuple[Tuple[float, ...], Tuple[float, ...]] = ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
 
 
@@ -38,11 +38,13 @@ class Environment(gym.Env, metaclass=abc.ABCMeta):
         self.cfg.update(**config)
         # Simulation parameter
         self.clock = EnvironmentClock(self.cfg.T)
-        self.reset_rnd_gen = RndPoseGenerator(*self.cfg.reset_variance)
         # Get action and observation space
         self.action_space = self.cfg.action_space
         self.observation_space = self.cfg.observation_space
-        # performance logging
+        # Render option can be enabled with the env.render() function
+        self.is_render = False
+        self.toggle_render_mode = False
+        # Performance logging
         self.task_pos_error = np.inf
         self.task_ang_error = np.inf
 
@@ -62,7 +64,8 @@ class Environment(gym.Env, metaclass=abc.ABCMeta):
         raise NotImplementedError('Must be implemented in subclass.')
 
     def render(self, mode: str = "human") -> None:
-        pass
+        self.toggle_render_mode = True if not self.is_render else False
+        self.is_render = True
 
     @property
     def done(self) -> bool:

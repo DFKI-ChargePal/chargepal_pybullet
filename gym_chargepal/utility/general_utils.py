@@ -1,5 +1,4 @@
-# MyPy
-from typing import Tuple
+""" This file provides several helper functions """
 
 
 def wrap(x: float, m: float, m_: float) -> float:

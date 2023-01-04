@@ -1,10 +1,10 @@
 """ This file defines the reward class for distances between two frames. """
 # global
 import numpy as np
+from rigmopy import Pose
 from dataclasses import dataclass
 
 # local
-from gym_chargepal.utility.tf import Pose
 from gym_chargepal.utility.env_clock import EnvironmentClock
 from gym_chargepal.reward.reward import RewardCfg, Reward
 

@@ -1,9 +1,14 @@
 # global
 import numpy as np
+
 from gym import spaces
+from rigmopy import (
+    Pose,
+    Position, 
+    Orientation,
+)
 
 # local
-from gym_chargepal.utility.tf import Quaternion, Translation, Pose
 from gym_chargepal.envs.env_reacher_pos_ctrl import EnvironmentReacherPositionCtrl
 from gym_chargepal.envs.env_reacher_vel_ctrl import EnvironmentReacherVelocityCtrl
 from gym_chargepal.envs.env_plugger_pos_ctrl import EnvironmentPluggerPositionCtrl
@@ -11,14 +16,11 @@ from gym_chargepal.envs.env_plugger_pos_ctrl import EnvironmentPluggerPositionCt
 
 """ Concrete point-to-point position controlled environments. """
 # Constants
-ROT_PI_2_X = Quaternion()
-ROT_PI_2_X.from_euler_angles(np.pi/2, 0.0, 0.0)
+ROT_PI_2_X = Orientation().from_euler_angle((np.pi/2, 0.0, 0.0))
 
-ROT_PI_X = Quaternion()
-ROT_PI_X.from_euler_angles(np.pi, 0.0, 0.0)
+ROT_PI_X = Orientation().from_euler_angle((np.pi, 0.0, 0.0))
 
-DEFAULT_TARGET_POS = Translation(0.0, 0.0, 1.2)
-
+DEFAULT_TARGET_POS = Position(0.0, 0.0, 1.2)
 
 # ///////////////////////////////////////////////////// #
 # ///                                               /// #
@@ -35,7 +37,7 @@ reacher_1dof_position_ctrl_v0 = {
         # Target configuration
         'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
         # Start configuration relative to target configuration'
-        'start_config': Pose(Translation(0.0, 0.2, 0.0), Quaternion()),
+        'start_config': Pose(Position(0.0, 0.2, 0.0), Orientation()),
         # Reset variance of the start pose
         'reset_variance': ((0.0, 0.025, 0.0), (0.0, 0.0, 0.0)),
     },
@@ -59,7 +61,7 @@ reacher_3dof_position_ctrl_v0 = {
         # Target configuration
         'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
         # Start configuration relative to target configuration'
-        'start_config': Pose(Translation(0.0, 0.2, 0.0), Quaternion()),
+        'start_config': Pose(Position(0.0, 0.2, 0.0), Orientation()),
         # Reset variance of the start pose
         'reset_variance': ((0.01, 0.05, 0.01), (0.0, 0.0, 0.0)),
         },
@@ -82,7 +84,7 @@ reacher_6dof_position_ctrl_v0 = {
         # Target configuration
         'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
         # Start configuration relative to target configuration'
-        'start_config': Pose(Translation(0.0, 0.2, 0.0), Quaternion()),
+        'start_config': Pose(Position(0.0, 0.2, 0.0), Orientation()),
         # Reset variance of the start pose
         'reset_variance': ((0.05, 0.05, 0.05), (0.1, 0.1, 0.1)),
         },
@@ -104,16 +106,15 @@ plugger_position_ctrl_v0 = {
         # Target configuration
         'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
         # Start configuration relative to target configuration'
-        'start_config': Pose(Translation(0.0, 0.1, 0.0), Quaternion()),
+        'start_config': Pose(Position(0.0, 0.1, 0.0), Orientation()),
         # Reset variance of the start pose
         'reset_variance': ((0.01, 0.005, 0.01), (0.05, 0.05, 0.05)),
         },
 }
 
 
-SOCKET_POS = Translation(0.0, -0.1/2.0, 0.0)
-SOCKET_ORI = Quaternion()
-SOCKET_ORI.from_euler_angles(0.0, 0.0, np.pi)
+SOCKET_POS = Position(0.0, -0.1/2.0, 0.0)
+SOCKET_ORI = Orientation().from_euler_angle((0.0, 0.0, np.pi))
 ROD_DIAMETER = "32d5"
 plugger_position_ctrl_v1 = {
 
@@ -125,7 +126,7 @@ plugger_position_ctrl_v1 = {
         # Target configuration
         'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
         # Start configuration relative to target configuration'
-        'start_config': Pose(Translation(0.0, 0.075, 0.0), Quaternion()),
+        'start_config': Pose(Position(0.0, 0.075, 0.0), Orientation()),
         # Reset variance of the start pose
         'reset_variance': ((0.01, 0.005, 0.01), (0.05, 0.05, 0.05)),
         # 'reset_variance': ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
@@ -149,7 +150,7 @@ plugger_position_ctrl_v2 = {
         # Target configuration
         'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
         # Start configuration relative to target configuration'
-        'start_config': Pose(Translation(0.0, 0.075, 0.0), Quaternion()),
+        'start_config': Pose(Position(0.0, 0.075, 0.0), Orientation()),
         # Reset variance of the start pose
         'reset_variance': ((0.01, 0.005, 0.01), (0.05, 0.05, 0.05)),
         # 'reset_variance': ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
@@ -171,9 +172,9 @@ testbed_plugger_position_ctrl_v0 = {
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(13,), dtype=np.float32),
         # Target configuration
-        'target_config': Pose(Translation(0.5, 0.8, 0.0), ROT_PI_X),
+        'target_config': Pose(Position(0.5, 0.8, 0.0), ROT_PI_X),
         # Start configuration relative to target configuration
-        'start_config': Pose(Translation(0.0, 0.0, 0.02+0.095), Quaternion()),
+        'start_config': Pose(Position(0.0, 0.0, 0.02+0.095), Orientation()),
         # Reset variance of the start pose
         'reset_variance': ((0.01, 0.01, 0.001), (0.05, 0.05, 0.05)),
         # 'reset_variance': ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
@@ -188,9 +189,9 @@ testbed_plugger_position_ctrl_v0 = {
         'cam_x': 0.8,
         'cam_y': 0.8,
         'cam_z': 0.15,
-        'plane_config': Pose(Translation(0.0, 0.0, -0.8136), Quaternion()),
-        'robot_config': Pose(Translation(), Quaternion()),
-        'socket_config': Pose(Translation(0.5, 0.8, 0.0), Quaternion()),
+        'plane_config': Pose(Position(0.0, 0.0, -0.8136), Orientation()),
+        'robot_config': Pose(),
+        'socket_config': Pose(Position(0.5, 0.8, 0.0), Orientation()),
         'gui_txt': "",
         'gui_txt_pos': (0.75, 1.25, 0.6),
         },
@@ -233,7 +234,7 @@ reacher_3dof_velocity_ctrl_v0 = {
         # Target configuration
         'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
         # Start configuration relative to target configuration'
-        'start_config': Pose(Translation(0.0, 0.2, 0.0), Quaternion()),
+        'start_config': Pose(Position(0.0, 0.2, 0.0), Orientation()),
         # Reset variance of the start pose
         'reset_variance': ((0.01, 0.05, 0.01), (0.0, 0.0, 0.0)),
         },
@@ -253,7 +254,7 @@ reacher_6dof_velocity_ctrl_v0 = {
         # Target configuration
         'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
         # Start configuration relative to target configuration'
-        'start_config': Pose(Translation(0.0, 0.2, 0.0), Quaternion()),
+        'start_config': Pose(Position(0.0, 0.2, 0.0), Orientation()),
         # Reset variance of the start pose
         'reset_variance': ((0.05, 0.05, 0.05), (0.1, 0.1, 0.1)),
         },

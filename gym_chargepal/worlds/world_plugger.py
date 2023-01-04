@@ -3,14 +3,13 @@
 import os 
 import logging
 import numpy as np
+from rigmopy import Orientation, Pose, Position
 
 # local
-import gym_chargepal.utility.cfg_handler as cfg_helper
-
 from gym_chargepal.bullet.ur_arm import URArm
+import gym_chargepal.utility.cfg_handler as ch
 from gym_chargepal.bullet.socket import Socket
 from gym_chargepal.worlds.world import WorldCfg, World
-from gym_chargepal.utility.tf import Quaternion, Translation, Pose
 
 # mypy
 from typing import Any, Dict, Tuple, Union
@@ -18,24 +17,14 @@ from typing import Any, Dict, Tuple, Union
 
 LOGGER = logging.getLogger(__name__)
 
-PLANE_POS = Translation(0.0, 0.0, 0.0)
-PLANE_ORI = Quaternion()
-
-ROBOT_POS = Translation(0.0, 1.15, 0.0)
-ROBOT_ORI = Quaternion()
-
-SOCKET_POS = Translation(0.0, -0.25/2.0, 0.0)
-SOCKET_ORI = Quaternion()
-SOCKET_ORI.from_euler_angles(0.0, 0.0, np.pi)
-
 
 class WorldPluggerCfg(WorldCfg):
     plane_urdf: str = 'plane.urdf'
     robot_urdf: str = 'primitive_chargepal_with_fix_plug.urdf'
     socket_urdf: str = 'primitive_adapter_station.urdf'
-    plane_config: Pose = Pose(PLANE_POS, PLANE_ORI)
-    robot_config: Pose = Pose(ROBOT_POS, ROBOT_ORI)
-    socket_config: Pose = Pose(SOCKET_POS, SOCKET_ORI)
+    plane_config: Pose = Pose()
+    robot_config: Pose = Pose(Position().from_vec((0.0, 1.15, 0.0)))
+    socket_config: Pose = Pose(Position().from_vec((0.0, -0.25/2.0, 0.0)), Orientation().from_euler_angle((0.0, 0.0, np.pi)))
 
 
 class WorldPlugger(World):
@@ -46,24 +35,19 @@ class WorldPlugger(World):
         # Create configuration and override values
         self.cfg: WorldPluggerCfg = WorldPluggerCfg()
         self.cfg.update(**config)
-
         # Pre initialize class attributes
         self.plane_id = -1
         self.robot_id = -1
         self.socket_id = -1
-        ur_arm_config = cfg_helper.search(config, 'ur_arm')
+        ur_arm_config = ch.search(config, 'ur_arm')
         ur_arm_config['ft_buffer_size'] = self.sim_steps + 1
         self.ur_arm = URArm(ur_arm_config)
-        socket_config = cfg_helper.search(config, 'socket')
+        socket_config = ch.search(config, 'socket')
         self.socket = Socket(socket_config)
-
         # Extract start configurations
-        self.plane_pos = self.cfg.plane_config.pos.as_tuple()
-        self.plane_ori = self.cfg.plane_config.ori.as_tuple(order='xyzw')
-        self.robot_pos = self.cfg.robot_config.pos.as_tuple()
-        self.robot_ori = self.cfg.robot_config.ori.as_tuple(order='xyzw')
-        self.socket_pos = self.cfg.socket_config.pos.as_tuple()
-        self.socket_ori = self.cfg.socket_config.ori.as_tuple(order='xyzw')
+        self.plane_pos, self.plane_ori = self.cfg.plane_config.as_vec(q_order='xyzw')
+        self.robot_pos, self.robot_ori = self.cfg.robot_config.as_vec(q_order='xyzw')
+        self.socket_pos, self.socket_ori = self.cfg.socket_config.as_vec(q_order='xyzw')
 
     def reset(self, joint_conf: Union[None, Tuple[float, ...]] = None, render: bool = False) -> None:
         if self.bullet_client is None:

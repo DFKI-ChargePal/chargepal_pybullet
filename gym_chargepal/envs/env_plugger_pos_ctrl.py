@@ -1,7 +1,7 @@
 # global
 import numpy as np
 import pybullet as p
-import quaternionic as quat
+from rigmopy import Orientation, Pose, Position
 
 # local
 import gym_chargepal.utility.cfg_handler as ch
@@ -12,7 +12,6 @@ from gym_chargepal.sensors.sensor_plug import PlugSensor
 from gym_chargepal.worlds.world_plugger import WorldPlugger
 # from gym_chargepal.reward.reward_dist import DistanceReward
 from gym_chargepal.sensors.sensor_socket import SocketSensor
-from gym_chargepal.utility.tf import Quaternion, Translation, Pose
 from gym_chargepal.reward.reward_pose_wrench import PoseWrenchReward
 from gym_chargepal.controllers.controller_tcp_pos import TcpPositionController
 from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotorControl
@@ -29,8 +28,7 @@ class EnvironmentPluggerPositionCtrl(Environment):
         # Update environment configuration
         config_env = ch.search(kwargs, 'environment')
         Environment.__init__(self, config_env)
-        
-        # extract component hyperparameter from kwargs
+        # Extract component hyperparameter from kwargs
         config_world = ch.search(kwargs, 'world')
         config_ur_arm = ch.search(kwargs, 'ur_arm')
         config_socket = ch.search(kwargs, 'socket')
@@ -41,28 +39,19 @@ class EnvironmentPluggerPositionCtrl(Environment):
         config_socket_sensor = ch.search(kwargs, 'socket_sensor')
         config_control_interface = ch.search(kwargs, 'control_interface')
         config_low_level_control = ch.search(kwargs, 'low_level_control')
-
-        # start configuration in world coordinates
-        self.x0_WP: Tuple[float, ...] = tuple(self.cfg.target_config.pos.as_array() + self.cfg.start_config.pos.as_array())
-        q0_SP= self.cfg.start_config.ori.as_quaternionic()
-        q0_WS = self.cfg.target_config.ori.as_quaternionic()
-        q0_WP = tuple((q0_WS * q0_SP).ndarray)
-        self.q0_WP = Quaternion(*q0_WP)
-        # target sensor state
-        self.tgt_pos = Translation()
-        self.tgt_ori = Quaternion()
-
-        # resolve cross references
+        # Start configuration in world coordinates
+        self.x0_WP = self.cfg.target_config.pos + self.cfg.start_config.pos
+        self.q0_WP = self.cfg.target_config.ori * self.cfg.start_config.ori
+        self.X0_WP = Pose(self.x0_WP, self.q0_WP)
+        # Target sensor state
+        self.tgt_pos = Position()
+        self.tgt_ori = Orientation()
+        # Resolve cross references
         config_world['ur_arm'] = config_ur_arm
         config_world['socket'] = config_socket
-        config_low_level_control['plug_lin_config'] = self.x0_WP
-        config_low_level_control['plug_ang_config'] = p.getEulerFromQuaternion(self.q0_WP.as_tuple(order='xyzw'))
-
-        # render option can be enabled with render() function
-        self.is_render = False
-        self.toggle_render_mode = False
-
-        # components
+        config_low_level_control['plug_lin_config'] = self.x0_WP.as_vec()
+        config_low_level_control['plug_ang_config'] = p.getEulerFromQuaternion(self.q0_WP.as_vec(order='xyzw'))
+        # Components
         self.world = WorldPlugger(config_world)
         self.ik_solver = IKSolver(config_ik_solver, self.world.ur_arm)
         self.control_interface = JointPositionMotorControl(config_control_interface, self.world.ur_arm)
@@ -79,25 +68,17 @@ class EnvironmentPluggerPositionCtrl(Environment):
         # self.reward = DistanceReward(config_reward, self.clock)
 
     def reset(self) -> npt.NDArray[np.float32]:
-        # reset environment
+        # Reset environment
         self.clock.reset()
-
         if self.toggle_render_mode:
             self.world.disconnect()
             self.toggle_render_mode = False
-
-        # reset robot by default joint configuration
+        # Reset robot by default joint configuration
         self.world.reset(render=self.is_render)
-
-        # get start joint configuration by inverse kinematic
-        mean_q0_WP = self.q0_WP.as_quaternionic()
-        cov_q0_WP = quat.array(self.reset_rnd_gen.rand_quat(order='wxyz'))
-        q0_WP = tuple((mean_q0_WP * cov_q0_WP).ndarray)
-        ori = Quaternion(*q0_WP).as_tuple(order='xyzw')
-        pos: Tuple[float, ...] = tuple(self.x0_WP + self.reset_rnd_gen.rand_linear())
-        joint_config_0 = self.ik_solver.solve((pos, ori))
-
-        # reset robot again
+        # Get start joint configuration by inverse kinematic
+        X0 = self.X0_WP.random(*self.cfg.reset_variance)
+        joint_config_0 = self.ik_solver.solve(X0.as_vec(q_order='xyzw'))
+        # Reset robot again
         self.world.reset(joint_config_0)
         # Set new target pose
         self.tgt_pos = self.socket_sensor.meas_pos()
@@ -106,10 +87,9 @@ class EnvironmentPluggerPositionCtrl(Environment):
 
     def step(self, action: npt.NDArray[np.float32]) -> Tuple[npt.NDArray[np.float32], float, bool, Dict[Any, Any]]:
         """ Execute environment/simulation step. """
-        # apply action
+        # Apply action
         self.low_level_control.update(action=np.array(action))
-        
-        # step simulation
+        # Step simulation
         self.world.step(render=self.is_render)
         self.clock.tick()
         self.ft_sensor.render_ft_bar(render=self.is_render)
@@ -125,25 +105,19 @@ class EnvironmentPluggerPositionCtrl(Environment):
         info = self.compose_info()
         return obs, reward, done, info
 
-    def render(self, mode: str = "human") -> None:
-        self.toggle_render_mode = True if not self.is_render else False
-        self.is_render = True
-
     def close(self) -> None:
         self.world.disconnect()
 
     def get_obs(self) -> npt.NDArray[np.float32]:
-        tgt_pos = self.tgt_pos.as_array()
-        plg_pos = self.plug_sensor.get_pos().as_array()
-        dif_pos: Tuple[float, ...] = tuple(tgt_pos - plg_pos)
+        dif_pos = (self.tgt_pos - self.plug_sensor.get_pos()).as_vec()
 
-        tgt_ori = self.tgt_ori.as_tuple(order='xyzw')
-        plg_ori = self.plug_sensor.get_ori().as_tuple(order='xyzw')
+        tgt_ori = self.tgt_ori.as_vec(order='xyzw')
+        plg_ori = self.plug_sensor.get_ori().as_vec(order='xyzw')
         dif_ori = self.world.bullet_client.getDifferenceQuaternion(plg_ori, tgt_ori)
 
-        ft_meas = self.ft_sensor.meas_wrench()
+        ft_meas = self.ft_sensor.meas_wrench().as_vec()
 
-        obs = np.array((dif_pos + dif_ori + ft_meas.as_tuple()), dtype=np.float32)
+        obs = np.array((dif_pos + dif_ori + ft_meas), dtype=np.float32)
 
         tgt_ori_ = np.array(tgt_ori)
         plg_ori_ = np.array(plg_ori)

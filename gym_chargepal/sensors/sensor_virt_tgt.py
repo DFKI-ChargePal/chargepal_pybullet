@@ -2,14 +2,14 @@
 # global
 import logging
 from dataclasses import dataclass
+from rigmopy import Orientation, Position
 
 # local
 from gym_chargepal.sensors.sensor import SensorCfg, Sensor
 from gym_chargepal.worlds.world_reacher import WorldReacher
-from gym_chargepal.utility.tf import Quaternion, Translation
 
 # mypy
-from typing import Dict, Any, Tuple
+from typing import Any, Dict
 
 
 LOGGER = logging.getLogger(__name__)
@@ -32,14 +32,14 @@ class VirtTgtSensor(Sensor):
         self.cfg.update(**config)
         # Safe references
         self.world = world
-        # intern sensors state
+        # Intern sensors state
         self.sensor_state = self.world.target_pose
 
     def update(self) -> None:
         self.sensor_state = self.world.target_pose
         
-    def get_pos(self) -> Translation:
+    def get_pos(self) -> Position:
         return self.sensor_state.pos
 
-    def get_ori(self) -> Quaternion:
+    def get_ori(self) -> Orientation:
         return self.sensor_state.ori

@@ -3,15 +3,15 @@
 import logging
 import numpy as np
 from dataclasses import dataclass
+from rigmopy import Orientation, Position
 
 # local
 from gym_chargepal.bullet.socket import Socket
 from gym_chargepal.sensors.sensor import SensorCfg, Sensor
-from gym_chargepal.utility.tf import Quaternion, Translation
 
 # mypy
-from typing import Any, Dict, Tuple
 from numpy import typing as npt
+from typing import Any, Dict, Tuple
 
 
 LOGGER = logging.getLogger(__name__)
@@ -44,20 +44,20 @@ class SocketSensor(Sensor):
         self.ori_bias = np.array(self.cfg.ori_bias, dtype=np.float32)
 
 
-    def get_pos(self) -> Translation:
+    def get_pos(self) -> Position:
         return self.socket.socket.get_pos()
 
-    def get_ori(self) -> Quaternion:
+    def get_ori(self) -> Orientation:
         return self.socket.socket.get_ori()
 
-    def meas_pos(self) -> Translation:
-        gt_pos = self.get_pos().as_array()
+    def meas_pos(self) -> Position:
+        gt_pos = self.get_pos().as_np_vec()
         pos_meas: npt.NDArray[np.float32] = gt_pos + np.random.randn(3) * self.pos_noise + self.pos_bias
-        return Translation(*pos_meas.tolist())
+        return Position().from_vec(pos_meas.tolist())
 
-    def meas_ori(self) -> Quaternion:
-        gt_ori = self.get_ori().as_tuple(order='xyzw')
+    def meas_ori(self) -> Orientation:
+        gt_ori = self.get_ori().as_vec(order='xyzw')
         gt_ori_eul = np.array(self.socket.bc.getEulerFromQuaternion(gt_ori), dtype=np.float32)
         ori_eul_meas: npt.NDArray[np.float32] = gt_ori_eul + np.random.randn(3) * self.ori_noise + self.ori_bias
-        ori_meas = Quaternion(*self.socket.bc.getQuaternionFromEuler(ori_eul_meas.tolist()) + ('xyzw',))
+        ori_meas = Orientation().from_vec(self.socket.bc.getQuaternionFromEuler(ori_eul_meas.tolist()), order='xyzw')
         return ori_meas

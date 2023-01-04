@@ -89,7 +89,7 @@ class TcpVelocityController(Controller):
         jac = np.array(jac_t + jac_r)
 
         # invert the jacobian to map from tcp velocities to joint velocities
-        # be careful of singnularities and non square matrices
+        # be careful of singularities and non square matrices
         # use pseudo-inverse when this is the case
         # this is all the time for 7 dof arms like panda
         if jac.shape[1] > np.linalg.matrix_rank(jac.T):
@@ -102,16 +102,13 @@ class TcpVelocityController(Controller):
         action[self.ang_action_ids] *= self.wa_ang
 
         # Get current tcp velocities
-        tcp_dot_twist = self.plug_sensor.get_twist().as_array()
+        tcp_dot_twist = self.plug_sensor.get_twist().as_np_vec()
         # Separate into linear and angular part
         tcp_dot_lin = tcp_dot_twist[0:3]
         tcp_dot_ang = tcp_dot_twist[3:6]
 
-        # tcp_dot_lin = np.array(self._plug_sensor.get_lin_vel())
-        # tcp_dot_ang = np.array(self._plug_sensor.get_ang_vel())
-
         # Calculate difference of commanded tcp velocity and current tcp velocity 
-        # to get new disired absolute velocity.
+        # to get new desired absolute velocity.
         # Degrees of freedom that are not controlled are set to zero.
         tcp_dot_lin_ = np.zeros(3)
         tcp_dot_ang_ = np.zeros(3)

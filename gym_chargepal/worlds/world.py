@@ -2,7 +2,6 @@
 # global
 import os
 import abc
-import copy
 import logging
 import time
 import rospkg
@@ -56,13 +55,13 @@ class World(metaclass=abc.ABCMeta):
         self.cfg.update(**config)
         self.bullet_client: BulletClient = None
         self.sim_steps = int(self.cfg.freq_sim // self.cfg.freq_ctrl)
-        # find chargepal ros description package
+        # Find chargepal ros description package
         ros_pkg = rospkg.RosPack()
         ros_pkg_path = ros_pkg.get_path(self.cfg.model_description_pkg)
         self.urdf_pkg_path = os.path.join(ros_pkg_path, self.cfg.urdf_model_dir)
 
     def connect(self, gui: bool) -> None:
-        # connecting to bullet server
+        # Connecting to bullet server
         connection_mode = p.GUI if gui else p.DIRECT
         if gui:
             # Add GUI options
@@ -77,11 +76,11 @@ class World(metaclass=abc.ABCMeta):
             connection_opt = ""
         self.bullet_client = BulletClient(connection_mode=connection_mode, options=connection_opt)
         assert self.bullet_client
-        # set common bullet data path
+        # Set common bullet data path
         self.bullet_client.setAdditionalSearchPath(pybullet_data.getDataPath())
-        # disable real-time simulation
+        # Disable real-time simulation
         self.bullet_client.setRealTimeSimulation(False)
-        # reset simulation
+        # Reset simulation
         self.bullet_client.resetSimulation()
         self.bullet_client.setPhysicsEngineParameter(deterministicOverlappingPairs=1)
         if gui:
@@ -108,7 +107,7 @@ class World(metaclass=abc.ABCMeta):
             self.bullet_client = None
 
     def step(self, render: bool, sensors: Optional[List[Sensor]] = None) -> None:
-        # step bullet simulation
+        # Step bullet simulation
         if self.bullet_client is None:
             error_msg = f'Unable to step simulation! Did you connect with a Bullet physics server?'
             LOGGER.error(error_msg)
@@ -116,9 +115,9 @@ class World(metaclass=abc.ABCMeta):
 
         for _ in range(self.sim_steps):
             self.bullet_client.stepSimulation()
-            # update physics in subclass
+            # Update physics in subclass
             self.sub_step()
-            # wait to render in wall clock time
+            # Wait to render in wall clock time
             if render:
                 if self.cfg.record:
                     self.bullet_client.configureDebugVisualizer(p.COV_ENABLE_SINGLE_STEP_RENDERING, 1)

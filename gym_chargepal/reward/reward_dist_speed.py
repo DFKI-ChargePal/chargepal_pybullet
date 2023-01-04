@@ -1,10 +1,10 @@
 """ This file defines the reward class for distances between two frames weighted by the TCP speed. """
 # global
 import numpy as np
+from rigmopy import Pose, Twist
 from dataclasses import dataclass
 
 # local
-from gym_chargepal.utility.tf import Pose, Twist
 from gym_chargepal.reward.reward import RewardCfg, Reward
 from gym_chargepal.utility.env_clock import EnvironmentClock
 
@@ -43,7 +43,7 @@ class DistanceSpeedReward(Reward):
         pts_tgt = X_tgt.to_3pt_set(dist=self.cfg.spatial_pt_distance, axes='xy')
         # Distance between end-effector and target points
         distances: npt.NDArray[np.float32] = pts_tgt - pts_tcp
-        speed = V_tcp.as_array()
+        speed = V_tcp.as_np_vec()
         # Convert angular velocities into tangential speed with r = 1m
         speed[3:] = 2 * np.pi * speed[3:]
         # Compute L1-norm of speed and distance vector

@@ -1,10 +1,10 @@
 # global
 import logging
 import pybullet as p
+from rigmopy import Position, Pose
 
 # local
 from gym_chargepal.bullet import BulletJointInfo
-from gym_chargepal.utility.tf import Translation, Pose
 
 # mypy
 from pybullet_utils.bullet_client import BulletClient
@@ -15,7 +15,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def draw_sphere_marker(
-        position: Translation,
+        position: Position,
         radius: float, 
         color: Tuple[float, ...],
         bullet_client: BulletClient
@@ -28,7 +28,7 @@ def draw_sphere_marker(
         rgbaColor=color
         )
     marker_id: int = bullet_client.createMultiBody(
-        basePosition=position.as_tuple(),
+        basePosition=position.as_vec(),
         baseCollisionShapeIndex=-1,
         baseVisualShapeIndex=vs_id
         )
@@ -52,9 +52,10 @@ def draw_cylinder_marker(
         rgbaColor=color,
         visualFramePosition=(0.0, 0.0, height/2)
         )
+    base_pos, base_ori = pose.as_vec(q_order='xyzw')
     marker_id: int = bullet_client.createMultiBody(
-        basePosition=pose.pos.as_tuple(),
-        baseOrientation=pose.ori.as_tuple(order='xyzw'),
+        basePosition=base_pos,
+        baseOrientation=base_ori,
         baseCollisionShapeIndex=-1,
         baseVisualShapeIndex=vs_id
     )

@@ -8,7 +8,7 @@ from gym_chargepal.bullet.ur_arm import URArm
 from gym_chargepal.sensors.sensor import SensorCfg, Sensor
 
 # mypy
-from typing import Dict, Any, Tuple, Optional
+from typing import Dict, Any, Tuple
 
 
 LOGGER = logging.getLogger(__name__)

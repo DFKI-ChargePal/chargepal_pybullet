@@ -2,11 +2,11 @@
 # global
 import logging
 from dataclasses import dataclass
+from rigmopy import Orientation, Position, Twist
 
 # local
 from gym_chargepal.bullet.ur_arm import URArm
 from gym_chargepal.sensors.sensor import SensorCfg, Sensor
-from gym_chargepal.utility.tf import Quaternion, Translation, Twist
 
 # mypy
 from typing import Any, Dict
@@ -35,10 +35,10 @@ class PlugSensor(Sensor):
         # Safe references
         self.ur_arm = ur_arm
 
-    def get_pos(self) -> Translation:
+    def get_pos(self) -> Position:
         return self.ur_arm.tcp.get_pos()
 
-    def get_ori(self) -> Quaternion:
+    def get_ori(self) -> Orientation:
         return self.ur_arm.tcp.get_ori()
 
     def get_twist(self) -> Twist:

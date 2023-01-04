@@ -1,11 +1,12 @@
 """ This file defines the link state class """
 # global
+from rigmopy import Orientation, Position, Twist
 from pybullet_utils.bullet_client import BulletClient
+
 
 # local
 import gym_chargepal.bullet.utility as pb_utils
 from gym_chargepal.bullet import BulletLinkState
-from gym_chargepal.utility.tf import Quaternion, Translation, Twist
 
 
 class BodyLink:
@@ -30,19 +31,19 @@ class BodyLink:
             computeForwardKinematics=True
         )
 
-    def get_pos(self) -> Translation:
+    def get_pos(self) -> Position:
         # make sure to update the sensor state before calling this method
         state_idx = BulletLinkState.WORLD_LINK_FRAME_POS
-        pos = Translation(*self.state[state_idx])
+        pos = Position().from_vec(self.state[state_idx])
         return pos
 
-    def get_ori(self) -> Quaternion:
+    def get_ori(self) -> Orientation:
         # make sure to update the sensor state before calling this method
         state_idx = BulletLinkState.WORLD_LINK_FRAME_ORI
-        ori = Quaternion(*self.state[state_idx] + ('xyzw',))  
+        ori = Orientation().from_vec(self.state[state_idx], order='xyzw')
         return ori
 
     def get_twist(self) -> Twist:
         lin_vel_state_idx = BulletLinkState.WORLD_LINK_LIN_VEL
         ang_vel_state_idx = BulletLinkState.WORLD_LINK_ANG_VEL
-        return Twist(*self.state[lin_vel_state_idx] + self.state[ang_vel_state_idx])
+        return Twist().from_vec(self.state[lin_vel_state_idx] + self.state[ang_vel_state_idx])

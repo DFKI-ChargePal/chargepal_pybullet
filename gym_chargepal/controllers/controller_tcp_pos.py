@@ -89,8 +89,8 @@ class TcpPositionController(Controller):
         action[self.lin_action_ids] *= self.wa_lin
         action[self.ang_action_ids] *= self.wa_ang
         # Get current pose
-        plug_lin_pos = self.plug_sensor.get_pos().as_array()
-        plug_ang_pos = np.array(p.getEulerFromQuaternion(self.plug_sensor.get_ori().as_tuple(order='xyzw')))
+        plug_lin_pos = self.plug_sensor.get_pos().as_np_vec()
+        plug_ang_pos = np.array(p.getEulerFromQuaternion(self.plug_sensor.get_ori().as_np_vec(order='xyzw')))
         # Increment pose by action
         plug_lin_pos[self.lin_motion_axis[MotionAxis.ENABLED]] += action[self.lin_action_ids]
         plug_ang_pos[self.ang_motion_axis[MotionAxis.ENABLED]] += action[self.ang_action_ids]
