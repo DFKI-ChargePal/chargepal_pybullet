@@ -1,6 +1,8 @@
 # global
+import pytest
 import numpy as np
 import pybullet as p
+import rigmopy as rp
 from rigmopy import Orientation, Pose, Position
 
 # local
@@ -40,17 +42,17 @@ class EnvironmentPluggerPositionCtrl(Environment):
         config_control_interface = ch.search(kwargs, 'control_interface')
         config_low_level_control = ch.search(kwargs, 'low_level_control')
         # Start configuration in world coordinates
-        self.x0_WP = self.cfg.target_config.pos + self.cfg.start_config.pos
-        self.q0_WP = self.cfg.target_config.ori * self.cfg.start_config.ori
-        self.X0_WP = Pose(self.x0_WP, self.q0_WP)
+        self.x0_PW = self.cfg.target_config.pos + self.cfg.start_config.pos
+        self.q0_PW = self.cfg.target_config.ori * self.cfg.start_config.ori
+        self.X0_PW = Pose(self.x0_PW, self.q0_PW)
         # Target sensor state
-        self.tgt_pos = Position()
-        self.tgt_ori = Orientation()
+        self.x_SW = Position()
+        self.q_SW = Orientation()
         # Resolve cross references
         config_world['ur_arm'] = config_ur_arm
         config_world['socket'] = config_socket
-        config_low_level_control['plug_lin_config'] = self.x0_WP.as_vec()
-        config_low_level_control['plug_ang_config'] = p.getEulerFromQuaternion(self.q0_WP.as_vec(order='xyzw'))
+        config_low_level_control['plug_lin_config'] = self.x0_PW.as_vec()
+        config_low_level_control['plug_ang_config'] = self.q0_PW.as_euler_angle()
         # Components
         self.world = WorldPlugger(config_world)
         self.ik_solver = IKSolver(config_ik_solver, self.world.ur_arm)
@@ -76,13 +78,13 @@ class EnvironmentPluggerPositionCtrl(Environment):
         # Reset robot by default joint configuration
         self.world.reset(render=self.is_render)
         # Get start joint configuration by inverse kinematic
-        X0 = self.X0_WP.random(*self.cfg.reset_variance)
-        joint_config_0 = self.ik_solver.solve(X0.as_vec(q_order='xyzw'))
+        X0 = self.X0_PW.random(*self.cfg.reset_variance)
+        joint_pos0 = self.ik_solver.solve(X0.as_vec(q_order='xyzw'))
         # Reset robot again
-        self.world.reset(joint_config_0)
+        self.world.reset(joint_pos0)
         # Set new target pose
-        self.tgt_pos = self.socket_sensor.meas_pos()
-        self.tgt_ori = self.socket_sensor.meas_ori()
+        self.x_SW = self.socket_sensor.meas_pos()
+        self.q_SW = self.socket_sensor.meas_ori()
         return self.get_obs()
 
     def step(self, action: npt.NDArray[np.float32]) -> Tuple[npt.NDArray[np.float32], float, bool, Dict[Any, Any]]:
@@ -97,10 +99,10 @@ class EnvironmentPluggerPositionCtrl(Environment):
         obs = self.get_obs()
         # Evaluate environment
         done = self.done
-        X_tcp = Pose(self.plug_sensor.get_pos(), self.plug_sensor.get_ori())
-        X_tgt = Pose(self.socket_sensor.get_pos(), self.socket_sensor.get_ori())
+        X_PW = Pose(self.plug_sensor.get_pos(), self.plug_sensor.get_ori())
+        X_SW = Pose(self.socket_sensor.get_pos(), self.socket_sensor.get_ori())
         F_tcp = self.ft_sensor.get_wrench()
-        reward = self.reward.compute(X_tcp, X_tgt, F_tcp, done)
+        reward = self.reward.compute(X_PW, X_SW, F_tcp, done)
         # reward = self.reward.compute(X_tcp, X_tgt, done)
         info = self.compose_info()
         return obs, reward, done, info
@@ -109,20 +111,18 @@ class EnvironmentPluggerPositionCtrl(Environment):
         self.world.disconnect()
 
     def get_obs(self) -> npt.NDArray[np.float32]:
-        dif_pos = (self.tgt_pos - self.plug_sensor.get_pos()).as_vec()
-
-        tgt_ori = self.tgt_ori.as_vec(order='xyzw')
-        plg_ori = self.plug_sensor.get_ori().as_vec(order='xyzw')
-        dif_ori = self.world.bullet_client.getDifferenceQuaternion(plg_ori, tgt_ori)
-
-        ft_meas = self.ft_sensor.meas_wrench().as_vec()
-
-        obs = np.array((dif_pos + dif_ori + ft_meas), dtype=np.float32)
-
-        tgt_ori_ = np.array(tgt_ori)
-        plg_ori_ = np.array(plg_ori)
-        self.task_pos_error = np.sqrt(np.sum(np.square(dif_pos)))
-        self.task_ang_error = np.arccos(np.clip((2 * (tgt_ori_.dot(plg_ori_))**2 - 1), -1.0, 1.0))
+        # Build observation
+        x_PW = self.plug_sensor.get_pos()
+        q_PW = self.plug_sensor.get_ori()
+        x_SP = (self.x_SW - x_PW).as_vec()
+        q_SP = rp.utils.orientation_difference(q_PW, self.q_SW).as_vec()
+        F_tcp_meas = self.ft_sensor.meas_wrench().as_vec()
+        obs = np.array((x_SP + q_SP + F_tcp_meas), dtype=np.float32)
+        # Evaluate metrics
+        q_SW_ = np.array(self.q_SW.as_vec())
+        q_PW_ = np.array(q_PW.as_vec())
+        self.task_pos_error = np.sqrt(np.sum(np.square(x_SP)))
+        self.task_ang_error = np.arccos(np.clip((2 * (q_SW_.dot(q_PW_))**2 - 1), -1.0, 1.0))
         return obs
 
     def compose_info(self) -> Dict[str, Any]:
