@@ -51,13 +51,13 @@ class SocketSensor(Sensor):
         return self.socket.socket.get_ori()
 
     def meas_pos(self) -> Position:
-        gt_pos = self.get_pos().as_np_vec()
-        pos_meas: npt.NDArray[np.float32] = gt_pos + np.random.randn(3) * self.pos_noise + self.pos_bias
-        return Position().from_vec(pos_meas.tolist())
+        gt_pos = self.get_pos().xyz1
+        pos_meas: npt.NDArray[np.float32] = gt_pos[0:3] + np.random.randn(3) * self.pos_noise + self.pos_bias
+        return Position().from_xyz(pos_meas.tolist())
 
     def meas_ori(self) -> Orientation:
-        gt_ori = self.get_ori().as_vec(order='xyzw')
+        gt_ori = self.get_ori().xyzw
         gt_ori_eul = np.array(self.socket.bc.getEulerFromQuaternion(gt_ori), dtype=np.float32)
         ori_eul_meas: npt.NDArray[np.float32] = gt_ori_eul + np.random.randn(3) * self.ori_noise + self.ori_bias
-        ori_meas = Orientation().from_vec(self.socket.bc.getQuaternionFromEuler(ori_eul_meas.tolist()), order='xyzw')
+        ori_meas = Orientation().from_xyzw(self.socket.bc.getQuaternionFromEuler(ori_eul_meas.tolist()))
         return ori_meas

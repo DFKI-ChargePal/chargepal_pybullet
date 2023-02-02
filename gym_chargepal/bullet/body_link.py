@@ -34,16 +34,16 @@ class BodyLink:
     def get_pos(self) -> Position:
         # make sure to update the sensor state before calling this method
         state_idx = BulletLinkState.WORLD_LINK_FRAME_POS
-        pos = Position().from_vec(self.state[state_idx])
+        pos = Position().from_xyz(self.state[state_idx])
         return pos
 
     def get_ori(self) -> Orientation:
         # make sure to update the sensor state before calling this method
         state_idx = BulletLinkState.WORLD_LINK_FRAME_ORI
-        ori = Orientation().from_vec(self.state[state_idx], order='xyzw')
+        ori = Orientation().from_xyzw(self.state[state_idx])
         return ori
 
     def get_twist(self) -> Twist:
         lin_vel_state_idx = BulletLinkState.WORLD_LINK_LIN_VEL
         ang_vel_state_idx = BulletLinkState.WORLD_LINK_ANG_VEL
-        return Twist().from_vec(self.state[lin_vel_state_idx] + self.state[ang_vel_state_idx])
+        return Twist().from_vw(self.state[lin_vel_state_idx] + self.state[ang_vel_state_idx])

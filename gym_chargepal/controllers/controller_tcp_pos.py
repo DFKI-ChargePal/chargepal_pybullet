@@ -76,7 +76,6 @@ class TcpPositionController(Controller):
         stop_idx = start_idx + len(self.ang_motion_axis[MotionAxis.ENABLED])
         self.ang_action_ids = slice(start_idx, stop_idx)
 
-
     def update(self, action: npt.NDArray[np.float32]) -> None:
         """
         Updates the tcp position controller
@@ -89,8 +88,8 @@ class TcpPositionController(Controller):
         action[self.lin_action_ids] *= self.wa_lin
         action[self.ang_action_ids] *= self.wa_ang
         # Get current pose
-        plug_lin_pos = self.plug_sensor.get_pos().as_np_vec()
-        plug_ang_pos = np.array(p.getEulerFromQuaternion(self.plug_sensor.get_ori().as_np_vec(order='xyzw')))
+        plug_lin_pos = self.plug_sensor.get_pos().xyz1[0:3]
+        plug_ang_pos = np.array(p.getEulerFromQuaternion(self.plug_sensor.get_ori().xyzw))
         # Increment pose by action
         plug_lin_pos[self.lin_motion_axis[MotionAxis.ENABLED]] += action[self.lin_action_ids]
         plug_ang_pos[self.ang_motion_axis[MotionAxis.ENABLED]] += action[self.ang_action_ids]

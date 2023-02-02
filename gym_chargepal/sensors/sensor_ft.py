@@ -50,8 +50,8 @@ class FTSensor(Sensor):
         assert self.ur_arm.fts
         # Get sensor state and bring values in a range between -1.0 and +1.0
         wrench = self.ur_arm.fts.get_wrench()
-        norm_wrench: npt.NDArray[np.float_] = np.clip(wrench.as_np_vec(), self.ft_min, self.ft_max) / self.ft_max
-        return Wrench().from_vec(norm_wrench.tolist())
+        norm_wrench: npt.NDArray[np.float_] = np.clip(wrench.to_numpy(), self.ft_min, self.ft_max) / self.ft_max
+        return Wrench().from_ft(norm_wrench.tolist())
 
     def meas_wrench(self) -> Wrench:
         meas = self.get_wrench()
@@ -60,7 +60,7 @@ class FTSensor(Sensor):
 
     def render_ft_bar(self, render: bool) -> None:
         if render and self.cfg.render_bar:
-            wrench = self.get_wrench().as_vec()
+            wrench = self.get_wrench().ft
             # Find outliers
             ft_max = max(wrench)
             # idx = wrench.index(ft_max)

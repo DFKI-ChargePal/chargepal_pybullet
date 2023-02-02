@@ -22,8 +22,8 @@ class WorldReacherCfg(WorldCfg):
     plane_urdf: str = 'plane.urdf'
     robot_urdf: str = 'primitive_chargepal_with_fix_plug.urdf'
     plane_config: Pose = Pose()
-    robot_config: Pose = Pose(Position().from_vec((0.0, 1.15, 0.0)))
-    target_config: Pose = Pose(Position().from_vec((0.0, 0.0, 1.2)), Orientation().from_euler_angle((np.pi/2, 0.0, 0.0)))
+    robot_config: Pose = Pose(Position().from_xyz((0.0, 1.15, 0.0)))
+    target_config: Pose = Pose(Position().from_xyz((0.0, 0.0, 1.2)), Orientation().from_euler_angle((np.pi/2, 0.0, 0.0)))
 
 
 class WorldReacher(World):
@@ -43,8 +43,8 @@ class WorldReacher(World):
         self.ur_arm = URArm(ur_arm_config)
         # Extract start configurations
         self.target_pose = self.cfg.target_config
-        self.plane_pos, self.plane_ori = self.cfg.plane_config.as_vec(q_order='xyzw')
-        self.robot_pos, self.robot_ori = self.cfg.robot_config.as_vec(q_order='xyzw')
+        self.plane_pos, self.plane_ori = self.cfg.plane_config.xyz_xyzw
+        self.robot_pos, self.robot_ori = self.cfg.robot_config.xyz_xyzw
 
     def reset(self, joint_conf: Union[None, Tuple[float, ...]] = None, render: bool = False) -> None:
         if self.bullet_client is None:

@@ -43,7 +43,7 @@ class DistanceSpeedReward(Reward):
         pts_tgt = X_tgt.to_3pt_set(dist=self.cfg.spatial_pt_distance, axes='xy')
         # Distance between end-effector and target points
         distances: npt.NDArray[np.float32] = pts_tgt - pts_tcp
-        speed = V_tcp.as_np_vec()
+        speed = V_tcp.to_numpy()
         # Convert angular velocities into tangential speed with r = 1m
         speed[3:] = 2 * np.pi * speed[3:]
         # Compute L1-norm of speed and distance vector

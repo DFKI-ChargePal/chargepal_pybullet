@@ -41,8 +41,8 @@ class EnvironmentReacherPositionCtrl(Environment):
         # Resolve cross references
         config_world['ur_arm'] = config_ur_arm
         config_world['target_config'] = self.cfg.target_config
-        config_low_level_control['plug_lin_config'] = self.x0_WP.as_vec()
-        config_low_level_control['plug_ang_config'] = p.getEulerFromQuaternion(self.q0_WP.as_vec(order='xyzw'))
+        config_low_level_control['plug_lin_config'] = self.x0_WP.xyz
+        config_low_level_control['plug_ang_config'] = p.getEulerFromQuaternion(self.q0_WP.xyzw)
         # Components
         self.world = WorldReacher(config_world)
         self.ik_solver = IKSolver(config_ik_solver, self.world.ur_arm)
@@ -67,7 +67,7 @@ class EnvironmentReacherPositionCtrl(Environment):
         self.world.reset(render=self.is_render)
         # Get start joint configuration by inverse kinematic
         X0 = self.X0_WP.random(*self.cfg.reset_variance)
-        joint_config_0 = self.ik_solver.solve(X0.as_vec(q_order='xyzw'))  # type: ignore
+        joint_config_0 = self.ik_solver.solve(X0.xyz_xyzw)
         # Reset robot again
         self.world.reset(joint_config_0)
         # Update sensors states
@@ -100,10 +100,10 @@ class EnvironmentReacherPositionCtrl(Environment):
             self.target_sensor.update()
 
     def get_obs(self) -> npt.NDArray[np.float32]:
-        dif_pos = (self.target_sensor.get_pos() - self.plug_sensor.get_pos()).as_vec()
+        dif_pos = (self.target_sensor.get_pos() - self.plug_sensor.get_pos()).xyz
 
-        tgt_ori = self.target_sensor.get_ori().as_vec(order='xyzw')
-        plg_ori = self.plug_sensor.get_ori().as_vec(order='xyzw')
+        tgt_ori = self.target_sensor.get_ori().xyzw
+        plg_ori = self.plug_sensor.get_ori().xyzw
         dif_ori = self.world.bullet_client.getDifferenceQuaternion(plg_ori, tgt_ori)
 
         obs = np.array((dif_pos + dif_ori), dtype=np.float32)

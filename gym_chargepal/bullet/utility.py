@@ -28,7 +28,7 @@ def draw_sphere_marker(
         rgbaColor=color
         )
     marker_id: int = bullet_client.createMultiBody(
-        basePosition=position.as_vec(),
+        basePosition=position.xyz,
         baseCollisionShapeIndex=-1,
         baseVisualShapeIndex=vs_id
         )
@@ -52,7 +52,7 @@ def draw_cylinder_marker(
         rgbaColor=color,
         visualFramePosition=(0.0, 0.0, height/2)
         )
-    base_pos, base_ori = pose.as_vec(q_order='xyzw')
+    base_pos, base_ori = pose.xyz_xyzw
     marker_id: int = bullet_client.createMultiBody(
         basePosition=base_pos,
         baseOrientation=base_ori,

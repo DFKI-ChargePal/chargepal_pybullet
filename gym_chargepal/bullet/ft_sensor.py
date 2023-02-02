@@ -53,5 +53,5 @@ class FTSensor:
         state_idx = BulletJointState.JOINT_REACTION_FORCE
         wrench: Tuple[float, ...] = self.state[state_idx]
         self.buffer.append(np.array(wrench, dtype=np.float32))
-        mean_wrench = Wrench().from_vec(np.mean(self.buffer, axis=0, dtype=np.float32).tolist())
+        mean_wrench = Wrench().from_ft(np.mean(self.buffer, axis=0, dtype=np.float32).tolist())
         return mean_wrench

@@ -39,7 +39,7 @@ class PoseWrenchReward(Reward):
         # Distance between end-effector and target points
         distances: npt.NDArray[np.float32] = pts_tgt - pts_tcp
         # Search for the force-torque outlier and negatively reward only that one.
-        ft_max = max(F_tcp.as_vec())
+        ft_max = max(F_tcp.ft)
         ft_max_weight = min(ft_max * self.cfg.wrench_weight, 1.0)
         # L1-norm of the distance
         dist_norm = min(np.mean(np.abs(distances)) * self.cfg.pose_weight, 1.0)

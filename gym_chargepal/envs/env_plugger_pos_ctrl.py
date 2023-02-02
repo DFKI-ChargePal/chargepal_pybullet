@@ -1,7 +1,6 @@
 # global
 import pytest
 import numpy as np
-import pybullet as p
 import rigmopy as rp
 from rigmopy import Orientation, Pose, Position
 
@@ -51,8 +50,8 @@ class EnvironmentPluggerPositionCtrl(Environment):
         # Resolve cross references
         config_world['ur_arm'] = config_ur_arm
         config_world['socket'] = config_socket
-        config_low_level_control['plug_lin_config'] = self.x0_PW.as_vec()
-        config_low_level_control['plug_ang_config'] = self.q0_PW.as_euler_angle()
+        config_low_level_control['plug_lin_config'] = self.x0_PW.xyz
+        config_low_level_control['plug_ang_config'] = self.q0_PW.rpy
         # Components
         self.world = WorldPlugger(config_world)
         self.ik_solver = IKSolver(config_ik_solver, self.world.ur_arm)
@@ -79,7 +78,7 @@ class EnvironmentPluggerPositionCtrl(Environment):
         self.world.reset(render=self.is_render)
         # Get start joint configuration by inverse kinematic
         X0 = self.X0_PW.random(*self.cfg.reset_variance)
-        joint_pos0 = self.ik_solver.solve(X0.as_vec(q_order='xyzw'))
+        joint_pos0 = self.ik_solver.solve(X0.xyz_xyzw)
         # Reset robot again
         self.world.reset(joint_pos0)
         # Set new target pose
@@ -114,14 +113,14 @@ class EnvironmentPluggerPositionCtrl(Environment):
         # Build observation
         x_PW = self.plug_sensor.get_pos()
         q_PW = self.plug_sensor.get_ori()
-        x_SP = (self.x_SW - x_PW).as_vec()
-        q_SP = rp.utils.orientation_difference(q_PW, self.q_SW).as_vec()
-        F_tcp_meas = self.ft_sensor.meas_wrench().as_vec()
-        obs = np.array((x_SP + q_SP + F_tcp_meas), dtype=np.float32)
+        x_SP = self.x_SW - x_PW
+        q_SP = rp.utils.orientation_difference(q_PW, self.q_SW).wxyz
+        F_tcp_meas = self.ft_sensor.meas_wrench().ft
+        obs = np.array((x_SP.xyz + q_SP + F_tcp_meas), dtype=np.float32)
         # Evaluate metrics
-        q_SW_ = np.array(self.q_SW.as_vec())
-        q_PW_ = np.array(q_PW.as_vec())
-        self.task_pos_error = np.sqrt(np.sum(np.square(x_SP)))
+        q_SW_ = np.array(self.q_SW.wxyz)
+        q_PW_ = np.array(q_PW.wxyz)
+        self.task_pos_error = np.sqrt(np.sum(np.square(x_SP.xyz)))
         self.task_ang_error = np.arccos(np.clip((2 * (q_SW_.dot(q_PW_))**2 - 1), -1.0, 1.0))
         return obs
 
