@@ -4,8 +4,8 @@ import numpy as np
 from gym import spaces
 from rigmopy import (
     Pose,
-    Position, 
-    Orientation,
+    Position,
+    Orientation
 )
 
 # local

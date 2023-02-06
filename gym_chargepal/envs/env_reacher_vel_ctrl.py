@@ -1,8 +1,6 @@
 # global
 import numpy as np
-import pybullet as p
-import quaternionic as quat
-from rigmopy import Orientation, Pose, Position
+import rigmopy as rp
 
 # local
 import gym_chargepal.utility.cfg_handler as ch
@@ -43,12 +41,12 @@ class EnvironmentReacherVelocityCtrl(Environment):
         # Start configuration in world coordinates
         self.x0_WP = self.cfg.target_config.pos + self.cfg.start_config.pos
         self.q0_WP = self.cfg.target_config.ori * self.cfg.start_config.ori
-        self.X0_WP = Pose(self.x0_WP, self.q0_WP)
+        self.X0_WP = rp.Pose(self.x0_WP, self.q0_WP)
         # Resolve cross references
         config_world['ur_arm'] = config_ur_arm
         config_world['target_config'] = self.cfg.target_config
         config_low_level_control['plug_lin_config'] = self.x0_WP.xyz
-        config_low_level_control['plug_ang_config'] = p.getEulerFromQuaternion(self.q0_WP.xyzw)
+        config_low_level_control['plug_ang_config'] = self.q0_WP.rpy
         # Components
         self.world = WorldReacher(config_world)
         self.jacobian = Jacobian(config_jacobian, self.world.ur_arm)
@@ -95,8 +93,8 @@ class EnvironmentReacherVelocityCtrl(Environment):
         obs = self.get_obs()
         # Evaluate environment
         done = self.done
-        X_tcp = Pose(self.plug_sensor.get_pos(), self.plug_sensor.get_ori())
-        X_tgt = Pose(self.plug_sensor.get_pos(), self.plug_sensor.get_ori())
+        X_tcp = rp.Pose(self.plug_sensor.get_pos(), self.plug_sensor.get_ori())
+        X_tgt = rp.Pose(self.plug_sensor.get_pos(), self.plug_sensor.get_ori())
         V_tcp = self.plug_sensor.get_twist()
         reward = self.reward.compute(X_tcp=X_tcp, V_tcp=V_tcp, X_tgt=X_tgt, done=done)
         info = self.compose_info()
@@ -111,19 +109,21 @@ class EnvironmentReacherVelocityCtrl(Environment):
 
     def get_obs(self) -> npt.NDArray[np.float32]:
         # Get spatial distance
-        dif_pos = (self.target_sensor.get_pos() - self.plug_sensor.get_pos()).xyz
-        tgt_ori = self.target_sensor.get_ori().xyzw
-        plg_ori = self.plug_sensor.get_ori().xyzw
-        dif_ori = self.world.bullet_client.getDifferenceQuaternion(plg_ori, tgt_ori)
+        x_PW = self.plug_sensor.get_pos()
+        x_SW = self.target_sensor.get_pos()
+        x_SP = (x_SW - x_PW).xyz
+        q_PW = self.plug_sensor.get_ori()
+        q_SW = self.target_sensor.get_ori()
+        q_SP = rp.utils.orientation_difference(q_PW, q_SW).wxyz
         # Get velocity signal
-        twist = self.plug_sensor.get_twist().vw
-        # Build observation
-        obs = np.array((dif_pos + dif_ori + twist), dtype=np.float32)
-        # Calculate side information
-        tgt_ori_ = np.array(tgt_ori)
-        plg_ori_ = np.array(plg_ori)
-        self.task_pos_error = np.sqrt(np.sum(np.square(dif_pos)))
-        self.task_ang_error = np.arccos(np.clip((2 * (tgt_ori_.dot(plg_ori_))**2 - 1), -1.0, 1.0))
+        i_twist_PW = self.plug_sensor.get_twist().vw
+        # Glue observation together
+        obs = np.array((x_SP + q_SP + i_twist_PW), dtype=np.float32)
+        # Calculate evaluation metrics
+        q_SW_ = np.array(q_SW.wxyz)
+        q_PW_ = np.array(q_PW.wxyz)
+        self.task_pos_error = np.sqrt(np.sum(np.square(x_SP)))
+        self.task_ang_error = np.arccos(np.clip((2 * (q_SW_.dot(q_PW_))**2 - 1), -1.0, 1.0))
         return obs
 
     def compose_info(self) -> Dict[str, Any]:
