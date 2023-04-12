@@ -2,7 +2,7 @@
 # global
 import logging
 from dataclasses import dataclass
-from rigmopy import Orientation, Position
+from rigmopy import Quaternion, Vector3d
 
 # local
 from gym_chargepal.sensors.sensor import SensorCfg, Sensor
@@ -38,8 +38,8 @@ class VirtTgtSensor(Sensor):
     def update(self) -> None:
         self.sensor_state = self.world.target_pose
         
-    def get_pos(self) -> Position:
-        return self.sensor_state.pos
+    def get_pos(self) -> Vector3d:
+        return self.sensor_state.p
 
-    def get_ori(self) -> Orientation:
-        return self.sensor_state.ori
+    def get_ori(self) -> Quaternion:
+        return self.sensor_state.q

@@ -1,7 +1,7 @@
 """ This file defines the reward class for distances between two frames weighted by the TCP speed. """
 # global
 import numpy as np
-from rigmopy import Pose, Twist
+from rigmopy import Pose, Vector6d
 from dataclasses import dataclass
 
 # local
@@ -32,7 +32,7 @@ class DistanceSpeedReward(Reward):
         self.cfg: DistanceSpeedRewardCfg = DistanceSpeedRewardCfg()
         self.cfg.update(**config)
 
-    def compute(self, X_tcp: Pose, V_tcp: Twist, X_tgt: Pose, done: bool) -> float:
+    def compute(self, X_tcp: Pose, V_tcp: Vector6d, X_tgt: Pose, done: bool) -> float:
         """ 
         Compute state action reward
             Reward calculation regarding: 

@@ -4,8 +4,8 @@ import numpy as np
 from gym import spaces
 from rigmopy import (
     Pose,
-    Position,
-    Orientation
+    Quaternion,
+    Vector3d
 )
 
 # local
@@ -16,11 +16,11 @@ from gym_chargepal.envs.env_plugger_pos_ctrl import EnvironmentPluggerPositionCt
 
 """ Concrete point-to-point position controlled environments. """
 # Constants
-ROT_PI_2_X = Orientation().from_euler_angle((np.pi/2, 0.0, 0.0))
+ROT_PI_2_X = Quaternion().from_euler_angle(angles=(np.pi/2, 0.0, 0.0))
 
-ROT_PI_X = Orientation().from_euler_angle((np.pi, 0.0, 0.0))
+ROT_PI_X = Quaternion().from_euler_angle(angles=(np.pi, 0.0, 0.0))
 
-DEFAULT_TARGET_POS = Position(0.0, 0.0, 1.2)
+DEFAULT_TARGET_POS = Vector3d().from_xyz((0.0, 0.0, 1.2))
 
 # ///////////////////////////////////////////////////// #
 # ///                                               /// #
@@ -35,9 +35,9 @@ reacher_1dof_position_ctrl_v0 = {
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(7,), dtype=np.float32),
         # Target configuration
-        'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
+        'target_config': Pose().from_pq(DEFAULT_TARGET_POS, ROT_PI_2_X),
         # Start configuration relative to target configuration'
-        'start_config': Pose(Position(0.0, 0.2, 0.0), Orientation()),
+        'start_config': Pose().from_xyz((0.0, 0.2, 0.0)),
         # Reset variance of the start pose
         'reset_variance': ((0.0, 0.025, 0.0), (0.0, 0.0, 0.0)),
     },
@@ -59,9 +59,9 @@ reacher_3dof_position_ctrl_v0 = {
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(7,), dtype=np.float32),
         # Target configuration
         # Target configuration
-        'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
+        'target_config': Pose().from_pq(DEFAULT_TARGET_POS, ROT_PI_2_X),
         # Start configuration relative to target configuration'
-        'start_config': Pose(Position(0.0, 0.2, 0.0), Orientation()),
+        'start_config': Pose().from_xyz((0.0, 0.2, 0.0)),
         # Reset variance of the start pose
         'reset_variance': ((0.01, 0.05, 0.01), (0.0, 0.0, 0.0)),
         },
@@ -82,9 +82,9 @@ reacher_6dof_position_ctrl_v0 = {
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(7,), dtype=np.float32),
         # Target configuration
-        'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
+        'target_config': Pose().from_pq(DEFAULT_TARGET_POS, ROT_PI_2_X),
         # Start configuration relative to target configuration'
-        'start_config': Pose(Position(0.0, 0.2, 0.0), Orientation()),
+        'start_config': Pose().from_xyz((0.0, 0.2, 0.0)),
         # Reset variance of the start pose
         'reset_variance': ((0.05, 0.05, 0.05), (0.1, 0.1, 0.1)),
         },
@@ -104,17 +104,17 @@ plugger_position_ctrl_v0 = {
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(13,), dtype=np.float32),
         # Target configuration
-        'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
+        'target_config': Pose().from_pq(DEFAULT_TARGET_POS, ROT_PI_2_X),
         # Start configuration relative to target configuration'
-        'start_config': Pose(Position(0.0, 0.1, 0.0), Orientation()),
+        'start_config': Pose().from_xyz((0.0, 0.1, 0.0)),
         # Reset variance of the start pose
         'reset_variance': ((0.01, 0.005, 0.01), (0.05, 0.05, 0.05)),
         },
 }
 
 
-SOCKET_POS = Position(0.0, -0.1/2.0, 0.0)
-SOCKET_ORI = Orientation().from_euler_angle((0.0, 0.0, np.pi))
+SOCKET_POS = Vector3d().from_xyz((0.0, -0.1/2.0, 0.0))
+SOCKET_ORI = Quaternion().from_euler_angle((0.0, 0.0, np.pi))
 ROD_DIAMETER = "32d5"
 plugger_position_ctrl_v1 = {
 
@@ -124,9 +124,9 @@ plugger_position_ctrl_v1 = {
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(13,), dtype=np.float32),
         # Target configuration
-        'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
+        'target_config': Pose().from_pq(DEFAULT_TARGET_POS, ROT_PI_2_X),
         # Start configuration relative to target configuration'
-        'start_config': Pose(Position(0.0, 0.075, 0.0), Orientation()),
+        'start_config': Pose().from_xyz((0.0, 0.075, 0.0)),
         # Reset variance of the start pose
         'reset_variance': ((0.01, 0.005, 0.01), (0.05, 0.05, 0.05)),
         # 'reset_variance': ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
@@ -135,7 +135,7 @@ plugger_position_ctrl_v1 = {
     'world': {
         'robot_urdf': f'cpm_fix_rod_{ROD_DIAMETER}.urdf',
         'socket_urdf': 'adapter_station_square_socket.urdf',
-        'socket_config': Pose(SOCKET_POS, SOCKET_ORI),
+        'socket_config': Pose().from_pq(SOCKET_POS, SOCKET_ORI),
         },
 }
 
@@ -148,9 +148,9 @@ plugger_position_ctrl_v2 = {
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(13,), dtype=np.float32),
         # Target configuration
-        'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
+        'target_config': Pose().from_pq(DEFAULT_TARGET_POS, ROT_PI_2_X),
         # Start configuration relative to target configuration'
-        'start_config': Pose(Position(0.0, 0.075, 0.0), Orientation()),
+        'start_config': Pose().from_xyz((0.0, 0.075, 0.0)),
         # Reset variance of the start pose
         'reset_variance': ((0.01, 0.005, 0.01), (0.05, 0.05, 0.05)),
         # 'reset_variance': ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
@@ -159,7 +159,7 @@ plugger_position_ctrl_v2 = {
     'world': {
         'robot_urdf': f'cpm_fix_rod_{ROD_DIAMETER}.urdf',
         'socket_urdf': 'adapter_station_square_socket.urdf',
-        'socket_config': Pose(SOCKET_POS, SOCKET_ORI),
+        'socket_config': Pose().from_pq(SOCKET_POS, SOCKET_ORI),
         },
 }
 
@@ -172,9 +172,9 @@ testbed_plugger_position_ctrl_v0 = {
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(13,), dtype=np.float32),
         # Target configuration
-        'target_config': Pose(Position(0.5, 0.8, 0.0), ROT_PI_X),
+        'target_config': Pose().from_xyz((0.5, 0.8, 0.0)).from_pq(q=ROT_PI_X),
         # Start configuration relative to target configuration
-        'start_config': Pose(Position(0.0, 0.0, 0.02+0.095), Orientation()),
+        'start_config': Pose().from_xyz((0.0, 0.0, 0.02+0.095)),
         # Reset variance of the start pose
         'reset_variance': ((0.01, 0.01, 0.001), (0.05, 0.05, 0.05)),
         # 'reset_variance': ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
@@ -189,9 +189,9 @@ testbed_plugger_position_ctrl_v0 = {
         'cam_x': 0.8,
         'cam_y': 0.8,
         'cam_z': 0.15,
-        'plane_config': Pose(Position(0.0, 0.0, -0.8136), Orientation()),
+        'plane_config': Pose().from_xyz((0.0, 0.0, -0.8136)),
         'robot_config': Pose(),
-        'socket_config': Pose(Position(0.5, 0.8, 0.0), Orientation()),
+        'socket_config': Pose().from_xyz((0.5, 0.8, 0.0)),
         'gui_txt': "",
         'gui_txt_pos': (0.75, 1.25, 0.6),
         },
@@ -232,9 +232,9 @@ reacher_3dof_velocity_ctrl_v0 = {
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(3,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(13,), dtype=np.float32),
         # Target configuration
-        'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
+        'target_config': Pose().from_pq(DEFAULT_TARGET_POS, ROT_PI_2_X),
         # Start configuration relative to target configuration'
-        'start_config': Pose(Position(0.0, 0.2, 0.0), Orientation()),
+        'start_config': Pose().from_xyz((0.0, 0.2, 0.0)),
         # Reset variance of the start pose
         'reset_variance': ((0.01, 0.05, 0.01), (0.0, 0.0, 0.0)),
         },
@@ -252,9 +252,9 @@ reacher_6dof_velocity_ctrl_v0 = {
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(13,), dtype=np.float32),
         # Target configuration
-        'target_config': Pose(DEFAULT_TARGET_POS, ROT_PI_2_X),
+        'target_config': Pose().from_pq(DEFAULT_TARGET_POS, ROT_PI_2_X),
         # Start configuration relative to target configuration'
-        'start_config': Pose(Position(0.0, 0.2, 0.0), Orientation()),
+        'start_config': Pose().from_xyz((0.0, 0.2, 0.0)),
         # Reset variance of the start pose
         'reset_variance': ((0.05, 0.05, 0.05), (0.1, 0.1, 0.1)),
         },

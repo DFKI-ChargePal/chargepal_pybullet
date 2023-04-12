@@ -3,7 +3,7 @@
 import os
 import logging
 import numpy as np
-from rigmopy import Orientation, Pose, Position
+from rigmopy import Pose, Quaternion, Vector3d
 
 # local
 from gym_chargepal.bullet.ur_arm import URArm
@@ -22,8 +22,8 @@ class WorldReacherCfg(WorldCfg):
     plane_urdf: str = 'plane.urdf'
     robot_urdf: str = 'primitive_chargepal_with_fix_plug.urdf'
     plane_config: Pose = Pose()
-    robot_config: Pose = Pose(Position().from_xyz((0.0, 1.15, 0.0)))
-    target_config: Pose = Pose(Position().from_xyz((0.0, 0.0, 1.2)), Orientation().from_euler_angle((np.pi/2, 0.0, 0.0)))
+    robot_config: Pose = Pose().from_pq(p=Vector3d().from_xyz((0.0, 1.15, 0.0)))
+    target_config: Pose = Pose().from_pq(p=Vector3d().from_xyz((0.0, 0.0, 1.2)), q=Quaternion().from_euler_angle(angles=(np.pi/2, 0.0, 0.0)))
 
 
 class WorldReacher(World):

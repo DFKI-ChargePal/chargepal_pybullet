@@ -1,6 +1,6 @@
 # global
 import numpy as np
-from rigmopy import Wrench
+from rigmopy import Vector6d
 from collections import deque
 from pybullet_utils.bullet_client import BulletClient
 
@@ -49,9 +49,9 @@ class FTSensor:
             jointIndex=self.joint_idx
         )
 
-    def get_wrench(self) -> Wrench:
+    def get_wrench(self) -> Vector6d:
         state_idx = BulletJointState.JOINT_REACTION_FORCE
         wrench: Tuple[float, ...] = self.state[state_idx]
-        self.buffer.append(np.array(wrench, dtype=np.float32))
-        mean_wrench = Wrench().from_ft(np.mean(self.buffer, axis=0, dtype=np.float32).tolist())
+        self.buffer.append(np.array(wrench, dtype=np.float64))
+        mean_wrench = Vector6d().from_xyzXYZ(np.mean(self.buffer, axis=0, dtype=np.float64))
         return mean_wrench

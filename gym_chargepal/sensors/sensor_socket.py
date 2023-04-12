@@ -3,7 +3,7 @@
 import logging
 import numpy as np
 from dataclasses import dataclass
-from rigmopy import Orientation, Position
+from rigmopy import Quaternion, Vector3d
 
 # local
 from gym_chargepal.bullet.socket import Socket
@@ -44,20 +44,19 @@ class SocketSensor(Sensor):
         self.ori_bias = np.array(self.cfg.ori_bias, dtype=np.float32)
 
 
-    def get_pos(self) -> Position:
+    def get_pos(self) -> Vector3d:
         return self.socket.socket.get_pos()
 
-    def get_ori(self) -> Orientation:
+    def get_ori(self) -> Quaternion:
         return self.socket.socket.get_ori()
 
-    def meas_pos(self) -> Position:
-        gt_pos = self.get_pos().xyz1
-        pos_meas: npt.NDArray[np.float32] = gt_pos[0:3] + np.random.randn(3) * self.pos_noise + self.pos_bias
-        return Position().from_xyz(pos_meas.tolist())
+    def meas_pos(self) -> Vector3d:
+        gt_pos = self.get_pos().xyz
+        pos_meas: npt.NDArray[np.float64] = np.array(gt_pos[0:3], dtype=np.float64) + np.random.randn(3) * self.pos_noise + self.pos_bias
+        return Vector3d().from_xyz(pos_meas)
 
-    def meas_ori(self) -> Orientation:
-        gt_ori = self.get_ori().xyzw
-        gt_ori_eul = np.array(self.socket.bc.getEulerFromQuaternion(gt_ori), dtype=np.float32)
-        ori_eul_meas: npt.NDArray[np.float32] = gt_ori_eul + np.random.randn(3) * self.ori_noise + self.ori_bias
-        ori_meas = Orientation().from_xyzw(self.socket.bc.getQuaternionFromEuler(ori_eul_meas.tolist()))
+    def meas_ori(self) -> Quaternion:
+        gt_ori_eul = np.array(self.get_ori().to_euler_angle(), dtype=np.float64)
+        ori_eul_meas: npt.NDArray[np.float64] = gt_ori_eul + np.random.randn(3) * self.ori_noise + self.ori_bias
+        ori_meas = Quaternion().from_xyzw(self.socket.bc.getQuaternionFromEuler(ori_eul_meas.tolist()))
         return ori_meas

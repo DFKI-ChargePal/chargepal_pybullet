@@ -2,7 +2,7 @@
 # global
 import logging
 import numpy as np
-from rigmopy import Wrench
+from rigmopy import Vector6d
 from termcolor import cprint
 from dataclasses import dataclass
 
@@ -45,22 +45,22 @@ class FTSensor(Sensor):
         self.ft_min = -np.array(self.cfg.ft_range, dtype=np.float32)
         self.ft_max = np.array(self.cfg.ft_range, dtype=np.float32)
 
-    def get_wrench(self) -> Wrench:
+    def get_wrench(self) -> Vector6d:
         # Mypy check whether ft sensor object exist 
         assert self.ur_arm.fts
         # Get sensor state and bring values in a range between -1.0 and +1.0
         wrench = self.ur_arm.fts.get_wrench()
         norm_wrench: npt.NDArray[np.float_] = np.clip(wrench.to_numpy(), self.ft_min, self.ft_max) / self.ft_max
-        return Wrench().from_ft(norm_wrench.tolist())
+        return Vector6d().from_xyzXYZ(norm_wrench)
 
-    def meas_wrench(self) -> Wrench:
+    def meas_wrench(self) -> Vector6d:
         meas = self.get_wrench()
         # TODO: Add sensor noise
         return meas
 
     def render_ft_bar(self, render: bool) -> None:
         if render and self.cfg.render_bar:
-            wrench = self.get_wrench().ft
+            wrench = self.get_wrench().xyzXYZ
             # Find outliers
             ft_max = max(wrench)
             # idx = wrench.index(ft_max)

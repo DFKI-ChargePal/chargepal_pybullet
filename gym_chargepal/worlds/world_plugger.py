@@ -3,7 +3,7 @@
 import os 
 import logging
 import numpy as np
-from rigmopy import Orientation, Pose, Position
+from rigmopy import Pose, Quaternion, Vector3d
 
 # local
 from gym_chargepal.bullet.ur_arm import URArm
@@ -23,8 +23,8 @@ class WorldPluggerCfg(WorldCfg):
     robot_urdf: str = 'primitive_chargepal_with_fix_plug.urdf'
     socket_urdf: str = 'primitive_adapter_station.urdf'
     plane_config: Pose = Pose()
-    robot_config: Pose = Pose(Position().from_xyz((0.0, 1.15, 0.0)))
-    socket_config: Pose = Pose(Position().from_xyz((0.0, -0.25/2.0, 0.0)), Orientation().from_euler_angle((0.0, 0.0, np.pi)))
+    robot_config: Pose = Pose().from_pq(p=Vector3d().from_xyz((0.0, 1.15, 0.0)))
+    socket_config: Pose = Pose().from_pq(p=Vector3d().from_xyz((0.0, -0.25/2.0, 0.0)), q=Quaternion().from_euler_angle(angles=(0.0, 0.0, np.pi)))
 
 
 class WorldPlugger(World):

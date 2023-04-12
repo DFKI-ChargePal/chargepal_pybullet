@@ -1,7 +1,7 @@
 # global
 import logging
 import pybullet as p
-from rigmopy import Position, Pose
+from rigmopy import Vector3d, Pose
 
 # local
 from gym_chargepal.bullet import BulletJointInfo
@@ -15,7 +15,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def draw_sphere_marker(
-        position: Position,
+        position: Vector3d,
         radius: float, 
         color: Tuple[float, ...],
         bullet_client: BulletClient

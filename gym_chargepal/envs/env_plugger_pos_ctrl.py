@@ -1,6 +1,7 @@
 # global
 import numpy as np
-import rigmopy as rp
+from rigmopy import utils_math as rp_math
+from rigmopy import Quaternion, Pose, Vector3d
 
 # local
 import gym_chargepal.utility.cfg_handler as ch
@@ -39,17 +40,17 @@ class EnvironmentPluggerPositionCtrl(Environment):
         config_control_interface = ch.search(kwargs, 'control_interface')
         config_low_level_control = ch.search(kwargs, 'low_level_control')
         # Start configuration in world coordinates
-        self.x0_PW = self.cfg.target_config.pos + self.cfg.start_config.pos
-        self.q0_PW = self.cfg.target_config.ori * self.cfg.start_config.ori
-        self.X0_PW = rp.Pose(self.x0_PW, self.q0_PW)
+        self.x0_PW = self.cfg.target_config.p + self.cfg.start_config.p
+        self.q0_PW = self.cfg.target_config.q * self.cfg.start_config.q
+        self.X0_PW = Pose().from_pq(self.x0_PW, self.q0_PW)
         # Target sensor state
-        self.x_SW = rp.Position()
-        self.q_SW = rp.Orientation()
+        self.x_SW = Vector3d()
+        self.q_SW = Quaternion()
         # Resolve cross references
         config_world['ur_arm'] = config_ur_arm
         config_world['socket'] = config_socket
         config_low_level_control['plug_lin_config'] = self.x0_PW.xyz
-        config_low_level_control['plug_ang_config'] = self.q0_PW.rpy
+        config_low_level_control['plug_ang_config'] = self.q0_PW.to_euler_angle()
         # Components
         self.world = WorldPlugger(config_world)
         self.ik_solver = IKSolver(config_ik_solver, self.world.ur_arm)
@@ -96,8 +97,8 @@ class EnvironmentPluggerPositionCtrl(Environment):
         obs = self.get_obs()
         # Evaluate environment
         done = self.done
-        X_PW = rp.Pose(self.plug_sensor.get_pos(), self.plug_sensor.get_ori())
-        X_SW = rp.Pose(self.socket_sensor.get_pos(), self.socket_sensor.get_ori())
+        X_PW = Pose().from_pq(self.plug_sensor.get_pos(), self.plug_sensor.get_ori())
+        X_SW = Pose().from_pq(self.socket_sensor.get_pos(), self.socket_sensor.get_ori())
         F_tcp = self.ft_sensor.get_wrench()
         reward = self.reward.compute(X_PW, X_SW, F_tcp, done)
         # reward = self.reward.compute(X_tcp, X_tgt, done)
@@ -112,8 +113,8 @@ class EnvironmentPluggerPositionCtrl(Environment):
         x_PW = self.plug_sensor.get_pos()
         q_PW = self.plug_sensor.get_ori()
         x_SP = (self.x_SW - x_PW).xyz
-        q_SP = rp.utils.orientation_difference(q_PW, self.q_SW).wxyz
-        F_tcp_meas = self.ft_sensor.meas_wrench().ft
+        q_SP = rp_math.quaternion_difference(q_PW, self.q_SW).wxyz
+        F_tcp_meas = self.ft_sensor.meas_wrench().xyzXYZ
         obs = np.array((x_SP + q_SP + F_tcp_meas), dtype=np.float32)
         # Evaluate metrics
         q_SW_ = np.array(self.q_SW.wxyz)

@@ -1,6 +1,6 @@
 """ This file defines the link state class """
 # global
-from rigmopy import Orientation, Position, Twist
+from rigmopy import Quaternion, Vector3d, Vector6d
 from pybullet_utils.bullet_client import BulletClient
 
 
@@ -31,19 +31,19 @@ class BodyLink:
             computeForwardKinematics=True
         )
 
-    def get_pos(self) -> Position:
+    def get_pos(self) -> Vector3d:
         # make sure to update the sensor state before calling this method
         state_idx = BulletLinkState.WORLD_LINK_FRAME_POS
-        pos = Position().from_xyz(self.state[state_idx])
+        pos = Vector3d().from_xyz(self.state[state_idx])
         return pos
 
-    def get_ori(self) -> Orientation:
+    def get_ori(self) -> Quaternion:
         # make sure to update the sensor state before calling this method
         state_idx = BulletLinkState.WORLD_LINK_FRAME_ORI
-        ori = Orientation().from_xyzw(self.state[state_idx])
+        ori = Quaternion().from_xyzw(self.state[state_idx])
         return ori
 
-    def get_twist(self) -> Twist:
+    def get_twist(self) -> Vector6d:
         lin_vel_state_idx = BulletLinkState.WORLD_LINK_LIN_VEL
         ang_vel_state_idx = BulletLinkState.WORLD_LINK_ANG_VEL
-        return Twist().from_vw(self.state[lin_vel_state_idx] + self.state[ang_vel_state_idx])
+        return Vector6d().from_xyzXYZ(self.state[lin_vel_state_idx] + self.state[ang_vel_state_idx])

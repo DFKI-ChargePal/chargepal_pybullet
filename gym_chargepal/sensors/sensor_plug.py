@@ -2,7 +2,7 @@
 # global
 import logging
 from dataclasses import dataclass
-from rigmopy import Orientation, Position, Twist
+from rigmopy import Quaternion, Vector3d, Vector6d
 
 # local
 from gym_chargepal.bullet.ur_arm import URArm
@@ -35,11 +35,11 @@ class PlugSensor(Sensor):
         # Safe references
         self.ur_arm = ur_arm
 
-    def get_pos(self) -> Position:
+    def get_pos(self) -> Vector3d:
         return self.ur_arm.tcp.get_pos()
 
-    def get_ori(self) -> Orientation:
+    def get_ori(self) -> Quaternion:
         return self.ur_arm.tcp.get_ori()
 
-    def get_twist(self) -> Twist:
+    def get_twist(self) -> Vector6d:
         return self.ur_arm.tcp.get_twist()

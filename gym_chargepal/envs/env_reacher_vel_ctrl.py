@@ -1,6 +1,7 @@
 # global
 import numpy as np
-import rigmopy as rp
+from rigmopy import utils_math as rp_math
+from rigmopy import Pose
 
 # local
 import gym_chargepal.utility.cfg_handler as ch
@@ -39,14 +40,14 @@ class EnvironmentReacherVelocityCtrl(Environment):
         config_control_interface = ch.search(kwargs, 'control_interface')
         config_low_level_control = ch.search(kwargs, 'low_level_control')
         # Start configuration in world coordinates
-        self.x0_WP = self.cfg.target_config.pos + self.cfg.start_config.pos
-        self.q0_WP = self.cfg.target_config.ori * self.cfg.start_config.ori
-        self.X0_WP = rp.Pose(self.x0_WP, self.q0_WP)
+        self.x0_WP = self.cfg.target_config.p + self.cfg.start_config.p
+        self.q0_WP = self.cfg.target_config.q * self.cfg.start_config.q
+        self.X0_WP = Pose().from_pq(self.x0_WP, self.q0_WP)
         # Resolve cross references
         config_world['ur_arm'] = config_ur_arm
         config_world['target_config'] = self.cfg.target_config
         config_low_level_control['plug_lin_config'] = self.x0_WP.xyz
-        config_low_level_control['plug_ang_config'] = self.q0_WP.rpy
+        config_low_level_control['plug_ang_config'] = self.q0_WP.to_euler_angle()
         # Components
         self.world = WorldReacher(config_world)
         self.jacobian = Jacobian(config_jacobian, self.world.ur_arm)
@@ -93,8 +94,8 @@ class EnvironmentReacherVelocityCtrl(Environment):
         obs = self.get_obs()
         # Evaluate environment
         done = self.done
-        X_tcp = rp.Pose(self.plug_sensor.get_pos(), self.plug_sensor.get_ori())
-        X_tgt = rp.Pose(self.plug_sensor.get_pos(), self.plug_sensor.get_ori())
+        X_tcp = Pose().from_pq(self.plug_sensor.get_pos(), self.plug_sensor.get_ori())
+        X_tgt = Pose().from_pq(self.plug_sensor.get_pos(), self.plug_sensor.get_ori())
         V_tcp = self.plug_sensor.get_twist()
         reward = self.reward.compute(X_tcp=X_tcp, V_tcp=V_tcp, X_tgt=X_tgt, done=done)
         info = self.compose_info()
@@ -114,9 +115,9 @@ class EnvironmentReacherVelocityCtrl(Environment):
         x_SP = (x_SW - x_PW).xyz
         q_PW = self.plug_sensor.get_ori()
         q_SW = self.target_sensor.get_ori()
-        q_SP = rp.utils.orientation_difference(q_PW, q_SW).wxyz
+        q_SP = rp_math.quaternion_difference(q_PW, q_SW).wxyz
         # Get velocity signal
-        i_twist_PW = self.plug_sensor.get_twist().vw
+        i_twist_PW = self.plug_sensor.get_twist().xyzXYZ
         # Glue observation together
         obs = np.array((x_SP + q_SP + i_twist_PW), dtype=np.float32)
         # Calculate evaluation metrics

@@ -1,6 +1,7 @@
 # global
 import numpy as np
-import rigmopy as rp
+from rigmopy import utils_math as rp_math
+from rigmopy import Pose
 
 # local
 import gym_chargepal.utility.cfg_handler as ch
@@ -34,14 +35,14 @@ class EnvironmentReacherPositionCtrl(Environment):
         config_control_interface = ch.search(kwargs, 'control_interface')
         config_low_level_control = ch.search(kwargs, 'low_level_control')
         # Start configuration in world coordinates
-        self.x0_WP = self.cfg.target_config.pos + self.cfg.start_config.pos
-        self.q0_WP = self.cfg.start_config.ori * self.cfg.target_config.ori
-        self.X0_WP = rp.Pose(self.x0_WP, self.q0_WP)
+        self.x0_WP = self.cfg.target_config.p + self.cfg.start_config.p
+        self.q0_WP = self.cfg.start_config.q * self.cfg.target_config.q
+        self.X0_WP = Pose().from_pq(self.x0_WP, self.q0_WP)
         # Resolve cross references
         config_world['ur_arm'] = config_ur_arm
         config_world['target_config'] = self.cfg.target_config
         config_low_level_control['plug_lin_config'] = self.x0_WP.xyz
-        config_low_level_control['plug_ang_config'] = self.q0_WP.rpy
+        config_low_level_control['plug_ang_config'] = self.q0_WP.to_euler_angle()
         # Components
         self.world = WorldReacher(config_world)
         self.ik_solver = IKSolver(config_ik_solver, self.world.ur_arm)
@@ -85,8 +86,8 @@ class EnvironmentReacherPositionCtrl(Environment):
         obs = self.get_obs()
         # Evaluate environment
         done = self.done
-        X_PW = rp.Pose(self.plug_sensor.get_pos(), self.plug_sensor.get_ori())
-        X_SW = rp.Pose(self.target_sensor.get_pos(), self.target_sensor.get_ori())
+        X_PW = Pose().from_pq(self.plug_sensor.get_pos(), self.plug_sensor.get_ori())
+        X_SW = Pose().from_pq(self.target_sensor.get_pos(), self.target_sensor.get_ori())
         reward = self.reward.compute(X_PW, X_SW, done)
         info = self.compose_info()
         return obs, reward, done, info
@@ -105,7 +106,7 @@ class EnvironmentReacherPositionCtrl(Environment):
         x_SP = (x_SW - x_PW).xyz
         q_PW = self.plug_sensor.get_ori()
         q_SW = self.target_sensor.get_ori()
-        q_SP = rp.utils.orientation_difference(q_PW, q_SW).wxyz
+        q_SP = rp_math.quaternion_difference(q_PW, q_SW).wxyz
         # Glue observation together
         obs = np.array((x_SP + q_SP), dtype=np.float32)
         # Calculate evaluation metrics

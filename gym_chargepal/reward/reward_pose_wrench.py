@@ -1,6 +1,6 @@
 # global
 import numpy as np
-from rigmopy import Pose, Wrench
+from rigmopy import Pose, Vector6d
 from dataclasses import dataclass
 
 # local
@@ -31,7 +31,7 @@ class PoseWrenchReward(Reward):
         self.cfg: PoseWrenchRewardCfg = PoseWrenchRewardCfg()
         self.cfg.update(**config)
 
-    def compute(self, X_tcp: Pose, X_tgt: Pose, F_tcp: Wrench, done: bool) -> float:
+    def compute(self, X_tcp: Pose, X_tgt: Pose, F_tcp: Vector6d, done: bool) -> float:
         """ Compute state action  reward """
         # Convert pose to sets of points
         pts_tcp = X_tcp.to_3pt_set(dist=self.cfg.spatial_pt_distance, axes='xy')
@@ -39,7 +39,7 @@ class PoseWrenchReward(Reward):
         # Distance between end-effector and target points
         distances: npt.NDArray[np.float32] = pts_tgt - pts_tcp
         # Search for the force-torque outlier and negatively reward only that one.
-        ft_max = max(F_tcp.ft)
+        ft_max = max(F_tcp.xyzXYZ)
         ft_max_weight = min(ft_max * self.cfg.wrench_weight, 1.0)
         # L1-norm of the distance
         dist_norm = min(np.mean(np.abs(distances)) * self.cfg.pose_weight, 1.0)
