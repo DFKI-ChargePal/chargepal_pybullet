@@ -138,7 +138,7 @@ testbed_reacher_3dof_position_ctrl_v0 = {
         },
 
     'low_level_control': {
-        'wa_lin': 0.025,  # action scaling in linear directions [m]
+        'wa_lin': 0.05,  # action scaling in linear directions [m]
         'linear_enabled_motion_axis': (True, True, True),
         'angular_enabled_motion_axis': (False, False, False),
         },
