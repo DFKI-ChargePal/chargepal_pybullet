@@ -17,8 +17,8 @@ LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class IKSolverCfg(ConfigHandler):
-    lower_limits: Tuple[float, ...] = (-pi, -pi, -pi, -pi, -pi, -pi)
-    upper_limits: Tuple[float, ...] = (pi, pi, pi, pi, pi, pi)
+    lower_limits: Tuple[float, ...] = (-2*pi, -2*pi, -2*pi, -2*pi, -2*pi, -2*pi)
+    upper_limits: Tuple[float, ...] = (2*pi, 2*pi, 2*pi, 2*pi, 2*pi, 2*pi)
     joint_ranges: Tuple[float, ...] = (2*pi, 2*pi, 2*pi, 2*pi, 2*pi, 2*pi)
     max_num_iterations: int = 100
     residual_threshold: float = 1e-7

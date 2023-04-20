@@ -96,6 +96,57 @@ reacher_6dof_position_ctrl_v0 = {
 }
 
 
+testbed_reacher_3dof_position_ctrl_v0 = {
+
+    'environment': {
+        'type': EnvironmentReacherPositionCtrl,
+        'T': 100,
+        'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(3,), dtype=np.float32),
+        'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(7,), dtype=np.float32),
+        # Target configuration
+        # Target configuration
+        'target_config': Pose().from_xyz((0.5, 1.0, 0.4)).from_euler_angle((-np.pi/2, 0.0, 0.0)),
+        # Start configuration relative to target configuration'
+        'start_config': Pose().from_xyz((-0.15, -0.3, -0.175)),
+        # Reset variance of the start pose
+        'reset_variance': ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
+        },
+
+    'world': {
+        'robot_urdf': 'chargepal_testbed_cic.urdf',
+        'socket_urdf': 'tdt_socket.urdf',
+        'cam_distance': 0.75,
+        'cam_yaw': 105,
+        'cam_pitch': -15.0,
+        'cam_x': 0.8,
+        'cam_y': 0.8,
+        'cam_z': 0.15,
+        'plane_config': Pose().from_xyz((0.0, 0.0, -0.8136)),
+        'robot_config': Pose(),
+        'socket_config': Pose().from_xyz((0.5, 0.8, 0.0)),
+        },
+
+    'ur_arm': {
+        'joint_default_values': {
+            'shoulder_pan_joint': np.deg2rad(196.57),
+            'shoulder_lift_joint': -np.deg2rad(78.87),
+            'elbow_joint': np.deg2rad(122.0),
+            'wrist_1_joint': -np.deg2rad(43.09),
+            'wrist_2_joint': np.deg2rad(106.76),
+            'wrist_3_joint': -np.deg2rad(90),
+            },
+        },
+
+    'low_level_control': {
+        'wa_lin': 0.025,  # action scaling in linear directions [m]
+        'linear_enabled_motion_axis': (True, True, True),
+        'angular_enabled_motion_axis': (False, False, False),
+        },
+
+}
+
+
+
 plugger_position_ctrl_v0 = {
 
     'environment': {
