@@ -109,7 +109,7 @@ testbed_reacher_3dof_position_ctrl_v0 = {
         # Start configuration relative to target configuration'
         'start_config': Pose().from_xyz((-0.15, -0.3, -0.175)),
         # Reset variance of the start pose
-        'reset_variance': ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
+        'reset_variance': ((0.1, 0.1, 0.1), (0.0, 0.0, 0.0)),
         },
 
     'world': {
