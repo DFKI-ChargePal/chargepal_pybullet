@@ -13,6 +13,7 @@ from gym_chargepal.bullet import (
 )
 from gym_chargepal.bullet.body_link import BodyLink
 from gym_chargepal.bullet.ft_sensor import FTSensor
+from gym_chargepal.bullet.ref_body import ReferenceBody
 from gym_chargepal.utility.cfg_handler import ConfigHandler
 from gym_chargepal.bullet.utility import create_joint_index_dict
 
@@ -27,16 +28,18 @@ class URArmCfg(ConfigHandler):
     joint_default_values: Dict[str, float] = field(default_factory=lambda: ARM_JOINT_DEFAULT_VALUES)
     joint_limits: Dict[str, Tuple[float, float]] = field(default_factory=lambda: ARM_JOINT_LIMITS)
     tcp_link_name: str = 'plug'
+    ref_link_name: str = 'base_link'
     ft_joint_name: str = 'mounting_to_wrench'
     ft_buffer_size: int = 1
 
 
 class URArm:
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: Dict[str, Any], ref_body: ReferenceBody) -> None:
         # Create configuration and override values
         self.cfg = URArmCfg()
         self.cfg.update(**config)
+        self.ref_body = ref_body
 
     def connect(self, bullet_client: BulletClient, body_id: int, enable_fts: bool=False) -> None:
         # Safe references
@@ -47,7 +50,12 @@ class URArm:
             self.cfg.arm_joint_names,
             bullet_client
             )
-        self.tcp = BodyLink(self.cfg.tcp_link_name, bullet_client, body_id)
+        self.tcp = BodyLink(
+            name=self.cfg.tcp_link_name,
+            bullet_client=bullet_client,
+            body_id=body_id,
+            ref_link=self.ref_body.link
+        )
         self.fts = FTSensor(self.cfg.ft_joint_name, bullet_client, body_id, self.cfg.ft_buffer_size) if enable_fts else None
 
     def reset(self, joint_cfg: Optional[Tuple[float, ...]] = None) -> None:

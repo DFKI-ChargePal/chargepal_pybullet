@@ -10,6 +10,7 @@ from gym_chargepal.bullet.ur_arm import URArm
 import gym_chargepal.utility.cfg_handler as ch
 import gym_chargepal.bullet.utility as pb_utils
 from gym_chargepal.worlds.world import WorldCfg, World
+from gym_chargepal.bullet.ref_body import ReferenceBody
 
 # mypy
 from typing import Any, Dict, Tuple, Union
@@ -39,8 +40,10 @@ class WorldReacher(World):
         self.plane_id = -1
         self.robot_id = -1
         self.target_id = -1
+        ref_body_config = ch.search(config, 'ref_body')
+        self.ref_body = ReferenceBody(ref_body_config)
         ur_arm_config = ch.search(config, 'ur_arm')
-        self.ur_arm = URArm(ur_arm_config)
+        self.ur_arm = URArm(ur_arm_config, self.ref_body)
         # Extract start configurations
         self.target_pose = self.cfg.target_config
         self.plane_pos, self.plane_ori = self.cfg.plane_config.xyz_xyzw
@@ -67,10 +70,13 @@ class WorldReacher(World):
             # Set gravity
             self.bullet_client.setGravity(*self.cfg.gravity)
             # Create bullet body helper objects
+            self.ref_body.connect(self.bullet_client, self.robot_id)
             self.ur_arm.connect(self.bullet_client, self.robot_id)
         
         self.ur_arm.reset(joint_cfg=joint_conf)
+        self.ref_body.update()
         self.ur_arm.update()
+        
         self.draw_target(render)
 
     def sub_step(self) -> None:
