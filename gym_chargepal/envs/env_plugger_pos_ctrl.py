@@ -77,7 +77,7 @@ class EnvironmentPluggerPositionCtrl(Environment):
         self.world.reset(render=self.is_render)
         # Get start joint configuration by inverse kinematic
         X0 = self.X0_PW.random(*self.cfg.reset_variance)
-        joint_pos0 = self.ik_solver.solve(X0.xyz_xyzw)
+        joint_pos0 = self.ik_solver.solve(X0)
         # Reset robot again
         self.world.reset(joint_pos0)
         # Set new target pose

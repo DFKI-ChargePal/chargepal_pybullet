@@ -75,7 +75,7 @@ class EnvironmentReacherVelocityCtrl(Environment):
         self.world.reset(render=self.is_render)
         # Get start joint configuration by inverse kinematic
         X0 = self.X0_WP.random(*self.cfg.reset_variance)
-        joint_config_0 = self.ik_solver.solve(X0.xyz_xyzw)
+        joint_config_0 = self.ik_solver.solve(X0)
         # Reset robot again
         self.world.reset(joint_config_0)
         # Update sensors states

@@ -45,7 +45,8 @@ class WorldReacher(World):
         ur_arm_config = ch.search(config, 'ur_arm')
         self.ur_arm = URArm(ur_arm_config, self.ref_body)
         # Extract start configurations
-        self.target_pose = self.cfg.target_config
+        self.X_arm2tgt = self.cfg.target_config
+        self.X_world2tgt = Pose()
         self.plane_pos, self.plane_ori = self.cfg.plane_config.xyz_xyzw
         self.robot_pos, self.robot_ori = self.cfg.robot_config.xyz_xyzw
 
@@ -76,7 +77,8 @@ class WorldReacher(World):
         self.ur_arm.reset(joint_cfg=joint_conf)
         self.ref_body.update()
         self.ur_arm.update()
-        
+        X_world2arm = self.ref_body.link.get_pose_ref()
+        self.X_world2tgt = X_world2arm * self.X_arm2tgt
         self.draw_target(render)
 
     def sub_step(self) -> None:
@@ -87,7 +89,7 @@ class WorldReacher(World):
             if self.target_id > -1:
                 self.bullet_client.removeBody(self.target_id)
             self.target_id = pb_utils.draw_cylinder_marker(
-                pose=self.target_pose,
+                pose=self.X_world2tgt,
                 radius=0.035, 
                 height=0.080,
                 color=(1, 0, 0, 0.75), 

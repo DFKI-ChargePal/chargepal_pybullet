@@ -33,10 +33,10 @@ class VirtTgtSensor(Sensor):
         # Safe references
         self.world = world
         # Intern sensors state
-        self.sensor_state = self.world.target_pose
+        self.sensor_state = self.world.X_arm2tgt
 
     def update(self) -> None:
-        self.sensor_state = self.world.target_pose
+        self.sensor_state = self.world.X_arm2tgt
         
     def get_pos(self) -> Vector3d:
         return self.sensor_state.p

@@ -103,11 +103,12 @@ testbed_reacher_3dof_position_ctrl_v0 = {
         'T': 100,
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(3,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(7,), dtype=np.float32),
-        # Target configuration
-        'target_config': Pose().from_xyz((0.5, 1.0, 0.4)).from_euler_angle((-np.pi/2, 0.0, 0.0)),
+        # Target configuration with respect to the arm base
+        'target_config': Pose().from_xyz((0.75, 0.1, 0.4)).from_euler_angle((0.0, 90.0, 0.0), degrees=True),
         # Start configuration relative to target configuration'
-        'start_config': Pose().from_xyz((-0.15, -0.3, -0.175)),
+        'start_config': Pose().from_xyz((0.15, 0.3, -0.15)),
         # Reset variance of the start pose
+        # 'reset_variance': ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
         'reset_variance': ((0.1, 0.1, 0.1), (0.0, 0.0, 0.0)),
         },
 
@@ -122,7 +123,9 @@ testbed_reacher_3dof_position_ctrl_v0 = {
         'cam_z': 0.15,
         'plane_config': Pose().from_xyz((0.0, 0.0, -0.8136)),
         'robot_config': Pose(),
-        'socket_config': Pose().from_xyz((0.5, 0.8, 0.0)),
+        'ref_body': {
+            'ref_link_name': 'base',
+        }
         },
 
     'ur_arm': {
@@ -171,7 +174,6 @@ testbed_reacher_6dof_position_ctrl_v0 = {
         'cam_z': 0.15,
         'plane_config': Pose().from_xyz((0.0, 0.0, -0.8136)),
         'robot_config': Pose(),
-        'socket_config': Pose().from_xyz((0.5, 0.8, 0.0)),
         },
 
     'ur_arm': {

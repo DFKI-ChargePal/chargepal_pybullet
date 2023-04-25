@@ -35,26 +35,26 @@ class EnvironmentReacherPositionCtrl(Environment):
         config_control_interface = ch.search(kwargs, 'control_interface')
         config_low_level_control = ch.search(kwargs, 'low_level_control')
         # Start configuration in world coordinates
-        self.x0_WP = self.cfg.target_config.p + self.cfg.start_config.p
-        self.q0_WP = self.cfg.start_config.q * self.cfg.target_config.q
-        self.X0_WP = Pose().from_pq(self.x0_WP, self.q0_WP)
+        self.p0_arm2plug = self.cfg.target_config.p + self.cfg.start_config.p
+        self.q0_arm2plug = self.cfg.target_config.q * self.cfg.start_config.q
+        # self.X0_arm2plug = Pose().from_pq(self.p0_arm2plug, self.q0_arm2plug)
+        self.X0_arm2plug = self.cfg.target_config * self.cfg.start_config
         # Resolve cross references
         config_world['ur_arm'] = config_ur_arm
         config_world['target_config'] = self.cfg.target_config
-        config_low_level_control['plug_lin_config'] = self.x0_WP.xyz
-        config_low_level_control['plug_ang_config'] = self.q0_WP.to_euler_angle()
         # Components
         self.world = WorldReacher(config_world)
         self.ik_solver = IKSolver(config_ik_solver, self.world.ur_arm)
         self.control_interface = JointPositionMotorControl(config_control_interface, self.world.ur_arm)
         self.plug_sensor = PlugSensor(config_plug_sensor, self.world.ur_arm)
         self.target_sensor = VirtTgtSensor(config_target_sensor, self.world)
-        self._low_level_control = TcpPositionController(
+        self.low_level_control = TcpPositionController(
             config_low_level_control,
             self.ik_solver,
             self.control_interface,
             self.plug_sensor
         )
+        self.low_level_control.reset(self.X0_arm2plug)
         self.reward = DistanceReward(config_reward, self.clock)
 
     def reset(self) -> npt.NDArray[np.float32]:
@@ -66,8 +66,10 @@ class EnvironmentReacherPositionCtrl(Environment):
         # Reset robot by default joint configuration
         self.world.reset(render=self.is_render)
         # Get start joint configuration by inverse kinematic
-        X0 = self.X0_WP.random(*self.cfg.reset_variance)
-        joint_config_0 = self.ik_solver.solve(X0.xyz_xyzw)
+        X_world2arm = self.world.ref_body.link.get_pose_ref()
+        X0_world2plug = X_world2arm * self.X0_arm2plug
+        X0 = X0_world2plug.random(*self.cfg.reset_variance)
+        joint_config_0 = self.ik_solver.solve(X0)
         # Reset robot again
         self.world.reset(joint_config_0)
         # Update sensors states
@@ -77,7 +79,7 @@ class EnvironmentReacherPositionCtrl(Environment):
     def step(self, action: npt.NDArray[np.float32]) -> Tuple[npt.NDArray[np.float32], float, bool, Dict[Any, Any]]:
         """ Execute environment/simulation step. """
         # Apply action
-        self._low_level_control.update(action=np.array(action))
+        self.low_level_control.update(action=np.array(action))
         # Step simulation
         self.world.step(render=self.is_render)
         self.clock.tick()
