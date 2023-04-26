@@ -21,10 +21,12 @@ LOGGER = logging.getLogger(__name__)
 
 class WorldReacherCfg(WorldCfg):
     plane_urdf: str = 'plane.urdf'
-    robot_urdf: str = 'primitive_chargepal_with_fix_plug.urdf'
+    env_urdf: str = 'testbed_table_cic.urdf'
+    robot_urdf: str = 'ur10e_fix_plug.urdf'
     plane_config: Pose = Pose()
-    robot_config: Pose = Pose().from_pq(p=Vector3d().from_xyz((0.0, 1.15, 0.0)))
-    target_config: Pose = Pose().from_pq(p=Vector3d().from_xyz((0.0, 0.0, 1.2)), q=Quaternion().from_euler_angle(angles=(np.pi/2, 0.0, 0.0)))
+    env_config: Pose = Pose().from_xyz((0.0, 1.15, 0.0))
+    robot_config: Pose = Pose().from_xyz((0.0, 1.15, 0.0))
+    target_config: Pose = Pose().from_xyz((0.0, 0.0, 1.2)).from_euler_angle(angles=(np.pi/2, 0.0, 0.0))
 
 
 class WorldReacher(World):

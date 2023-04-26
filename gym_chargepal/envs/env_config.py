@@ -138,6 +138,8 @@ testbed_reacher_3dof_position_ctrl_v0 = {
             'wrist_3_joint': -np.deg2rad(90),
             },
         },
+        # np.deg2rad((196.57, -78.87, 122.0, -43.09, 106.76, -90)).tolist()
+
 
     'low_level_control': {
         'wa_lin': 0.05,  # action scaling in linear directions [m]
