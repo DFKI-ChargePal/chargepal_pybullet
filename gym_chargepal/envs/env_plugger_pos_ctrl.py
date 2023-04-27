@@ -60,9 +60,9 @@ class EnvironmentPluggerPositionCtrl(Environment):
         self.socket_sensor = SocketSensor(config_socket_sensor, self.world.socket)
         self.low_level_control = TcpPositionController(
             config_low_level_control,
+            self.world.ur_arm,
             self.ik_solver,
-            self.control_interface,
-            self.plug_sensor
+            self.control_interface
         )
         self.reward = PoseWrenchReward(config_reward, self.clock)
         # self.reward = DistanceReward(config_reward, self.clock)

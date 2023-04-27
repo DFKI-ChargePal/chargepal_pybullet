@@ -30,12 +30,12 @@ class WorldCfg(ConfigHandler):
     # Gui configurations
     gui_width: int = 1280
     gui_height: int = 720
-    cam_distance: float = 2.5
-    cam_yaw: float = 50.0
-    cam_pitch: float = -42.0
-    cam_x: float = 0.0
-    cam_y: float = 0.0
-    cam_z: float = 1.2
+    cam_distance: float = 0.75
+    cam_yaw: float = 105.0
+    cam_pitch: float = -15.0
+    cam_x: float = 0.8
+    cam_y: float = 0.8
+    cam_z: float = 0.15
     # Gui text
     gui_txt: str = ""
     gui_txt_size: float = 5.0

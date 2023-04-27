@@ -1,5 +1,6 @@
 """ Configuration file for the bullet classes. """
-from numpy import pi
+from math import pi
+import numpy as np
 
 
 # constants
@@ -73,12 +74,12 @@ ARM_LINK_NAMES = [
 
 
 ARM_JOINT_DEFAULT_VALUES = {
-    'shoulder_pan_joint': 0.0,
-    'shoulder_lift_joint': -pi/2 - pi/6,
-    'elbow_joint': -pi/2 - pi/6,
-    'wrist_1_joint': pi/2 - pi/6,
-    'wrist_2_joint': pi/2,
-    'wrist_3_joint': pi/2,
+    'shoulder_pan_joint': np.deg2rad(196.57),
+    'shoulder_lift_joint': -np.deg2rad(78.87),
+    'elbow_joint': np.deg2rad(122.0),
+    'wrist_1_joint': -np.deg2rad(43.09),
+    'wrist_2_joint': np.deg2rad(106.76),
+    'wrist_3_joint': -np.deg2rad(90),
 }
 
 

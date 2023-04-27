@@ -36,10 +36,10 @@ class PlugSensor(Sensor):
         self.ur_arm = ur_arm
 
     def get_pos(self) -> Vector3d:
-        return self.ur_arm.tcp.get_pos_ref()
+        return self.ur_arm.get_p_base2tcp()
 
     def get_ori(self) -> Quaternion:
-        return self.ur_arm.tcp.get_ori_ref()
+        return self.ur_arm.get_q_base2tcp()
 
     def get_twist(self) -> Vector6d:
-        return self.ur_arm.tcp.get_twist()
+        return self.ur_arm.tcp_link.get_twist_world2link()

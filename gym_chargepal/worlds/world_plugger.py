@@ -10,7 +10,6 @@ from gym_chargepal.bullet.ur_arm import URArm
 from gym_chargepal.bullet.socket import Socket
 import gym_chargepal.utility.cfg_handler as ch
 from gym_chargepal.worlds.world import WorldCfg, World
-from gym_chargepal.bullet.ref_body import ReferenceBody
 
 # mypy
 from typing import Any, Dict, Tuple, Union
@@ -40,13 +39,11 @@ class WorldPlugger(World):
         self.plane_id = -1
         self.robot_id = -1
         self.socket_id = -1
-        ref_body_config = ch.search(config, 'ref_body')
-        self.ref_body = ReferenceBody(ref_body_config)
         ur_arm_config = ch.search(config, 'ur_arm')
         ur_arm_config['ft_buffer_size'] = self.sim_steps + 1
-        self.ur_arm = URArm(ur_arm_config, self.ref_body)
+        self.ur_arm = URArm(ur_arm_config)
         socket_config = ch.search(config, 'socket')
-        self.socket = Socket(socket_config, self.ref_body)
+        self.socket = Socket(socket_config)
         # Extract start configurations
         self.plane_pos, self.plane_ori = self.cfg.plane_config.xyz_xyzw
         self.robot_pos, self.robot_ori = self.cfg.robot_config.xyz_xyzw
@@ -85,7 +82,6 @@ class WorldPlugger(World):
             self.socket.connect(self.bullet_client, self.socket_id)
 
         self.ur_arm.reset(joint_cfg=joint_conf)
-        self.ref_body.update()
         self.ur_arm.update()
         self.socket.update()
 

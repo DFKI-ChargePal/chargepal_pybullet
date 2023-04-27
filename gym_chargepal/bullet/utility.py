@@ -75,14 +75,17 @@ def get_link_idx(body_id: int, link_name: str, bullet_client: BulletClient) -> i
     :param client_id: Bullet physical client id
     :return:          Link name corresponding index. In case of link not found -2.
     """
-    link_idx = -2
-    for idx in range(bullet_client.getNumJoints(bodyUniqueId=body_id)):
-        joint_info = bullet_client.getJointInfo(bodyUniqueId=body_id, jointIndex=idx)
-        scanned_link_name = _extract_name(joint_info[BulletJointInfo.LINK_NAME])
-        scanned_link_idx = joint_info[BulletJointInfo.JOINT_INDEX]
-        if scanned_link_name == link_name:
-            link_idx = scanned_link_idx
-            break
+    link_idx = -1
+    if len(link_name) > 0:
+        for idx in range(bullet_client.getNumJoints(bodyUniqueId=body_id)):
+            joint_info = bullet_client.getJointInfo(bodyUniqueId=body_id, jointIndex=idx)
+            scanned_link_name = _extract_name(joint_info[BulletJointInfo.LINK_NAME])
+            scanned_link_idx = joint_info[BulletJointInfo.JOINT_INDEX]
+            if scanned_link_name == link_name:
+                link_idx = scanned_link_idx
+                break
+    else:
+        link_idx = 0
     return link_idx
 
 

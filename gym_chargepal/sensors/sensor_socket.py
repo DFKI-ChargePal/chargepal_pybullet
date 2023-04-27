@@ -45,10 +45,12 @@ class SocketSensor(Sensor):
 
 
     def get_pos(self) -> Vector3d:
-        return self.socket.socket.get_pos_ref()
+        return self.socket.socket.get_p_world2link()
+        # return self.socket.socket.get_pos_ref()
 
     def get_ori(self) -> Quaternion:
-        return self.socket.socket.get_ori_ref()
+        # return self.socket.socket.get_ori_ref()
+        return self.socket.socket.get_q_world2link()
 
     def meas_pos(self) -> Vector3d:
         gt_pos = self.get_pos().xyz

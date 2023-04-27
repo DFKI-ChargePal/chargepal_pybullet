@@ -35,16 +35,15 @@ class Jacobian:
         :param acc: desired joint accelerations
         :return: translational and rotational jacobians
         """
-        # get link state to get the local inertial frame position of the end effector link
-        ee_link_state = self.ur_arm.bc.getLinkState(self.ur_arm.body_id, self.ur_arm.tcp.link_idx, True, True)
-        local_inertial_trn = ee_link_state[2]
+        # Get the local inertial frame position of the end effector link
+        p_ee2inertial = self.ur_arm.tcp_link.get_p_link2inertial()
 
         # Important to omit segmentation faults...
         # pos, vel, acc must be of type list or tuple
-        jac: Tuple[Tuple[float], Tuple[float]] = self.ur_arm.bc.calculateJacobian(
-            bodyUniqueId=self.ur_arm.body_id,
-            linkIndex=self.ur_arm.tcp.link_idx,
-            localPosition=local_inertial_trn,
+        jac: Tuple[Tuple[float], Tuple[float]] = self.ur_arm.bullet_client.calculateJacobian(
+            bodyUniqueId=self.ur_arm.bullet_body_id,
+            linkIndex=self.ur_arm.tcp_link.idx,
+            localPosition=p_ee2inertial.xyz,
             objPositions=pos,
             objVelocities=vel,
             objAccelerations=acc,

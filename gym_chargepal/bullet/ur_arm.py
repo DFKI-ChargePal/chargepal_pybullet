@@ -1,6 +1,10 @@
 """ This file defines the UR arm robot class """
+from __future__ import annotations
+
 # global
+import logging
 from dataclasses import dataclass, field
+from rigmopy import Vector3d, Quaternion,Pose
 from pybullet_utils.bullet_client import BulletClient
 
 # local
@@ -13,88 +17,178 @@ from gym_chargepal.bullet import (
 )
 from gym_chargepal.bullet.body_link import BodyLink
 from gym_chargepal.bullet.ft_sensor import FTSensor
-from gym_chargepal.bullet.ref_body import ReferenceBody
 from gym_chargepal.utility.cfg_handler import ConfigHandler
 from gym_chargepal.bullet.utility import create_joint_index_dict
 
 # mypy
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
 class URArmCfg(ConfigHandler):
-    arm_link_names: List[str] = field(default_factory=lambda: ARM_LINK_NAMES)
-    arm_joint_names: List[str] = field(default_factory=lambda: ARM_JOINT_NAMES)
-    joint_default_values: Dict[str, float] = field(default_factory=lambda: ARM_JOINT_DEFAULT_VALUES)
-    joint_limits: Dict[str, Tuple[float, float]] = field(default_factory=lambda: ARM_JOINT_LIMITS)
+    arm_link_names: list[str] = field(default_factory=lambda: ARM_LINK_NAMES)
+    arm_joint_names: list[str] = field(default_factory=lambda: ARM_JOINT_NAMES)
+    joint_default_values: dict[str, float] = field(default_factory=lambda: ARM_JOINT_DEFAULT_VALUES)
+    joint_limits: dict[str, tuple[float, float]] = field(default_factory=lambda: ARM_JOINT_LIMITS)
     tcp_link_name: str = 'plug'
-    ref_link_name: str = 'base_link'
+    base_link_name: str = ''
     ft_joint_name: str = 'mounting_to_wrench'
     ft_buffer_size: int = 1
 
 
 class URArm:
 
-    def __init__(self, config: Dict[str, Any], ref_body: ReferenceBody) -> None:
+    _CONNECTION_ERROR_MSG = f"No connection to PyBullet. Please fist connect via {__name__}.connect()"
+
+    def __init__(self, config: dict[str, Any]) -> None:
         # Create configuration and override values
         self.cfg = URArmCfg()
         self.cfg.update(**config)
-        self.ref_body = ref_body
+        # PyBullet references
+        self._bc: BulletClient | None = None
+        self._body_id: int | None = None
+        # Arm links and joints
+        self._base: BodyLink | None = None
+        self._tcp: BodyLink | None = None
+        self._fts: FTSensor | None = None
+        self._joint_idx_dict: dict[str, int] = {}
+
+    @property
+    def bullet_client(self) -> BulletClient:
+        if self.is_connected:
+            return self._bc
+        else:
+            raise RuntimeError("Not connect to PyBullet client.")
+
+    @property
+    def bullet_body_id(self) -> int:
+        if self.is_connected and self._body_id:
+            return self._body_id
+        else:
+            raise RuntimeError("Not connect to PyBullet client.")
+
+    @property
+    def base_link(self) -> BodyLink:
+        if self.is_connected and self._base:
+            return self._base
+        else:
+            raise RuntimeError("Not connect to PyBullet client.")
+
+    @property
+    def tcp_link(self) -> BodyLink:
+        if self.is_connected and self._tcp:
+            return self._tcp
+        else:
+            raise RuntimeError("Not connect to PyBullet client.")
+        
+    @property
+    def ft_sensor(self) -> FTSensor:
+        if self.is_connected and self._fts:
+            return self._fts
+        else:
+            if self.is_connected:
+                raise ValueError("F/T sensor is not enabled for this object.")
+            else:
+                raise RuntimeError("Not connect to PyBullet client.")
+
+    @property
+    def is_connected(self) -> bool:
+        """ Check if object is connect to PyBullet"""
+        return True if self._bc else False
 
     def connect(self, bullet_client: BulletClient, body_id: int, enable_fts: bool=False) -> None:
         # Safe references
-        self.bc = bullet_client
-        self.body_id = body_id
-        self.joint_idx_dict = create_joint_index_dict(
+        self._bc = bullet_client
+        self._body_id = body_id
+        # Map joint names to PyBullet joint ids
+        self._joint_idx_dict = create_joint_index_dict(
             body_id,
             self.cfg.arm_joint_names,
             bullet_client
             )
-        self.tcp = BodyLink(
+        self._base = BodyLink(
+            name=self.cfg.base_link_name,
+            bullet_client=bullet_client,
+            body_id=body_id
+            )
+        self._tcp = BodyLink(
             name=self.cfg.tcp_link_name,
             bullet_client=bullet_client,
-            body_id=body_id,
-            ref_link=self.ref_body.link
-        )
-        self.fts = FTSensor(self.cfg.ft_joint_name, bullet_client, body_id, self.cfg.ft_buffer_size) if enable_fts else None
+            body_id=body_id
+            )
+        if enable_fts:
+            self._fts = FTSensor(self.cfg.ft_joint_name, bullet_client, body_id, self.cfg.ft_buffer_size)
+        else:
+            self._fts = None
 
-    def reset(self, joint_cfg: Optional[Tuple[float, ...]] = None) -> None:
+    def reset(self, joint_cfg: tuple[float, ...] | None = None) -> None:
         """ Hard arm reset in either default or given joint configuration """
         # reset joint configuration
-        if joint_cfg is None:
-            for joint_name in self.joint_idx_dict.keys():
-                self.bc.resetJointState(
-                    bodyUniqueId=self.body_id,
-                    jointIndex=self.joint_idx_dict[joint_name],
-                    targetValue=self.cfg.joint_default_values[joint_name],
-                    targetVelocity=0.0
-                    )
+        if self.is_connected:
+            if joint_cfg is None:
+                for joint_name in self._joint_idx_dict.keys():
+                    self._bc.resetJointState(  # type: ignore
+                        bodyUniqueId=self._body_id,
+                        jointIndex=self._joint_idx_dict[joint_name],
+                        targetValue=self.cfg.joint_default_values[joint_name],
+                        targetVelocity=0.0
+                        )
+            else:
+                assert len(joint_cfg) == len(self._joint_idx_dict)
+                for k, joint_name in enumerate(self._joint_idx_dict.keys()):
+                    joint_state = joint_cfg[k]
+                    self._bc.resetJointState(  # type: ignore
+                        bodyUniqueId=self._body_id,
+                        jointIndex=self._joint_idx_dict[joint_name], 
+                        targetValue=joint_state,
+                        targetVelocity=0.0
+                        )
         else:
-            assert len(joint_cfg) == len(self.joint_idx_dict)
-            for k, joint_name in enumerate(self.joint_idx_dict.keys()):
-                joint_state = joint_cfg[k]
-                self.bc.resetJointState(
-                    bodyUniqueId=self.body_id,
-                    jointIndex=self.joint_idx_dict[joint_name], 
-                    targetValue=joint_state,
-                    targetVelocity=0.0
-                    )
+            LOGGER.error(self._CONNECTION_ERROR_MSG)
+            raise RuntimeError("Not connect to PyBullet client.")
 
     def update(self) -> None:
         """ Update physical pybullet state """
-        self.state = self.bc.getJointStates(
-            bodyUniqueId=self.body_id,
-            jointIndices=[idx for idx in self.joint_idx_dict.values()]
-        )
-        if self.fts: self.fts.update()
-        self.tcp.update()
+        if self.is_connected:
+            self.state = self._bc.getJointStates(  # type: ignore
+                bodyUniqueId=self._body_id,
+                jointIndices=[idx for idx in self._joint_idx_dict.values()]
+            )
+            self.base_link.update()
+            self.tcp_link.update()
+            if self._fts: self._fts.update()
+        else:
+            LOGGER.error(self._CONNECTION_ERROR_MSG)
+            raise RuntimeError("Not connect to PyBullet client.")
 
-    def get_joint_pos(self) -> Tuple[float, ...]:
+    def get_joint_pos(self) -> tuple[float, ...]:
         state_idx = BulletJointState.JOINT_POSITION
         pos = tuple(joint[state_idx] for joint in self.state)
         return pos
 
-    def get_joint_vel(self) -> Tuple[float, ...]:
+    def get_joint_vel(self) -> tuple[float, ...]:
         state_idx = BulletJointState.JOINT_VELOCITY
         vel = tuple(joint[state_idx] for joint in self.state)
         return vel
+    
+    def get_X_base2tcp(self) -> Pose:
+        if self.is_connected:
+            # Get arm pose
+            X_world2arm = self._base.get_X_world2link()  # type: ignore
+            # Get tcp pose
+            X_world2tcp = self._tcp.get_X_world2link()  # type: ignore
+            # Get tcp pose wrt arm pose
+            X_arm2tcp = X_world2arm.inverse() * X_world2tcp
+        else:
+            LOGGER.error(self._CONNECTION_ERROR_MSG)
+            X_arm2tcp = Pose()
+        return X_arm2tcp
+
+    def get_p_base2tcp(self) -> Vector3d:
+        return self.get_X_base2tcp().p
+
+    def get_q_base2tcp(self) -> Quaternion:
+        return self.get_X_base2tcp().q

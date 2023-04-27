@@ -28,10 +28,11 @@ class IKSolverCfg(ConfigHandler):
 class IKSolver:
     """ Inverse kinematics solver. """
     def __init__(self, config: Dict[str, Any], ur_arm: URArm):
+        # Create configuration and override values
         self.cfg = IKSolverCfg()
         self.cfg.update(**config)
 
-        # get attributes of the world
+        # Get attributes of the world
         self.ur_arm = ur_arm
         self.rest_pos = [x0 for x0 in self.ur_arm.cfg.joint_default_values.values()]
 
@@ -41,9 +42,9 @@ class IKSolver:
         :param pose: spatial pose containing end effector target position and orientation (quaternion)
         :return: joint configuration
         """
-        joints: Tuple[float, ...] = self.ur_arm.bc.calculateInverseKinematics(
-            bodyUniqueId=self.ur_arm.body_id,
-            endEffectorLinkIndex=self.ur_arm.tcp.link_idx,
+        joints: Tuple[float, ...] = self.ur_arm.bullet_client.calculateInverseKinematics(
+            bodyUniqueId=self.ur_arm.bullet_body_id,
+            endEffectorLinkIndex=self.ur_arm.tcp_link.idx,
             targetPosition=pose.xyz,
             targetOrientation=pose.xyzw,
             lowerLimits=self.cfg.lower_limits,

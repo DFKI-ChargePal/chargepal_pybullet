@@ -50,11 +50,11 @@ class EnvironmentReacherPositionCtrl(Environment):
         self.target_sensor = VirtTgtSensor(config_target_sensor, self.world)
         self.low_level_control = TcpPositionController(
             config_low_level_control,
+            self.world.ur_arm,
             self.ik_solver,
-            self.control_interface,
-            self.plug_sensor
+            self.control_interface
         )
-        self.low_level_control.reset(self.X0_arm2plug)
+        self.low_level_control.reset()
         self.reward = DistanceReward(config_reward, self.clock)
 
     def reset(self) -> npt.NDArray[np.float32]:
@@ -66,12 +66,13 @@ class EnvironmentReacherPositionCtrl(Environment):
         # Reset robot by default joint configuration
         self.world.reset(render=self.is_render)
         # Get start joint configuration by inverse kinematic
-        X_world2arm = self.world.ref_body.link.get_pose_ref()
+        X_world2arm = self.world.ur_arm.base_link.get_X_world2link()
         X0_world2plug = X_world2arm * self.X0_arm2plug
         X0 = X0_world2plug.random(*self.cfg.reset_variance)
         joint_config_0 = self.ik_solver.solve(X0)
         # Reset robot again
         self.world.reset(joint_config_0)
+        self.low_level_control.reset()
         # Update sensors states
         self.update_sensors(target_sensor=True)
         return self.get_obs()

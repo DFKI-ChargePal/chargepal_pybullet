@@ -3,14 +3,13 @@ from __future__ import annotations
 # global
 import logging
 import numpy as np
-import pybullet as p
-from rigmopy import Pose, Vector3d, Quaternion
+from rigmopy import Pose
 from dataclasses import dataclass
 
 # local
+from gym_chargepal.bullet.ur_arm import URArm
 from gym_chargepal.bullet.ik_solver import IKSolver
 from gym_chargepal.utility.constants import MotionAxis
-from gym_chargepal.sensors.sensor_plug import PlugSensor
 from gym_chargepal.controllers.controller import Controller, ControllerCfg
 from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotorControl
 
@@ -38,9 +37,9 @@ class TcpPositionController(Controller):
     """ Cartesian tool center point position controller """
     def __init__(self,
         config: dict[str, Any],
+        arm: URArm,
         ik_solver: IKSolver,
-        controller_interface: JointPositionMotorControl,
-        plug_sensor: PlugSensor
+        controller_interface: JointPositionMotorControl
         ) -> None:
         # Call super class
         super().__init__(config=config)
@@ -48,38 +47,38 @@ class TcpPositionController(Controller):
         self.cfg: TcpPositionControllerCfg = TcpPositionControllerCfg()
         self.cfg.update(**config)
         # object references
-        self.plug_sensor = plug_sensor
+        self.arm = arm
         self.ik_solver = ik_solver
         self.controller_interface = controller_interface
         # constants
         self.wa_lin = self.cfg.wa_lin
         self.wa_ang = self.cfg.wa_ang
-        self.plug_lin_config: npt.NDArray[np.float32] | None = None
-        self.plug_ang_config: npt.NDArray[np.float32] | None = None
+        self.pos0_base2tcp = np.array([0, 0, 0])
+        self.ori0_base2tcp = np.array([0, 0, 0])
         # mapping of the enabled motion axis to the indices
-        self.lin_motion_axis: dict[bool, list[int]] = {
+        self.pos_motion_axis: dict[bool, list[int]] = {
             MotionAxis.ENABLED: [], 
             MotionAxis.DISABLED: [],
             }
         for axis, mode in enumerate(self.cfg.linear_enabled_motion_axis):
-            self.lin_motion_axis[mode].append(axis)
-        self.ang_motion_axis: dict[bool, list[int]] = {
+            self.pos_motion_axis[mode].append(axis)
+        self.ori_motion_axis: dict[bool, list[int]] = {
             MotionAxis.ENABLED: [], 
             MotionAxis.DISABLED: [],
             }
         for axis, mode in enumerate(self.cfg.angular_enabled_motion_axis):
-            self.ang_motion_axis[mode].append(axis)
+            self.ori_motion_axis[mode].append(axis)
         # Slices for the linear and angular actions.
         start_idx = 0
-        stop_idx = len(self.lin_motion_axis[MotionAxis.ENABLED])
-        self.lin_action_ids = slice(start_idx, stop_idx)
+        stop_idx = len(self.pos_motion_axis[MotionAxis.ENABLED])
+        self.pos_action_ids = slice(start_idx, stop_idx)
         start_idx = stop_idx
-        stop_idx = start_idx + len(self.ang_motion_axis[MotionAxis.ENABLED])
-        self.ang_action_ids = slice(start_idx, stop_idx)
+        stop_idx = start_idx + len(self.ori_motion_axis[MotionAxis.ENABLED])
+        self.ori_action_ids = slice(start_idx, stop_idx)
 
-    def reset(self, X_world2plug: Pose) -> None:
-        self.plug_lin_config = np.array(X_world2plug.xyz, np.float32)
-        self.plug_ang_config = np.array(X_world2plug.to_euler_angle(), np.float32)
+    def reset(self) -> None:
+        self.pos0_base2tcp = np.array(self.arm.get_p_base2tcp().xyz)
+        self.ori0_base2tcp = np.array(self.arm.get_q_base2tcp().xyzw)
 
     def update(self, action: npt.NDArray[np.float32]) -> None:
         """
@@ -90,39 +89,20 @@ class TcpPositionController(Controller):
         : return: None
         """
         # Scale action
-        action[self.lin_action_ids] *= self.wa_lin
-        action[self.ang_action_ids] *= self.wa_ang
+        action[self.pos_action_ids] *= self.wa_lin
+        action[self.ori_action_ids] *= self.wa_ang
         # Get current pose
-        plug_lin_pos = np.array(self.plug_sensor.get_pos().xyz)
-        plug_ang_pos = np.array(self.plug_sensor.get_ori().to_euler_angle())
-        # Increment pose by action
-        plug_lin_pos[self.lin_motion_axis[MotionAxis.ENABLED]] += action[self.lin_action_ids]
-        plug_ang_pos[self.ang_motion_axis[MotionAxis.ENABLED]] += action[self.ang_action_ids]
+        pos_base2tcp = np.array(self.arm.get_p_base2tcp().xyz)
+        ori_base2tcp = np.array(self.arm.get_q_base2tcp().to_euler_angle())
+        # Increment pose by new action
+        pos_base2tcp[self.pos_motion_axis[MotionAxis.ENABLED]] += action[self.pos_action_ids]
+        ori_base2tcp[self.ori_motion_axis[MotionAxis.ENABLED]] += action[self.ori_action_ids]
         # Set disabled axis to default values to avoid pos drift.
-        reset_error = False
-        if self.plug_lin_config is not None:
-            plug_lin_pos[self.lin_motion_axis[MotionAxis.DISABLED]] = self.plug_lin_config[
-                self.lin_motion_axis[MotionAxis.DISABLED]
-                ]
-        else:
-            reset_error = True
-        if self.plug_ang_config is not None:
-            plug_ang_pos[self.ang_motion_axis[MotionAxis.DISABLED]] = self.plug_ang_config[
-                self.ang_motion_axis[MotionAxis.DISABLED]
-                ]
-        else:
-            reset_error = True
-        if reset_error:
-            LOGGER.error(f"Please reset controller before use the update function.")
-
-        # Compose new plug pose
-        X_arm2plug = Pose().from_xyz(plug_lin_pos).from_euler_angle(plug_ang_pos)
-        # Get reference pose
-        p_world2arm = self.plug_sensor.ur_arm.tcp.ref_link.get_pos_ref() if self.plug_sensor.ur_arm.tcp.ref_link else Vector3d()
-        q_world2arm = self.plug_sensor.ur_arm.tcp.ref_link.get_ori_ref() if self.plug_sensor.ur_arm.tcp.ref_link else Quaternion()
-        X_world2arm = Pose().from_pq(p_world2arm, q_world2arm)
-        X_world2plug = X_world2arm * X_arm2plug
+        pos_base2tcp[self.pos_motion_axis[MotionAxis.DISABLED]] = self.pos0_base2tcp[self.pos_motion_axis[MotionAxis.DISABLED]]
+        ori_base2tcp[self.ori_motion_axis[MotionAxis.DISABLED]] = self.ori0_base2tcp[self.ori_motion_axis[MotionAxis.DISABLED]]
+        # Compose new end-effector pose
+        X_base2tcp = Pose().from_xyz(pos_base2tcp).from_euler_angle(ori_base2tcp)
         # Transform to joint space positions
-        joint_pos = self.ik_solver.solve(X_world2plug)
+        joint_pos = self.ik_solver.solve(X_base2tcp)
         # Send command to robot
         self.controller_interface.update(joint_pos)

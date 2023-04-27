@@ -34,9 +34,9 @@ class JointPositionMotorControl:
 
     def update(self, tgt_pos: Tuple[float, ...]) -> None:
         """ Update position controllers. Inputs are the desired joint angels of the arm. """
-        self.ur_arm.bc.setJointMotorControlArray(
-            bodyIndex=self.ur_arm.body_id,
-            jointIndices=[idx for idx in self.ur_arm.joint_idx_dict.values()],
+        self.ur_arm.bullet_client.setJointMotorControlArray(
+            bodyIndex=self.ur_arm._body_id,
+            jointIndices=[idx for idx in self.ur_arm._joint_idx_dict.values()],
             controlMode=self.cfg.control_mode,
             targetPositions=tgt_pos,
             targetVelocities=self.cfg.target_vel,

@@ -1,6 +1,5 @@
 """ This file defines the link state class """
 from __future__ import annotations
-
 # global
 from rigmopy import Quaternion, Vector3d, Vector6d, Pose
 from pybullet_utils.bullet_client import BulletClient
@@ -9,69 +8,64 @@ from pybullet_utils.bullet_client import BulletClient
 import gym_chargepal.bullet.utility as pb_utils
 from gym_chargepal.bullet import BulletLinkState
 
+# typing
+from typing import Any
+
 
 class BodyLink:
 
-    def __init__(self, name: str, bullet_client: BulletClient, body_id: int, ref_link: BodyLink | None = None):
+    def __init__(self, name: str, bullet_client: BulletClient, body_id: int):
         self.bc = bullet_client
         self.body_id = body_id
-        self.link_name = name
-        self.ref_link = ref_link
-        self.link_idx = pb_utils.get_link_idx(
+        self.name = name
+        self.idx = pb_utils.get_link_idx(
             body_id=body_id, 
             link_name=name,
             bullet_client=bullet_client
         )
-        if self.link_idx < -1:
-            raise ValueError(f"Link with name {name} could not be found!")
+        self.__state = None
+        if self.idx < 0:
+            raise ValueError(f"Link with name {name} could not be found! ")
 
     def update(self) -> None:
-        self.link_state = self.bc.getLinkState(
+        self.__state = self.bc.getLinkState(
             bodyUniqueId=self.body_id,
-            linkIndex=self.link_idx,
+            linkIndex=self.idx,
             computeLinkVelocity=True,
             computeForwardKinematics=True
         )
 
-    def get_pose_ref(self) -> Pose:
-        # Make sure to update the sensor state before calling this method
-        pos_state_idx = BulletLinkState.WORLD_LINK_FRAME_POS
-        ori_state_idx = BulletLinkState.WORLD_LINK_FRAME_ORI
-        # Get reference pose
-        p_world2ref = self.ref_link.get_pos_ref() if self.ref_link else Vector3d()
-        q_world2ref = self.ref_link.get_ori_ref() if self.ref_link else Quaternion()
-        X_world2ref = Pose().from_pq(p_world2ref, q_world2ref)
-        # Get target pose
-        p_world2tgt = Vector3d().from_xyz(self.link_state[pos_state_idx])
-        q_world2tgt = Quaternion().from_xyzw(self.link_state[ori_state_idx])
-        X_world2tgt = Pose().from_pq(p_world2tgt, q_world2tgt)
-        # Get transformation from reference to target pose
-        X_ref2tgt = X_world2ref.inverse() * X_world2tgt
-        return X_ref2tgt
+    @property
+    def raw_state(self) -> tuple[tuple[float, ...], ...]:
+        if self.__state:
+            return self.__state
+        else:
+            raise ValueError("Link state is not set. Please update the link before access state.")
 
-    def get_pose_world(self) -> Pose:
-        # Make sure to update the sensor state before calling this method
-        pos_state_idx = BulletLinkState.WORLD_LINK_FRAME_POS
-        ori_state_idx = BulletLinkState.WORLD_LINK_FRAME_ORI
-        # Get target pose
-        p_world2tgt = Vector3d().from_xyz(self.link_state[pos_state_idx])
-        q_world2tgt = Quaternion().from_xyzw(self.link_state[ori_state_idx])
-        X_world2tgt = Pose().from_pq(p_world2tgt, q_world2tgt)
-        return X_world2tgt
-    
-    def get_pos_ref(self) -> Vector3d:
-        return self.get_pose_ref().p
+    # //////////////////////////////////////////////////////////////////////// #
+    # /// make sure to update the sensor state before calling this methods /// #
+    # //////////////////////////////////////////////////////////////////////// #
+    def get_p_world2link(self) -> Vector3d:
+        state_idx = BulletLinkState.WORLD_LINK_FRAME_POS
+        return Vector3d().from_xyz(self.raw_state[state_idx])
 
-    def get_pos_world(self) -> Vector3d:
-        return self.get_pose_world().p
+    def get_q_world2link(self) -> Quaternion:
+        # make sure to update the sensor state before calling this method
+        state_idx = BulletLinkState.WORLD_LINK_FRAME_ORI
+        return Quaternion().from_xyzw(self.raw_state[state_idx])
 
-    def get_ori_world(self) -> Quaternion:
-        return self.get_pose_world().q
+    def get_X_world2link(self) -> Pose:
+        return Pose().from_pq(self.get_p_world2link(), self.get_q_world2link())
 
-    def get_ori_ref(self) -> Quaternion:
-        return self.get_pose_ref().q
+    def get_p_link2inertial(self) -> Vector3d:
+        state_idx = BulletLinkState.LOCAL_INERTIAL_POS
+        return Vector3d().from_xyz(self.raw_state[state_idx])
 
-    def get_twist(self) -> Vector6d:
+    def get_q_link2inertial(self) -> Quaternion:
+        state_idx = BulletLinkState.LOCAL_INERTIAL_ORI
+        return Quaternion().from_xyzw(self.raw_state[state_idx])
+
+    def get_twist_world2link(self) -> Vector6d:
         lin_vel_state_idx = BulletLinkState.WORLD_LINK_LIN_VEL
         ang_vel_state_idx = BulletLinkState.WORLD_LINK_ANG_VEL
-        return Vector6d().from_xyzXYZ(self.link_state[lin_vel_state_idx] + self.link_state[ang_vel_state_idx])
+        return Vector6d().from_xyzXYZ(self.raw_state[lin_vel_state_idx] + self.raw_state[ang_vel_state_idx])
