@@ -54,7 +54,6 @@ class EnvironmentReacherPositionCtrl(Environment):
             self.ik_solver,
             self.control_interface
         )
-        self.low_level_control.reset()
         self.reward = DistanceReward(config_reward, self.clock)
 
     def reset(self) -> npt.NDArray[np.float32]:

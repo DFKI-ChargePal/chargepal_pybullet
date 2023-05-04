@@ -1,5 +1,6 @@
 # global imports
 import gym
+import logging
 import numpy as np
 
 # constants
@@ -10,6 +11,8 @@ from typing import Any, Dict
 
 
 def main(env_name: str, gui: bool) -> None:
+
+    logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
 
     print(3 * '\n' + f"Start test with environment: {env_name}")
     # kwargs_cfg = {
