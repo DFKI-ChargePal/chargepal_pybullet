@@ -14,7 +14,7 @@ from gym_chargepal.envs.env_reacher_vel_ctrl import EnvironmentReacherVelocityCt
 from gym_chargepal.envs.env_plugger_pos_ctrl import EnvironmentPluggerPositionCtrl
 
 
-""" Concrete point-to-point position controlled environments. """
+""" Configuration setups point-to-point position controlled environments. """
 # Constants
 # ROT_PI_2_X = Quaternion().from_euler_angle(angles=(np.pi/2, 0.0, 0.0))
 
@@ -96,7 +96,7 @@ from gym_chargepal.envs.env_plugger_pos_ctrl import EnvironmentPluggerPositionCt
 # }
 
 
-testbed_reacher_3dof_position_ctrl_v0 = {
+testbed_reacher_3dof_position_ctrl_v1 = {
 
     'environment': {
         'type': EnvironmentReacherPositionCtrl,
@@ -108,8 +108,8 @@ testbed_reacher_3dof_position_ctrl_v0 = {
         # Start configuration relative to target configuration'
         'start_config': Pose().from_xyz((0.15, 0.3, -0.15)),
         # Reset variance of the start pose
-        'reset_variance': ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
-        # 'reset_variance': ((0.1, 0.1, 0.1), (0.0, 0.0, 0.0)),
+        # 'reset_variance': ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
+        'reset_variance': ((0.1, 0.1, 0.1), (0.0, 0.0, 0.0)),
         },
 
     'low_level_control': {
@@ -119,6 +119,30 @@ testbed_reacher_3dof_position_ctrl_v0 = {
         },
 
 }
+
+testbed_reacher_6dof_position_ctrl_v1 = {
+
+    'environment': {
+        'type': EnvironmentReacherPositionCtrl,
+        'T': 100,
+        'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
+        'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(7,), dtype=np.float32),
+        # Target configuration with respect to the arm base
+        'target_config': Pose().from_xyz((0.75, 0.1, 0.4)).from_euler_angle((0.0, 90.0, 0.0), degrees=True),
+        # Start configuration relative to target configuration'
+        'start_config': Pose().from_xyz((0.15, 0.3, -0.15)),
+        # Reset variance of the start pose
+        # 'reset_variance': ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
+        'reset_variance': ((0.1, 0.1, 0.1), (0.0, 0.0, 0.0)),
+        },
+
+    'low_level_control': {
+        'wa_lin': 0.05,  # action scaling in linear directions [m]
+        'wa_ang': 0.05 * np.pi,  # action scaling in angular directions [rad]
+        },
+
+}
+
 
 
 # testbed_reacher_6dof_position_ctrl_v0 = {
