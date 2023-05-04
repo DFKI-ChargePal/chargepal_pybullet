@@ -78,15 +78,18 @@ class TcpPositionController(Controller):
 
     def reset(self) -> None:
         self.pos0_base2tcp = np.array(self.arm.get_p_base2tcp().xyz)
-        self.ori0_base2tcp = np.array(self.arm.get_q_base2tcp().xyzw)
+        self.ori0_base2tcp = np.array(self.arm.get_q_base2tcp().to_euler_angle())
 
     def update(self, action: npt.NDArray[np.float32]) -> None:
-        """
-        Updates the tcp position controller
-        : param action: Action array; The action sequence is defined as (x y z roll pitch yaw).
-                        If not all motion directions are enabled, the actions will be executed 
-                        in the order in which they are given.
-        : return: None
+        """ Updates the tcp position controller
+
+        Args:
+            action: Action array; The action sequence is defined as (x y z roll pitch yaw).
+                    If not all motion directions are enabled, the actions will be executed 
+                    in the order in which they are given.
+        
+        Returns:
+            None
         """
         # Scale action
         action[self.pos_action_ids] *= self.wa_lin
@@ -102,7 +105,9 @@ class TcpPositionController(Controller):
         ori_base2tcp[self.ori_motion_axis[MotionAxis.DISABLED]] = self.ori0_base2tcp[self.ori_motion_axis[MotionAxis.DISABLED]]
         # Compose new end-effector pose
         X_base2tcp = Pose().from_xyz(pos_base2tcp).from_euler_angle(ori_base2tcp)
+        # Transform into world space
+        X_world2tcp = self.arm.get_X_world2base() * X_base2tcp
         # Transform to joint space positions
-        joint_pos = self.ik_solver.solve(X_base2tcp)
+        joint_pos = self.ik_solver.solve(X_world2tcp)
         # Send command to robot
         self.controller_interface.update(joint_pos)

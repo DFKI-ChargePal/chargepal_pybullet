@@ -34,7 +34,7 @@ class URArmCfg(ConfigHandler):
     joint_default_values: dict[str, float] = field(default_factory=lambda: ARM_JOINT_DEFAULT_VALUES)
     joint_limits: dict[str, tuple[float, float]] = field(default_factory=lambda: ARM_JOINT_LIMITS)
     tcp_link_name: str = 'plug'
-    base_link_name: str = ''
+    base_link_name: str = 'base'
     ft_joint_name: str = 'mounting_to_wrench'
     ft_buffer_size: int = 1
 
@@ -61,28 +61,28 @@ class URArm:
         if self.is_connected:
             return self._bc
         else:
-            raise RuntimeError("Not connect to PyBullet client.")
+            raise RuntimeError("Not connected to PyBullet client.")
 
     @property
     def bullet_body_id(self) -> int:
         if self.is_connected and self._body_id:
             return self._body_id
         else:
-            raise RuntimeError("Not connect to PyBullet client.")
+            raise RuntimeError("Not connected to PyBullet client.")
 
     @property
     def base_link(self) -> BodyLink:
         if self.is_connected and self._base:
             return self._base
         else:
-            raise RuntimeError("Not connect to PyBullet client.")
+            raise RuntimeError("Not connected to PyBullet client.")
 
     @property
     def tcp_link(self) -> BodyLink:
         if self.is_connected and self._tcp:
             return self._tcp
         else:
-            raise RuntimeError("Not connect to PyBullet client.")
+            raise RuntimeError("Not connected to PyBullet client.")
         
     @property
     def ft_sensor(self) -> FTSensor:
@@ -92,7 +92,7 @@ class URArm:
             if self.is_connected:
                 raise ValueError("F/T sensor is not enabled for this object.")
             else:
-                raise RuntimeError("Not connect to PyBullet client.")
+                raise RuntimeError("Not connected to PyBullet client.")
 
     @property
     def is_connected(self) -> bool:
@@ -157,8 +157,8 @@ class URArm:
                 bodyUniqueId=self._body_id,
                 jointIndices=[idx for idx in self._joint_idx_dict.values()]
             )
-            self.base_link.update()
             self.tcp_link.update()
+            self.base_link.update()
             if self._fts: self._fts.update()
         else:
             LOGGER.error(self._CONNECTION_ERROR_MSG)
@@ -192,3 +192,18 @@ class URArm:
 
     def get_q_base2tcp(self) -> Quaternion:
         return self.get_X_base2tcp().q
+
+    def get_X_world2base(self) -> Pose:
+        if self.is_connected:
+            # Get base pose
+            X_world2base = self._base.get_X_world2link()  # type: ignore
+        else:
+            LOGGER.error(self._CONNECTION_ERROR_MSG)
+            X_world2base = Pose()
+        return X_world2base
+    
+    def get_p_world2base(self) -> Vector3d:
+        return self.get_X_world2base().p
+    
+    def get_q_world2base(self) -> Quaternion:
+        return self.get_X_world2base().q

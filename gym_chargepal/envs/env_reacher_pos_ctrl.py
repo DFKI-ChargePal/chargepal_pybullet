@@ -104,19 +104,22 @@ class EnvironmentReacherPositionCtrl(Environment):
 
     def get_obs(self) -> npt.NDArray[np.float32]:
         # Build observation
-        x_PW = self.plug_sensor.get_pos()
-        x_SW = self.target_sensor.get_pos()
-        x_SP = (x_SW - x_PW).xyz
-        q_PW = self.plug_sensor.get_ori()
-        q_SW = self.target_sensor.get_ori()
-        q_SP = rp_math.quaternion_difference(q_PW, q_SW).wxyz
+        p_arm2plug_arm = self.plug_sensor.get_pos()
+        p_arm2tgt_arm = self.target_sensor.get_pos()
+        # Translation plug to target in arm frame
+        p_plug2target_arm = (p_arm2tgt_arm - p_arm2plug_arm).xyz
+
+        q_arm2plug = self.plug_sensor.get_ori()
+        q_arm2tgt = self.target_sensor.get_ori()
+        # Minimal rotation plug to target
+        q_plug2tgt = rp_math.quaternion_difference(q_arm2plug, q_arm2tgt).wxyz
         # Glue observation together
-        obs = np.array((x_SP + q_SP), dtype=np.float32)
+        obs = np.array((p_plug2target_arm + q_plug2tgt), dtype=np.float32)
         # Calculate evaluation metrics
-        q_SW_ = np.array(q_SW.wxyz)
-        q_PW_ = np.array(q_PW.wxyz)
-        self.task_pos_error = np.sqrt(np.sum(np.square(x_SP)))
-        self.task_ang_error = np.arccos(np.clip((2 * (q_SW_.dot(q_PW_))**2 - 1), -1.0, 1.0))
+        q_arm2tgt_ = np.array(q_arm2tgt.wxyz)
+        q_arm2plug_ = np.array(q_arm2plug.wxyz)
+        self.task_pos_error = np.sqrt(np.sum(np.square(p_plug2target_arm)))
+        self.task_ang_error = np.arccos(np.clip((2 * (q_arm2tgt_.dot(q_arm2plug_))**2 - 1), -1.0, 1.0))
         return obs
 
     def compose_info(self) -> Dict[str, Any]:
