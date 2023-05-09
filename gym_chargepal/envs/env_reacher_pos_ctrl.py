@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # global
 import numpy as np
 from rigmopy import utils_math as rp_math
@@ -14,14 +16,14 @@ from gym_chargepal.sensors.sensor_virt_tgt import VirtTgtSensor
 from gym_chargepal.controllers.controller_tcp_pos import TcpPositionController
 from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotorControl
 
-# MyPy
+# typing
+from typing import Any
 from numpy import typing as npt
-from typing import Any, Dict, Tuple
 
 
 class EnvironmentReacherPositionCtrl(Environment):
     """ Cartesian Environment with position controller - Task: point to point """
-    def __init__(self, **kwargs: Dict[str, Any]):
+    def __init__(self, **kwargs: dict[str, Any]):
         # Update environment configuration
         config_env = ch.search(kwargs, 'environment')
         Environment.__init__(self, config_env)
@@ -76,7 +78,7 @@ class EnvironmentReacherPositionCtrl(Environment):
         self.update_sensors(target_sensor=True)
         return self.get_obs()
 
-    def step(self, action: npt.NDArray[np.float32]) -> Tuple[npt.NDArray[np.float32], float, bool, Dict[Any, Any]]:
+    def step(self, action: npt.NDArray[np.float32]) -> tuple[npt.NDArray[np.float32], float, bool, dict[Any, Any]]:
         """ Execute environment/simulation step. """
         # Apply action
         self.low_level_control.update(action=np.array(action))
@@ -88,7 +90,7 @@ class EnvironmentReacherPositionCtrl(Environment):
         obs = self.get_obs()
         # Evaluate environment
         done = self.done
-        X_PW = Pose().from_pq(self.plug_sensor.get_pos(), self.plug_sensor.get_ori())
+        X_PW = Pose().from_pq(self.plug_sensor.p_arm2sensor, self.plug_sensor.q_arm2sensor)
         X_SW = Pose().from_pq(self.target_sensor.get_pos(), self.target_sensor.get_ori())
         reward = self.reward.compute(X_PW, X_SW, done)
         info = self.compose_info()
@@ -103,12 +105,12 @@ class EnvironmentReacherPositionCtrl(Environment):
 
     def get_obs(self) -> npt.NDArray[np.float32]:
         # Build observation
-        p_arm2plug_arm = self.plug_sensor.get_pos()
+        p_arm2plug_arm = self.plug_sensor.p_arm2sensor
         p_arm2tgt_arm = self.target_sensor.get_pos()
         # Translation plug to target in arm frame
         p_plug2target_arm = (p_arm2tgt_arm - p_arm2plug_arm).xyz
 
-        q_arm2plug = self.plug_sensor.get_ori()
+        q_arm2plug = self.plug_sensor.q_arm2sensor
         q_arm2tgt = self.target_sensor.get_ori()
         # Minimal rotation plug to target
         q_plug2tgt = rp_math.quaternion_difference(q_arm2plug, q_arm2tgt).wxyz
@@ -121,7 +123,7 @@ class EnvironmentReacherPositionCtrl(Environment):
         self.task_ang_error = np.arccos(np.clip((2 * (q_arm2tgt_.dot(q_arm2plug_))**2 - 1), -1.0, 1.0))
         return obs
 
-    def compose_info(self) -> Dict[str, Any]:
+    def compose_info(self) -> dict[str, Any]:
         info = {
             'error_pos': self.task_pos_error,
             'error_ang': self.task_ang_error,

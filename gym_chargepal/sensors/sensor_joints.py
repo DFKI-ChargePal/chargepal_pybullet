@@ -33,8 +33,10 @@ class JointSensor(Sensor):
         # Safe references
         self.ur_arm = ur_arm
 
-    def get_pos(self) -> Tuple[float, ...]:
+    @property
+    def pos(self) -> Tuple[float, ...]:
         return self.ur_arm.get_joint_pos()
 
-    def get_vel(self) -> Tuple[float, ...]:
+    @property
+    def vel(self) -> Tuple[float, ...]:
         return self.ur_arm.get_joint_vel()

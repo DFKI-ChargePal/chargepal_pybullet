@@ -79,8 +79,8 @@ class TcpVelocityController(Controller):
         : return: None
         """
         # get joint configuration
-        j_pos = self.joint_sensor.get_pos()
-        j_vel = self.joint_sensor.get_vel()
+        j_pos = self.joint_sensor.pos
+        j_vel = self.joint_sensor.vel
         j_acc = tuple([0.0] * 6)
 
         # get Jacobians
@@ -102,7 +102,7 @@ class TcpVelocityController(Controller):
         action[self.ang_action_ids] *= self.wa_ang
 
         # Get current tcp velocities
-        tcp_dot_twist = self.plug_sensor.get_twist().to_numpy()
+        tcp_dot_twist = self.plug_sensor.twist.to_numpy()
         # Separate into linear and angular part
         tcp_dot_lin = tcp_dot_twist[0:3]
         tcp_dot_ang = tcp_dot_twist[3:6]

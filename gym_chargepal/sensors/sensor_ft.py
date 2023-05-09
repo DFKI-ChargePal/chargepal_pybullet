@@ -45,7 +45,8 @@ class FTSensor(Sensor):
         self.ft_min = -np.array(self.cfg.ft_range, dtype=np.float32)
         self.ft_max = np.array(self.cfg.ft_range, dtype=np.float32)
 
-    def get_wrench(self) -> Vector6d:
+    @property
+    def wrench(self) -> Vector6d:
         # Mypy check whether ft sensor object exist 
         assert self.ur_arm._fts
         # Get sensor state and bring values in a range between -1.0 and +1.0
@@ -53,14 +54,15 @@ class FTSensor(Sensor):
         norm_wrench: npt.NDArray[np.float_] = np.clip(wrench.to_numpy(), self.ft_min, self.ft_max) / self.ft_max
         return Vector6d().from_xyzXYZ(norm_wrench)
 
-    def meas_wrench(self) -> Vector6d:
-        meas = self.get_wrench()
+    @property
+    def noisy_wrench(self) -> Vector6d:
+        meas = self.wrench
         # TODO: Add sensor noise
         return meas
 
     def render_ft_bar(self, render: bool) -> None:
         if render and self.cfg.render_bar:
-            wrench = self.get_wrench().xyzXYZ
+            wrench = self.wrench.xyzXYZ
             # Find outliers
             ft_max = max(wrench)
             # idx = wrench.index(ft_max)

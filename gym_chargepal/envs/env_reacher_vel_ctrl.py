@@ -94,9 +94,9 @@ class EnvironmentReacherVelocityCtrl(Environment):
         obs = self.get_obs()
         # Evaluate environment
         done = self.done
-        X_tcp = Pose().from_pq(self.plug_sensor.get_pos(), self.plug_sensor.get_ori())
-        X_tgt = Pose().from_pq(self.plug_sensor.get_pos(), self.plug_sensor.get_ori())
-        V_tcp = self.plug_sensor.get_twist()
+        X_tcp = Pose().from_pq(self.plug_sensor.p_arm2sensor, self.plug_sensor.q_arm2sensor)
+        X_tgt = Pose().from_pq(self.plug_sensor.p_arm2sensor, self.plug_sensor.q_arm2sensor)
+        V_tcp = self.plug_sensor.twist
         reward = self.reward.compute(X_tcp=X_tcp, V_tcp=V_tcp, X_tgt=X_tgt, done=done)
         info = self.compose_info()
         return obs, reward, done, info
@@ -110,14 +110,14 @@ class EnvironmentReacherVelocityCtrl(Environment):
 
     def get_obs(self) -> npt.NDArray[np.float32]:
         # Get spatial distance
-        x_PW = self.plug_sensor.get_pos()
+        x_PW = self.plug_sensor.p_arm2sensor
         x_SW = self.target_sensor.get_pos()
         x_SP = (x_SW - x_PW).xyz
-        q_PW = self.plug_sensor.get_ori()
+        q_PW = self.plug_sensor.q_arm2sensor
         q_SW = self.target_sensor.get_ori()
         q_SP = rp_math.quaternion_difference(q_PW, q_SW).wxyz
         # Get velocity signal
-        i_twist_PW = self.plug_sensor.get_twist().xyzXYZ
+        i_twist_PW = self.plug_sensor.twist.xyzXYZ
         # Glue observation together
         obs = np.array((x_SP + q_SP + i_twist_PW), dtype=np.float32)
         # Calculate evaluation metrics

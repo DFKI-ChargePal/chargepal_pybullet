@@ -1,15 +1,17 @@
 """ This file defines the sensors tool class. """
+from __future__ import annotations
+
 # global
 import logging
 from dataclasses import dataclass
-from rigmopy import Quaternion, Vector3d, Vector6d
+from rigmopy import Pose, Quaternion, Vector3d, Vector6d
 
 # local
 from gym_chargepal.bullet.ur_arm import URArm
 from gym_chargepal.sensors.sensor import SensorCfg, Sensor
 
 # mypy
-from typing import Any, Dict
+from typing import Any
 
 
 LOGGER = logging.getLogger(__name__)
@@ -26,7 +28,7 @@ class PlugSensorCfg(SensorCfg):
 
 class PlugSensor(Sensor):
     """ Sensor of the arm plug. """
-    def __init__(self, config: Dict[str, Any], ur_arm: URArm):
+    def __init__(self, config: dict[str, Any], ur_arm: URArm):
         # Call super class
         super().__init__(config=config)
         # Create configuration and override values
@@ -34,12 +36,19 @@ class PlugSensor(Sensor):
         self.cfg.update(**config)
         # Safe references
         self.ur_arm = ur_arm
+    
+    @property
+    def X_arm2sensor(self) -> Pose:
+        return self.ur_arm.get_X_base2tcp()
 
-    def get_pos(self) -> Vector3d:
+    @property
+    def p_arm2sensor(self) -> Vector3d:
         return self.ur_arm.get_p_base2tcp()
 
-    def get_ori(self) -> Quaternion:
+    @property
+    def q_arm2sensor(self) -> Quaternion:
         return self.ur_arm.get_q_base2tcp()
 
-    def get_twist(self) -> Vector6d:
+    @property
+    def twist(self) -> Vector6d:
         return self.ur_arm.tcp_link.get_twist_world2link()

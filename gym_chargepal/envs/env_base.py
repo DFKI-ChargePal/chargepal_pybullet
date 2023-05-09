@@ -1,4 +1,6 @@
 """ This file defines the environments base class. """
+from __future__ import annotations
+
 # global
 import abc
 import gym
@@ -10,27 +12,28 @@ from dataclasses import dataclass
 from gym_chargepal.utility.env_clock import EnvironmentClock
 from gym_chargepal.utility.cfg_handler import ConfigHandler
 
-# mypy
+# typing
+from typing import Any
 from numpy import typing as npt
-from typing import Dict, Any, Optional, Tuple
+
 
 @dataclass
 class EnvironmentCfg(ConfigHandler):
     T: int = 100  # time horizon
     task_pos_eps: float = 0.003  # position task criterion [m]
     task_ang_eps: float = 0.0175  # angular task criterion [rad]
-    action_space: Optional[gym.spaces.Space] = None
-    observation_space: Optional[gym.spaces.Space] = None
+    action_space: gym.spaces.Space | None = None
+    observation_space: gym.spaces.Space | None = None
     start_config: Pose = Pose()
     target_config: Pose = Pose() 
-    reset_variance: Tuple[Tuple[float, ...], Tuple[float, ...]] = ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
+    reset_variance: tuple[tuple[float, ...], tuple[float, ...]] = ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
 
 
 class Environment(gym.Env, metaclass=abc.ABCMeta):
     """
     This is the concrete implementation of the OpenAI gym interface.
     """
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         # Call base class
         super(Environment, self).__init__()
         # Create configuration object
@@ -49,7 +52,7 @@ class Environment(gym.Env, metaclass=abc.ABCMeta):
         self.task_ang_error = np.inf
 
     @abc.abstractmethod
-    def step(self, action: npt.NDArray[np.float32]) -> Tuple[npt.NDArray[np.float32], float, bool, Dict[Any, Any]]:
+    def step(self, action: npt.NDArray[np.float32]) -> tuple[npt.NDArray[np.float32], float, bool, dict[Any, Any]]:
         """ Environment step function of the Reinforcement Learning framework. """
         raise NotImplementedError('Must be implemented in subclass.')
 

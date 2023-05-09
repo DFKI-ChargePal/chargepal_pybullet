@@ -1,9 +1,11 @@
 """ This file defines the reacher worlds. """
+from __future__ import annotations
+
 # global
 import os
 import logging
 import numpy as np
-from rigmopy import Pose, Quaternion, Vector3d
+from rigmopy import Pose
 
 # local
 from gym_chargepal.bullet.ur_arm import URArm
@@ -12,8 +14,7 @@ import gym_chargepal.bullet.utility as pb_utils
 from gym_chargepal.worlds.world import WorldCfg, World
 
 # mypy
-from typing import Any, Dict, Tuple, Union
-
+from typing import Any
 
 LOGGER = logging.getLogger(__name__)
 
@@ -38,14 +39,19 @@ class WorldReacherCfg(WorldCfg):
 
 class WorldReacher(World):
 
-    """ Build a robot world where the task is to reach a point from a random start configuration """
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]) -> None:
+        """ Build a robot world where the task is to reach a point from a random start configuration
+
+        Args:
+            config: Dictionary to overwrite values of the world configuration class
+        """
         # Call super class
         super().__init__(config=config)
         # Create configuration and override values
         self.cfg: WorldReacherCfg = WorldReacherCfg()
         self.cfg.update(**config)
         # Pre initialize class attributes
+        self.env_id = -1
         self.plane_id = -1
         self.robot_id = -1
         self.target_id = -1
@@ -55,7 +61,7 @@ class WorldReacher(World):
         self.X_arm2tgt = self.cfg.target_config
         self.X_world2tgt = Pose()
 
-    def reset(self, joint_conf: Union[None, Tuple[float, ...]] = None, render: bool = False) -> None:
+    def reset(self, joint_conf: tuple[float, ...] | None = None, render: bool = False) -> None:
         if self.bullet_client is None:
             # Connect to bullet simulation server
             self.connect(render)

@@ -1,34 +1,39 @@
-# global imports
+from __future__ import annotations
+
+# global
 import gym
 import logging
+import argparse
 import numpy as np
 
-# constants
-N_EPISODES = 1
+# local
+from gym_chargepal.envs import environment_register
 
 # typing
-from typing import Any, Dict
+from typing import Any
 
 
-def main(env_name: str, gui: bool) -> None:
+LOGGER = logging.getLogger(__name__)
 
-    logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
 
-    print(3 * '\n' + f"Start test with environment: {env_name}")
+def main(env_name: str, n_episodes: int, gui: bool) -> None:
+
+
+    LOGGER.info(f"Run with environment: {env_name}")
     # kwargs_cfg = {
     #     'world': {
     #         'gui_txt': 'Hello World'
     #     }
     # }
-    kwargs_cfg: Dict[str, Any] = {}
+    kwargs_cfg: dict[str, Any] = {}
     env = gym.make("gym_chargepal:" + env_name, **{'kwargs': kwargs_cfg})
     env.action_space.seed(42)
     if gui: env.render()
     obs = env.reset()
 
     episode = 1
+    run_inf = n_episodes < 0
     ep_return = 0.0
-    print(f'Episode: {episode}')
     while True:
 
         action = env.action_space.sample()
@@ -39,16 +44,15 @@ def main(env_name: str, gui: bool) -> None:
         act_string = " ".join(format(f, '6.2f') for f in action)
         obs_string = " ".join(format(f, '6.2f') for f in obs)
 
-        print(f'Action: {act_string}  ----  Observation: {obs_string}  ----  Reward: {reward:5.2}')
+        LOGGER.debug(f'Action: {act_string}  ----  Observation: {obs_string}  ----  Reward: {reward:5.2}')
         if gui: env.render()
         # reset environment
         if done:
-            print(f'Finish episode {episode} with return: {ep_return}')
+            LOGGER.info(f'Finish episode {episode} with return: {ep_return}')
             episode += 1
             ep_return = 0.0
-            if episode > N_EPISODES:
+            if not run_inf and episode > n_episodes:
                 break
-            print(f'\n\nEpisode: {episode}')
             obs = env.reset()
 
     env.close()
@@ -56,11 +60,31 @@ def main(env_name: str, gui: bool) -> None:
 
 if __name__ == '__main__':
 
-    # test for all registered environments
-    from gym_chargepal.envs import environment_register
+    parser = argparse.ArgumentParser(description='Gym environment test for users')
+    parser.add_argument('--env', type=str, default='', help="Option to specify an environment.")
+    parser.add_argument('--episodes', type=int, default=1, help='Option to specify the number of episodes. -1 means infinity loop.')
+    parser.add_argument('--no_gui', action='store_true', help="Option to omit GUI")
+    parser.add_argument('--debug', action='store_true', help="Write debug messages")
+    # Parse input arguments
+    args = parser.parse_args()
+    env_name = args.env
+    n_ep = args.episodes
+    use_gui = not args.no_gui
 
-    # main(env_name="ChargePal-Testbed-Plugger-PositionControl-v0", gui=True)
-    for env_ in environment_register:
-        main(env_name=env_, gui=True)
-    
-    print(f"\n\nAPI test finished\n\n")
+    if args.debug:
+        logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
+    else:
+        logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
+
+    LOGGER.info(f"Start API user test")
+
+    if env_name:
+        if env_name in environment_register:
+            main(env_name, n_ep, use_gui)
+        else:
+            LOGGER.warn(f"Environment with name '{env_name}' not found. End program...")
+    else:
+        for env_ in environment_register:
+            main(env_, n_ep, use_gui)
+
+    LOGGER.info(f"API user test finished")
