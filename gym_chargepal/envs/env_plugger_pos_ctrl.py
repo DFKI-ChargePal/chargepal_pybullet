@@ -41,9 +41,9 @@ class EnvironmentPluggerPositionCtrl(Environment):
         config_socket_sensor = ch.search(kwargs, 'socket_sensor')
         config_control_interface = ch.search(kwargs, 'control_interface')
         config_low_level_control = ch.search(kwargs, 'low_level_control')
-        # Placeholder target sensor state
-        self.x_arm2socket = Vector3d()
-        self.q_arm2socket = Quaternion()
+        # Placeholder noisy target sensor state
+        self.noisy_p_arm2socket = Vector3d()
+        self.noisy_q_arm2socket = Quaternion()
         # Components
         self.world = WorldPlugger(config_world, config_ur_arm, config_socket)
         self.ik_solver = IKSolver(config_ik_solver, self.world.ur_arm)
@@ -70,13 +70,14 @@ class EnvironmentPluggerPositionCtrl(Environment):
         self.world.reset(render=self.is_render)
         # Get start joint configuration by inverse kinematic
         X0_socket2plug = self.cfg.start_config.random(*self.cfg.reset_variance)
-        X0_world2plug = self.world.socket.get_X_world2socket() * X0_socket2plug
+        X0_world2plug = self.world.socket.X_arm2socket * X0_socket2plug
         joint_pos0 = self.ik_solver.solve(X0_world2plug)
         # Reset robot again
         self.world.reset(joint_pos0)
+        self.low_level_control.reset()
         # Set new target pose
-        self.x_arm2socket = self.socket_sensor.noisy_p_arm2sensor
-        self.q_arm2socket = self.socket_sensor.noisy_q_arm2sensor
+        self.noisy_p_arm2socket = self.socket_sensor.noisy_p_arm2sensor
+        self.noisy_q_arm2socket = self.socket_sensor.noisy_q_arm2sensor
         return self.get_obs()
 
     def step(self, action: npt.NDArray[np.float32]) -> tuple[npt.NDArray[np.float32], float, bool, dict[Any, Any]]:
@@ -91,10 +92,8 @@ class EnvironmentPluggerPositionCtrl(Environment):
         obs = self.get_obs()
         # Evaluate environment
         done = self.done
-        X_arm2plug = self.plug_sensor.X_arm2sensor
-        X_arm2socket = self.socket_sensor.X_arm2sensor
         F_tcp = self.ft_sensor.wrench
-        reward = self.reward.compute(X_arm2plug, X_arm2socket, F_tcp, done)
+        reward = self.reward.compute(self.world.ur_arm.get_X_base2tcp(), self.world.socket.X_arm2socket, F_tcp, done)
         # reward = self.reward.compute(X_tcp, X_tgt, done)
         info = self.compose_info()
         return obs, reward, done, info
@@ -103,17 +102,16 @@ class EnvironmentPluggerPositionCtrl(Environment):
         self.world.disconnect()
 
     def get_obs(self) -> npt.NDArray[np.float32]:
-        # Build observation
-        x_arm2plug = self.plug_sensor.p_arm2sensor
-        q_arm2plug = self.plug_sensor.q_arm2sensor
-        x_plug2socket = (self.x_arm2socket - x_arm2plug).xyz
-        q_plug2socket = rp_math.quaternion_difference(q_arm2plug, self.q_arm2socket).wxyz
+        # Build noisy observation
+        noisy_p_plug2socket = (self.noisy_p_arm2socket - self.plug_sensor.noisy_p_arm2sensor).xyz
+        noisy_q_plug2socket = rp_math.quaternion_difference(self.plug_sensor.noisy_q_arm2sensor, self.noisy_q_arm2socket).wxyz
         F_tcp_meas = self.ft_sensor.noisy_wrench.xyzXYZ
-        obs = np.array((x_plug2socket + q_plug2socket + F_tcp_meas), dtype=np.float32)
+        obs = np.array((noisy_p_plug2socket + noisy_q_plug2socket + F_tcp_meas), dtype=np.float32)
         # Evaluate metrics
-        q_arm2socket_ = np.array(self.q_arm2socket.wxyz)
-        q_arm2plug_ = np.array(q_arm2plug.wxyz)
-        self.task_pos_error = np.sqrt(np.sum(np.square(x_plug2socket)))
+        q_arm2socket_ = np.array(self.socket_sensor.q_arm2sensor.wxyz)
+        q_arm2plug_ = np.array(self.world.ur_arm.get_q_base2tcp().wxyz)
+        p_plug2socket = (self.socket_sensor.p_arm2sensor - self.world.ur_arm.get_p_base2tcp()).xyz
+        self.task_pos_error = np.sqrt(np.sum(np.square(p_plug2socket)))
         self.task_ang_error = np.arccos(np.clip((2 * (q_arm2socket_.dot(q_arm2plug_))**2 - 1), -1.0, 1.0))
         return obs
 

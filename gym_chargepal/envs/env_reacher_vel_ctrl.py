@@ -1,7 +1,7 @@
 # global
 import numpy as np
 from rigmopy import utils_math as rp_math
-from rigmopy import Pose
+from rigmopy import Pose, Quaternion, Vector3d
 
 # local
 import gym_chargepal.utility.cfg_handler as ch
@@ -31,6 +31,7 @@ class EnvironmentReacherVelocityCtrl(Environment):
         # Extract component hyperparameter from kwargs
         config_world = ch.search(kwargs, 'world')
         config_ur_arm = ch.search(kwargs, 'ur_arm')
+        config_target = ch.search(kwargs, 'target')
         config_reward = ch.search(kwargs, 'reward')
         config_jacobian = ch.search(kwargs, 'jacobian')
         config_ik_solver = ch.search(kwargs, 'ik_solver')
@@ -39,17 +40,13 @@ class EnvironmentReacherVelocityCtrl(Environment):
         config_target_sensor = ch.search(kwargs, 'target_sensor')
         config_control_interface = ch.search(kwargs, 'control_interface')
         config_low_level_control = ch.search(kwargs, 'low_level_control')
-        # Start configuration in world coordinates
-        self.x0_WP = self.cfg.target_config.p + self.cfg.start_config.p
-        self.q0_WP = self.cfg.target_config.q * self.cfg.start_config.q
-        self.X0_WP = Pose().from_pq(self.x0_WP, self.q0_WP)
-        # Resolve cross references
-        config_world['ur_arm'] = config_ur_arm
-        config_world['target_config'] = self.cfg.target_config
+        # Placeholder noisy target sensor state
+        self.x_arm2socket = Vector3d()
+        self.q_arm2socket = Quaternion()
         config_low_level_control['plug_lin_config'] = self.x0_WP.xyz
         config_low_level_control['plug_ang_config'] = self.q0_WP.to_euler_angle()
         # Components
-        self.world = WorldReacher(config_world)
+        self.world = WorldReacher(config_world, config_ur_arm, config_target)
         self.jacobian = Jacobian(config_jacobian, self.world.ur_arm)
         self.ik_solver = IKSolver(config_ik_solver, self.world.ur_arm)
         self.control_interface = JointVelocityMotorControl(config_control_interface, self.world.ur_arm)
@@ -94,9 +91,9 @@ class EnvironmentReacherVelocityCtrl(Environment):
         obs = self.get_obs()
         # Evaluate environment
         done = self.done
-        X_tcp = Pose().from_pq(self.plug_sensor.p_arm2sensor, self.plug_sensor.q_arm2sensor)
-        X_tgt = Pose().from_pq(self.plug_sensor.p_arm2sensor, self.plug_sensor.q_arm2sensor)
-        V_tcp = self.plug_sensor.twist
+        X_tcp = Pose().from_pq(self.plug_sensor.noisy_p_arm2sensor, self.plug_sensor.noisy_q_arm2sensor)
+        X_tgt = Pose().from_pq(self.plug_sensor.noisy_p_arm2sensor, self.plug_sensor.noisy_q_arm2sensor)
+        V_tcp = self.plug_sensor.noisy_twist
         reward = self.reward.compute(X_tcp=X_tcp, V_tcp=V_tcp, X_tgt=X_tgt, done=done)
         info = self.compose_info()
         return obs, reward, done, info
@@ -110,14 +107,14 @@ class EnvironmentReacherVelocityCtrl(Environment):
 
     def get_obs(self) -> npt.NDArray[np.float32]:
         # Get spatial distance
-        x_PW = self.plug_sensor.p_arm2sensor
-        x_SW = self.target_sensor.get_pos()
+        x_PW = self.plug_sensor.noisy_p_arm2sensor
+        x_SW = self.target_sensor.noisy_p_arm2tgt
         x_SP = (x_SW - x_PW).xyz
-        q_PW = self.plug_sensor.q_arm2sensor
-        q_SW = self.target_sensor.get_ori()
+        q_PW = self.plug_sensor.noisy_q_arm2sensor
+        q_SW = self.target_sensor.noisy_q_arm2tgt
         q_SP = rp_math.quaternion_difference(q_PW, q_SW).wxyz
         # Get velocity signal
-        i_twist_PW = self.plug_sensor.twist.xyzXYZ
+        i_twist_PW = self.plug_sensor.noisy_twist.xyzXYZ
         # Glue observation together
         obs = np.array((x_SP + q_SP + i_twist_PW), dtype=np.float32)
         # Calculate evaluation metrics

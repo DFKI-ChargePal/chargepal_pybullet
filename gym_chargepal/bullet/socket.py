@@ -2,6 +2,7 @@
 from __future__ import annotations
 # global
 import logging
+import numpy as np
 from dataclasses import dataclass
 from rigmopy import Vector3d, Quaternion, Pose
 from pybullet_utils.bullet_client import BulletClient
@@ -19,7 +20,8 @@ LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class SocketCfg(ConfigHandler):
-    socket_link_name = "socket"
+    link_name = "socket"
+    X_arm2socket: Pose = Pose().from_xyz((0.635 + 0.05, 0.319, 0.271)).from_euler_angle((0.0, -np.pi/2, 0.0))
 
 
 class Socket:
@@ -30,6 +32,10 @@ class Socket:
         # Create configuration and override values
         self.cfg = SocketCfg()
         self.cfg.update(**config)
+        # PyBullet references
+        self._bc: BulletClient | None = None
+        self._body_id: int | None = None
+        self._socket: BodyLink | None = None
 
     @property
     def is_connected(self) -> bool:
@@ -38,14 +44,35 @@ class Socket:
         Returns:
             Boolean
         """
-        return True if self.bc else False
+        return True if self._bc else False
+
+    @property
+    def bullet_client(self) -> BulletClient:
+        if self.is_connected:
+            return self._bc
+        else:
+            raise RuntimeError("Not connected to PyBullet client.")
+        
+    @property
+    def bullet_body_id(self) -> int:
+        if self.is_connected and self._body_id:
+            return self._body_id
+        else:
+            raise RuntimeError("Not connected to PyBullet client.")
+        
+    @property
+    def socket(self) -> BodyLink:
+        if self.is_connected and self._socket:
+            return self._socket
+        else:
+            raise RuntimeError("Not connected to PyBullet client.")
 
     def connect(self, bullet_client: BulletClient, body_id: int) -> None:
         # Safe references
-        self.bc = bullet_client
-        self.body_id = body_id
-        self.socket = BodyLink(
-            name=self.cfg.socket_link_name, 
+        self._bc = bullet_client
+        self._body_id = body_id
+        self._socket = BodyLink(
+            name=self.cfg.link_name, 
             bullet_client=bullet_client, 
             body_id=body_id
         )
@@ -54,17 +81,19 @@ class Socket:
         """ Update physical pybullet state. """
         self.socket.update()
 
-    def get_X_world2socket(self) -> Pose:
+    @property
+    def X_arm2socket(self) -> Pose:
         if self.is_connected:
             # Get socket pose
-            X_world2socket = self.socket.get_X_world2link()  # type: ignore
+            X_world2socket = self._socket.get_X_world2link()  # type: ignore
         else:
-            LOGGER.error(self._CONNECTION_ERROR_MSG)
-            X_world2socket = Pose()
+            X_world2socket = self.cfg.X_arm2socket
         return X_world2socket
 
-    def get_p_world2socket(self) -> Vector3d:
-        return self.get_X_world2socket().p
+    @property
+    def p_world2socket(self) -> Vector3d:
+        return self.X_arm2socket.p
 
-    def get_q_world2socket(self) -> Quaternion:
-        return self.get_X_world2socket().q
+    @property
+    def q_world2socket(self) -> Quaternion:
+        return self.X_arm2socket.q

@@ -37,8 +37,6 @@ class WorldPluggerCfg(WorldCfg):
     robot_config: Pose = Pose().from_xyz(
         (_TABLE_WIDTH - _BASE_PLATE_SIZE/2, _PROFILE_SIZE + _BASE_PLATE_SIZE/2, _BASE_PLATE_HEIGHT)
         ).from_euler_angle(angles=(0.0, 0.0, np.pi/2))
-    socket_config: Pose = Pose().from_xyz(
-        (0.635 + 0.05, 0.319, 0.271)).from_euler_angle((0.0, -np.pi/2, 0.0))
 
 class WorldPlugger(World):
 
@@ -65,7 +63,7 @@ class WorldPlugger(World):
         self.env_pos, self.env_ori = self.cfg.env_config.xyz_xyzw
         self.plane_pos, self.plane_ori = self.cfg.plane_config.xyz_xyzw
         self.robot_pos, self.robot_ori = self.cfg.robot_config.xyz_xyzw
-        self.socket_pos, self.socket_ori = (self.cfg.robot_config * self.cfg.socket_config).xyz_xyzw
+        self.socket_pos, self.socket_ori = (self.cfg.robot_config * self.socket.X_arm2socket).xyz_xyzw
 
     def reset(self, joint_conf: tuple[float, ...] | None = None, render: bool = False) -> None:
         if self.bullet_client is None:

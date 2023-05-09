@@ -38,17 +38,19 @@ class PlugSensor(Sensor):
         self.ur_arm = ur_arm
     
     @property
-    def X_arm2sensor(self) -> Pose:
+    def noisy_X_arm2sensor(self) -> Pose:
+        # TODO: Add noise
         return self.ur_arm.get_X_base2tcp()
 
     @property
-    def p_arm2sensor(self) -> Vector3d:
+    def noisy_p_arm2sensor(self) -> Vector3d:
         return self.ur_arm.get_p_base2tcp()
 
     @property
-    def q_arm2sensor(self) -> Quaternion:
+    def noisy_q_arm2sensor(self) -> Quaternion:
         return self.ur_arm.get_q_base2tcp()
 
     @property
-    def twist(self) -> Vector6d:
+    def noisy_twist(self) -> Vector6d:
+        # TODO: Add noise
         return self.ur_arm.tcp_link.get_twist_world2link()

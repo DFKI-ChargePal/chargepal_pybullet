@@ -3,7 +3,7 @@ from __future__ import annotations
 # global
 import numpy as np
 from rigmopy import utils_math as rp_math
-from rigmopy import Pose
+from rigmopy import Pose, Quaternion, Vector3d
 
 # local
 import gym_chargepal.utility.cfg_handler as ch
@@ -30,22 +30,18 @@ class EnvironmentReacherPositionCtrl(Environment):
         # Extract component hyperparameter from kwargs
         config_world = ch.search(kwargs, 'world')
         config_ur_arm = ch.search(kwargs, 'ur_arm')
+        config_target = ch.search(kwargs, 'target')
         config_reward = ch.search(kwargs, 'reward')
         config_ik_solver = ch.search(kwargs, 'ik_solver')
         config_plug_sensor = ch.search(kwargs, 'plug_sensor')
         config_target_sensor = ch.search(kwargs, 'target_sensor')
         config_control_interface = ch.search(kwargs, 'control_interface')
         config_low_level_control = ch.search(kwargs, 'low_level_control')
-        # Start configuration in world coordinates
-        self.p0_arm2plug = self.cfg.target_config.p + self.cfg.start_config.p
-        self.q0_arm2plug = self.cfg.target_config.q * self.cfg.start_config.q
-        # self.X0_arm2plug = Pose().from_pq(self.p0_arm2plug, self.q0_arm2plug)
-        self.X0_arm2plug = self.cfg.target_config * self.cfg.start_config
-        # Resolve cross references
-        config_world['ur_arm'] = config_ur_arm
-        config_world['target_config'] = self.cfg.target_config
+        # Placeholder noisy target sensor state
+        self.noisy_p_arm2tgt = Vector3d()
+        self.noisy_q_arm2tgt = Quaternion()
         # Components
-        self.world = WorldReacher(config_world)
+        self.world = WorldReacher(config_world, config_ur_arm, config_target)
         self.ik_solver = IKSolver(config_ik_solver, self.world.ur_arm)
         self.control_interface = JointPositionMotorControl(config_control_interface, self.world.ur_arm)
         self.plug_sensor = PlugSensor(config_plug_sensor, self.world.ur_arm)
@@ -67,15 +63,15 @@ class EnvironmentReacherPositionCtrl(Environment):
         # Reset robot by default joint configuration
         self.world.reset(render=self.is_render)
         # Get start joint configuration by inverse kinematic
-        X_world2arm = self.world.ur_arm.base_link.get_X_world2link()
-        X0_world2plug = X_world2arm * self.X0_arm2plug
-        X0 = X0_world2plug.random(*self.cfg.reset_variance)
-        joint_config_0 = self.ik_solver.solve(X0)
+        X0_tgt2plug = self.cfg.start_config.random(*self.cfg.reset_variance)
+        X0_world2plug = self.world.ur_arm.get_X_world2base() * self.world.vrt_tgt.X_arm2tgt * X0_tgt2plug
+        joint_pos0 = self.ik_solver.solve(X0_world2plug)
         # Reset robot again
-        self.world.reset(joint_config_0)
+        self.world.reset(joint_pos0)
         self.low_level_control.reset()
-        # Update sensors states
-        self.update_sensors(target_sensor=True)
+        # Set new noisy target pose
+        self.noisy_p_arm2tgt = self.target_sensor.noisy_p_arm2tgt
+        self.noisy_q_arm2tgt = self.target_sensor.noisy_q_arm2tgt
         return self.get_obs()
 
     def step(self, action: npt.NDArray[np.float32]) -> tuple[npt.NDArray[np.float32], float, bool, dict[Any, Any]]:
@@ -86,32 +82,24 @@ class EnvironmentReacherPositionCtrl(Environment):
         self.world.step(render=self.is_render)
         self.clock.tick()
         # Update states
-        self.update_sensors()
         obs = self.get_obs()
         # Evaluate environment
         done = self.done
-        X_PW = Pose().from_pq(self.plug_sensor.p_arm2sensor, self.plug_sensor.q_arm2sensor)
-        X_SW = Pose().from_pq(self.target_sensor.get_pos(), self.target_sensor.get_ori())
-        reward = self.reward.compute(X_PW, X_SW, done)
+        X_PW = Pose().from_pq(self.plug_sensor.noisy_p_arm2sensor, self.plug_sensor.noisy_q_arm2sensor)
+        reward = self.reward.compute(X_PW, self.world.vrt_tgt.X_arm2tgt, done)
         info = self.compose_info()
         return obs, reward, done, info
 
     def close(self) -> None:
         self.world.disconnect()
 
-    def update_sensors(self, target_sensor: bool=False) -> None:
-        if target_sensor:
-            self.target_sensor.update()
-
     def get_obs(self) -> npt.NDArray[np.float32]:
         # Build observation
-        p_arm2plug_arm = self.plug_sensor.p_arm2sensor
-        p_arm2tgt_arm = self.target_sensor.get_pos()
         # Translation plug to target in arm frame
-        p_plug2target_arm = (p_arm2tgt_arm - p_arm2plug_arm).xyz
+        p_plug2target_arm = (self.noisy_p_arm2tgt - self.plug_sensor.noisy_p_arm2sensor).xyz
 
-        q_arm2plug = self.plug_sensor.q_arm2sensor
-        q_arm2tgt = self.target_sensor.get_ori()
+        q_arm2plug = self.plug_sensor.noisy_q_arm2sensor
+        q_arm2tgt = self.target_sensor.noisy_q_arm2tgt
         # Minimal rotation plug to target
         q_plug2tgt = rp_math.quaternion_difference(q_arm2plug, q_arm2tgt).wxyz
         # Glue observation together

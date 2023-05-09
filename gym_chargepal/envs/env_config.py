@@ -21,13 +21,16 @@ testbed_reacher_3dof_position_ctrl_v1 = {
         'T': 100,
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(3,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(7,), dtype=np.float32),
-        # Target configuration with respect to the arm base
-        'target_config': Pose().from_xyz((0.75, 0.1, 0.4)).from_euler_angle((0.0, 90.0, 0.0), degrees=True),
         # Start configuration relative to target configuration'
         'start_config': Pose().from_xyz((0.15, 0.3, -0.15)),
         # Reset variance of the start pose
         # 'reset_variance': ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
         'reset_variance': ((0.1, 0.1, 0.1), (0.0, 0.0, 0.0)),
+    },
+
+    'target': {
+        # Virtual target configuration w.r.t. the arm base
+        'X_arm2tgt': Pose().from_xyz((0.75, 0.1, 0.4)).from_euler_angle((0.0, 90.0, 0.0), degrees=True), 
     },
 
     'low_level_control': {
@@ -45,13 +48,16 @@ testbed_reacher_6dof_position_ctrl_v1 = {
         'T': 100,
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(7,), dtype=np.float32),
-        # Target configuration with respect to the arm base
-        'target_config': Pose().from_xyz((0.75, 0.1, 0.4)).from_euler_angle((0.0, 90.0, 0.0), degrees=True),
         # Start configuration relative to target configuration'
         'start_config': Pose().from_xyz((0.15, 0.3, -0.15)),
         # Reset variance of the start pose
         # 'reset_variance': ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
         'reset_variance': ((0.1, 0.1, 0.1), (0.1 * np.pi, 0.1 * np.pi, 0.1 * np.pi)),
+    },
+
+    'target': {
+        # Virtual target configuration w.r.t. the arm base
+        'X_arm2tgt': Pose().from_xyz((0.75, 0.1, 0.4)).from_euler_angle((0.0, 90.0, 0.0), degrees=True), 
     },
 
     'low_level_control': {
@@ -84,8 +90,9 @@ testbed_plugger_6dof_position_ctrl_v1 = {
         # 'reset_variance': ((0.1, 0.1, 0.1), (0.1 * np.pi, 0.1 * np.pi, 0.1 * np.pi)),
     },
 
-    'world': {
-        'socket_config': Pose().from_xyz((0.90, 0.50, 0.50)).from_euler_angle((0.0, -np.pi/2, 0.0)),
+    'socket': {
+        # Socket configuration w.r.t. the arm base
+        'X_arm2socket': Pose().from_xyz((0.90, 0.50, 0.50)).from_euler_angle((0.0, -np.pi/2, 0.0)),
     },
 
     'low_level_control': {

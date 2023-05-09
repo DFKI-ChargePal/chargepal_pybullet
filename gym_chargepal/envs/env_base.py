@@ -25,7 +25,6 @@ class EnvironmentCfg(ConfigHandler):
     action_space: gym.spaces.Space | None = None
     observation_space: gym.spaces.Space | None = None
     start_config: Pose = Pose()
-    target_config: Pose = Pose() 
     reset_variance: tuple[tuple[float, ...], tuple[float, ...]] = ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
 
 

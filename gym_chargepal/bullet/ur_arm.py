@@ -48,7 +48,7 @@ class URArm:
         self.cfg = URArmCfg()
         self.cfg.update(**config)
         # PyBullet references
-        self.bc: BulletClient | None = None
+        self._bc: BulletClient | None = None
         self._body_id: int | None = None
         # Arm links and joints
         self._base: BodyLink | None = None
@@ -59,7 +59,7 @@ class URArm:
     @property
     def bullet_client(self) -> BulletClient:
         if self.is_connected:
-            return self.bc
+            return self._bc
         else:
             raise RuntimeError("Not connected to PyBullet client.")
 
@@ -97,11 +97,11 @@ class URArm:
     @property
     def is_connected(self) -> bool:
         """ Check if object is connect to PyBullet"""
-        return True if self.bc else False
+        return True if self._bc else False
 
     def connect(self, bullet_client: BulletClient, body_id: int, enable_fts: bool=False) -> None:
         # Safe references
-        self.bc = bullet_client
+        self._bc = bullet_client
         self._body_id = body_id
         # Map joint names to PyBullet joint ids
         self._joint_idx_dict = create_joint_index_dict(
@@ -130,7 +130,7 @@ class URArm:
         if self.is_connected:
             if joint_cfg is None:
                 for joint_name in self._joint_idx_dict.keys():
-                    self.bc.resetJointState(  # type: ignore
+                    self._bc.resetJointState(  # type: ignore
                         bodyUniqueId=self._body_id,
                         jointIndex=self._joint_idx_dict[joint_name],
                         targetValue=self.cfg.joint_default_values[joint_name],
@@ -140,7 +140,7 @@ class URArm:
                 assert len(joint_cfg) == len(self._joint_idx_dict)
                 for k, joint_name in enumerate(self._joint_idx_dict.keys()):
                     joint_state = joint_cfg[k]
-                    self.bc.resetJointState(  # type: ignore
+                    self._bc.resetJointState(  # type: ignore
                         bodyUniqueId=self._body_id,
                         jointIndex=self._joint_idx_dict[joint_name], 
                         targetValue=joint_state,
@@ -153,7 +153,7 @@ class URArm:
     def update(self) -> None:
         """ Update physical pybullet state """
         if self.is_connected:
-            self.state = self.bc.getJointStates(  # type: ignore
+            self.state = self._bc.getJointStates(  # type: ignore
                 bodyUniqueId=self._body_id,
                 jointIndices=[idx for idx in self._joint_idx_dict.values()]
             )

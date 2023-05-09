@@ -73,5 +73,5 @@ class SocketSensor(Sensor):
     def noisy_q_arm2sensor(self) -> Quaternion:
         gt_ori_eul = np.array(self.q_arm2sensor.to_euler_angle(), dtype=np.float64)
         ori_eul_meas: npt.NDArray[np.float64] = gt_ori_eul + np.random.randn(3) * self.ori_noise + self.ori_bias
-        ori_meas = Quaternion().from_xyzw(self.socket.bc.getQuaternionFromEuler(ori_eul_meas.tolist()))
+        ori_meas = Quaternion().from_xyzw(self.socket.bullet_client.getQuaternionFromEuler(ori_eul_meas.tolist()))
         return ori_meas

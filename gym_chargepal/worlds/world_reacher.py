@@ -9,9 +9,9 @@ from rigmopy import Pose
 
 # local
 from gym_chargepal.bullet.ur_arm import URArm
-import gym_chargepal.utility.cfg_handler as ch
 import gym_chargepal.bullet.utility as pb_utils
 from gym_chargepal.worlds.world import WorldCfg, World
+from gym_chargepal.utility.virtual_target import VirtualTarget
 
 # mypy
 from typing import Any
@@ -35,11 +35,10 @@ class WorldReacherCfg(WorldCfg):
     robot_config: Pose = Pose().from_xyz(
         (_TABLE_WIDTH - _BASE_PLATE_SIZE/2, _PROFILE_SIZE + _BASE_PLATE_SIZE/2, _BASE_PLATE_HEIGHT)
         ).from_euler_angle(angles=(0.0, 0.0 ,np.pi/2))
-    target_config: Pose = Pose().from_xyz((0.0, 0.0, 1.2)).from_euler_angle(angles=(np.pi/2, 0.0, 0.0))
 
 class WorldReacher(World):
 
-    def __init__(self, config: dict[str, Any]) -> None:
+    def __init__(self, config: dict[str, Any], config_arm: dict[str, Any], config_tgt: dict[str, Any]) -> None:
         """ Build a robot world where the task is to reach a point from a random start configuration
 
         Args:
@@ -55,11 +54,8 @@ class WorldReacher(World):
         self.plane_id = -1
         self.robot_id = -1
         self.target_id = -1
-        ur_arm_config = ch.search(config, 'ur_arm')
-        self.ur_arm = URArm(ur_arm_config)
-        # Extract start configurations
-        self.X_arm2tgt = self.cfg.target_config
-        self.X_world2tgt = Pose()
+        self.ur_arm = URArm(config_arm)
+        self.vrt_tgt = VirtualTarget(config_tgt)
 
     def reset(self, joint_conf: tuple[float, ...] | None = None, render: bool = False) -> None:
         if self.bullet_client is None:
@@ -93,7 +89,6 @@ class WorldReacher(World):
         
         self.ur_arm.reset(joint_cfg=joint_conf)
         self.ur_arm.update()
-        self.X_world2tgt = self.ur_arm.base_link.get_X_world2link() * self.X_arm2tgt
         self.draw_target(render)
 
     def sub_step(self) -> None:
@@ -104,7 +99,7 @@ class WorldReacher(World):
             if self.target_id > -1:
                 self.bullet_client.removeBody(self.target_id)
             self.target_id = pb_utils.draw_cylinder_marker(
-                pose=self.X_world2tgt,
+                pose=self.ur_arm.base_link.get_X_world2link() * self.vrt_tgt.X_arm2tgt,
                 radius=0.035, 
                 height=0.080,
                 color=(1, 0, 0, 0.75), 
