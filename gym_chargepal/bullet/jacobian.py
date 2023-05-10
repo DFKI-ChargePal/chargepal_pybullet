@@ -36,7 +36,7 @@ class Jacobian:
         :return: translational and rotational jacobians
         """
         # Get the local inertial frame position of the end effector link
-        p_ee2inertial = self.ur_arm.tcp_link.get_p_link2inertial()
+        p_ee2inertial = self.ur_arm.tcp_link.p_link2inertial
 
         # Important to omit segmentation faults...
         # pos, vel, acc must be of type list or tuple

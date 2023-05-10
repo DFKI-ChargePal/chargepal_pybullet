@@ -87,7 +87,7 @@ class Socket:
     def X_arm2socket(self) -> Pose:
         if self.is_connected:
             # Get socket pose
-            X_arm2socket = self.ur_arm.X_world2arm.inverse() * self.socket.get_X_world2link()
+            X_arm2socket = self.ur_arm.X_world2arm.inverse() * self.socket.X_world2link
         else:
             X_arm2socket = self.cfg.X_arm2socket
         return X_arm2socket

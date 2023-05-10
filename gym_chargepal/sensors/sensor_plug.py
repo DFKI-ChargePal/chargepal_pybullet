@@ -53,4 +53,4 @@ class PlugSensor(Sensor):
     @property
     def noisy_twist(self) -> Vector6d:
         # TODO: Add noise
-        return self.ur_arm.tcp_link.get_twist_world2link()
+        return self.ur_arm.tcp_link.twist_world2link

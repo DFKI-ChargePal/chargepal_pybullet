@@ -45,27 +45,33 @@ class BodyLink:
     # //////////////////////////////////////////////////////////////////////// #
     # /// make sure to update the sensor state before calling this methods /// #
     # //////////////////////////////////////////////////////////////////////// #
-    def get_p_world2link(self) -> Vector3d:
+    @property
+    def p_world2link(self) -> Vector3d:
         state_idx = BulletLinkState.WORLD_LINK_FRAME_POS
         return Vector3d().from_xyz(self.raw_state[state_idx])
 
-    def get_q_world2link(self) -> Quaternion:
+    @property
+    def q_world2link(self) -> Quaternion:
         # make sure to update the sensor state before calling this method
         state_idx = BulletLinkState.WORLD_LINK_FRAME_ORI
         return Quaternion().from_xyzw(self.raw_state[state_idx])
 
-    def get_X_world2link(self) -> Pose:
-        return Pose().from_pq(self.get_p_world2link(), self.get_q_world2link())
+    @property
+    def X_world2link(self) -> Pose:
+        return Pose().from_pq(self.p_world2link, self.q_world2link)
 
-    def get_p_link2inertial(self) -> Vector3d:
+    @property
+    def p_link2inertial(self) -> Vector3d:
         state_idx = BulletLinkState.LOCAL_INERTIAL_POS
         return Vector3d().from_xyz(self.raw_state[state_idx])
 
-    def get_q_link2inertial(self) -> Quaternion:
+    @property
+    def q_link2inertial(self) -> Quaternion:
         state_idx = BulletLinkState.LOCAL_INERTIAL_ORI
         return Quaternion().from_xyzw(self.raw_state[state_idx])
 
-    def get_twist_world2link(self) -> Vector6d:
+    @property
+    def twist_world2link(self) -> Vector6d:
         lin_vel_state_idx = BulletLinkState.WORLD_LINK_LIN_VEL
         ang_vel_state_idx = BulletLinkState.WORLD_LINK_ANG_VEL
         return Vector6d().from_xyzXYZ(self.raw_state[lin_vel_state_idx] + self.raw_state[ang_vel_state_idx])

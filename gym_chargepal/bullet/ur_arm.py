@@ -189,9 +189,9 @@ class URArm:
     def X_arm2plug(self) -> Pose:
         if self.is_connected:
             # Get arm pose
-            X_world2arm = self._base.get_X_world2link()  # type: ignore
+            X_world2arm = self.base_link.X_world2link
             # Get tcp pose
-            X_world2tcp = self._tcp.get_X_world2link()  # type: ignore
+            X_world2tcp = self.tcp_link.X_world2link
             # Get tcp pose wrt arm pose
             X_arm2tcp = X_world2arm.inverse() * X_world2tcp
         else:
@@ -211,7 +211,7 @@ class URArm:
     def X_world2arm(self) -> Pose:
         if self.is_connected:
             # Get base pose
-            X_world2base = self._base.get_X_world2link()  # type: ignore
+            X_world2base = self.base_link.X_world2link
         else:
             X_world2base = self.cfg.X_world2arm
         return X_world2base

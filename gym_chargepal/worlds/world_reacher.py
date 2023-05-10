@@ -101,7 +101,7 @@ class WorldReacher(World):
             if self.target_id > -1:
                 self.bullet_client.removeBody(self.target_id)
             self.target_id = pb_utils.draw_cylinder_marker(
-                pose=self.ur_arm.base_link.get_X_world2link() * self.vrt_tgt.X_arm2tgt,
+                pose=self.ur_arm.base_link.X_world2link * self.vrt_tgt.X_arm2tgt,
                 radius=0.035, 
                 height=0.080,
                 color=(1, 0, 0, 0.75), 
