@@ -8,6 +8,7 @@ from rigmopy import Vector3d, Quaternion, Pose
 from pybullet_utils.bullet_client import BulletClient
 
 # local
+from gym_chargepal.bullet.ur_arm import URArm
 from gym_chargepal.bullet.body_link import BodyLink
 from gym_chargepal.utility.cfg_handler import ConfigHandler
 
@@ -21,17 +22,18 @@ LOGGER = logging.getLogger(__name__)
 @dataclass
 class SocketCfg(ConfigHandler):
     link_name = "socket"
-    X_arm2socket: Pose = Pose().from_xyz((0.635 + 0.05, 0.319, 0.271)).from_euler_angle((0.0, -np.pi/2, 0.0))
+    X_arm2socket: Pose = Pose().from_xyz((0.635, 0.319, 0.271)).from_euler_angle((0.0, np.pi/2, 0.0))
 
 
 class Socket:
 
     _CONNECTION_ERROR_MSG = f"No connection to PyBullet. Please fist connect via {__name__}.connect()"
 
-    def __init__(self, config: dict[str, Any]):
+    def __init__(self, config: dict[str, Any], ur_arm: URArm):
         # Create configuration and override values
         self.cfg = SocketCfg()
         self.cfg.update(**config)
+        self.ur_arm = ur_arm
         # PyBullet references
         self._bc: BulletClient | None = None
         self._body_id: int | None = None
@@ -85,15 +87,15 @@ class Socket:
     def X_arm2socket(self) -> Pose:
         if self.is_connected:
             # Get socket pose
-            X_world2socket = self._socket.get_X_world2link()  # type: ignore
+            X_arm2socket = self.ur_arm.X_world2arm.inverse() * self.socket.get_X_world2link()
         else:
-            X_world2socket = self.cfg.X_arm2socket
-        return X_world2socket
+            X_arm2socket = self.cfg.X_arm2socket
+        return X_arm2socket
 
     @property
-    def p_world2socket(self) -> Vector3d:
+    def p_arm2socket(self) -> Vector3d:
         return self.X_arm2socket.p
 
     @property
-    def q_world2socket(self) -> Quaternion:
+    def q_arm2socket(self) -> Quaternion:
         return self.X_arm2socket.q

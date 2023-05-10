@@ -30,6 +30,7 @@ class EnvironmentReacherPositionCtrl(Environment):
         # Extract component hyperparameter from kwargs
         config_world = ch.search(kwargs, 'world')
         config_ur_arm = ch.search(kwargs, 'ur_arm')
+        config_start = ch.search(kwargs, 'start')
         config_target = ch.search(kwargs, 'target')
         config_reward = ch.search(kwargs, 'reward')
         config_ik_solver = ch.search(kwargs, 'ik_solver')
@@ -41,7 +42,7 @@ class EnvironmentReacherPositionCtrl(Environment):
         self.noisy_p_arm2tgt = Vector3d()
         self.noisy_q_arm2tgt = Quaternion()
         # Components
-        self.world = WorldReacher(config_world, config_ur_arm, config_target)
+        self.world = WorldReacher(config_world, config_ur_arm, config_start, config_target)
         self.ik_solver = IKSolver(config_ik_solver, self.world.ur_arm)
         self.control_interface = JointPositionMotorControl(config_control_interface, self.world.ur_arm)
         self.plug_sensor = PlugSensor(config_plug_sensor, self.world.ur_arm)
@@ -53,21 +54,19 @@ class EnvironmentReacherPositionCtrl(Environment):
             self.control_interface
         )
         self.reward = DistanceReward(config_reward, self.clock)
+        # Reset robot by default joint configuration
+        self.world.reset()
 
     def reset(self) -> npt.NDArray[np.float32]:
         # Reset environment
         self.clock.reset()
         if self.toggle_render_mode:
             self.world.disconnect()
+            self.world.reset(render=self.is_render)  # Reset robot by default joint configuration
             self.toggle_render_mode = False
-        # Reset robot by default joint configuration
-        self.world.reset(render=self.is_render)
-        # Get start joint configuration by inverse kinematic
-        X0_tgt2plug = self.cfg.start_config.random(*self.cfg.reset_variance)
-        X0_world2plug = self.world.ur_arm.X_world2arm * self.world.vrt_tgt.X_arm2tgt * X0_tgt2plug
-        joint_pos0 = self.ik_solver.solve(X0_world2plug)
-        # Reset robot again
-        self.world.reset(joint_pos0)
+        # Get start joint start configuration by inverse kinematic
+        joint_pos0 = self.ik_solver.solve(self.world.sample_X0())
+        self.world.reset(joint_conf=joint_pos0, render=self.is_render)
         self.low_level_control.reset()
         # Set new noisy target pose
         self.noisy_p_arm2tgt = self.target_sensor.noisy_p_arm2tgt

@@ -31,6 +31,7 @@ class EnvironmentReacherVelocityCtrl(Environment):
         # Extract component hyperparameter from kwargs
         config_world = ch.search(kwargs, 'world')
         config_ur_arm = ch.search(kwargs, 'ur_arm')
+        config_start = ch.search(kwargs, 'start')
         config_target = ch.search(kwargs, 'target')
         config_reward = ch.search(kwargs, 'reward')
         config_jacobian = ch.search(kwargs, 'jacobian')
@@ -46,7 +47,7 @@ class EnvironmentReacherVelocityCtrl(Environment):
         config_low_level_control['plug_lin_config'] = self.x0_WP.xyz
         config_low_level_control['plug_ang_config'] = self.q0_WP.to_euler_angle()
         # Components
-        self.world = WorldReacher(config_world, config_ur_arm, config_target)
+        self.world = WorldReacher(config_world, config_ur_arm, config_start, config_target)
         self.jacobian = Jacobian(config_jacobian, self.world.ur_arm)
         self.ik_solver = IKSolver(config_ik_solver, self.world.ur_arm)
         self.control_interface = JointVelocityMotorControl(config_control_interface, self.world.ur_arm)
@@ -71,8 +72,7 @@ class EnvironmentReacherVelocityCtrl(Environment):
         # Reset robot by default joint configuration
         self.world.reset(render=self.is_render)
         # Get start joint configuration by inverse kinematic
-        X0 = self.X0_WP.random(*self.cfg.reset_variance)
-        joint_config_0 = self.ik_solver.solve(X0)
+        joint_config_0 = self.ik_solver.solve(self.world.sample_X0())
         # Reset robot again
         self.world.reset(joint_config_0)
         # Update sensors states

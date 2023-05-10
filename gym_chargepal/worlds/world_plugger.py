@@ -9,8 +9,8 @@ from rigmopy import Pose
 # local
 from gym_chargepal.bullet.ur_arm import URArm
 from gym_chargepal.bullet.socket import Socket
-import gym_chargepal.utility.cfg_handler as ch
 from gym_chargepal.worlds.world import WorldCfg, World
+from gym_chargepal.utility.start_sampler import StartSampler
 
 # mypy
 from typing import Any
@@ -18,12 +18,7 @@ from typing import Any
 
 LOGGER = logging.getLogger(__name__)
 
-
 _TABLE_HEIGHT = 0.8136
-_TABLE_WIDTH = 0.81
-_PROFILE_SIZE = 0.045
-_BASE_PLATE_SIZE = 0.225
-_BASE_PLATE_HEIGHT = 0.0225
 
 
 class WorldPluggerCfg(WorldCfg):
@@ -33,17 +28,23 @@ class WorldPluggerCfg(WorldCfg):
     socket_urdf: str = 'tdt_socket.urdf'
     plane_config: Pose = Pose().from_xyz((0.0, 0.0, -_TABLE_HEIGHT))
     env_config: Pose = Pose()
-    robot_config: Pose = Pose().from_xyz(
-        (_TABLE_WIDTH - _BASE_PLATE_SIZE/2, _PROFILE_SIZE + _BASE_PLATE_SIZE/2, _BASE_PLATE_HEIGHT)
-        ).from_euler_angle(angles=(0.0, 0.0, np.pi/2))
+
 
 class WorldPlugger(World):
 
-    def __init__(self, config: dict[str, Any], config_arm: dict[str, Any], config_socket: dict[str, Any]):
+    def __init__(self, 
+                 config:        dict[str, Any], 
+                 config_arm:    dict[str, Any], 
+                 config_start:  dict[str, Any],
+                 config_socket: dict[str, Any]
+                 ) -> None:
         """ Build a robot world where the task is to connect some type of plug with some type of socket 
 
         Args:
-            config: Dictionary to overwrite values of the world configuration class
+            config:        Dictionary to overwrite values of the world configuration class
+            config_arm:    Dictionary to overwrite values of the UR arm configuration class
+            config_start:  Dictionary to overwrite values of the start sampler configuration class
+            config_socket: Dictionary to overwrite values of the socket configuration class
         """
         # Call super class
         super().__init__(config=config)
@@ -57,15 +58,12 @@ class WorldPlugger(World):
         self.socket_id = -1
         config_arm['ft_buffer_size'] = self.sim_steps + 1
         self.ur_arm = URArm(config_arm)
-        self.socket = Socket(config_socket)
-        # Extract start configurations
-        self.env_pos, self.env_ori = self.cfg.env_config.xyz_xyzw
-        self.plane_pos, self.plane_ori = self.cfg.plane_config.xyz_xyzw
-        self.robot_pos, self.robot_ori = self.cfg.robot_config.xyz_xyzw
-        self.socket_pos, self.socket_ori = (self.cfg.robot_config * self.socket.X_arm2socket).xyz_xyzw
+        self.start = StartSampler(config_start)
+        self.socket = Socket(config_socket, self.ur_arm)
 
     def sample_X0(self) -> Pose:
-        return Pose()
+        X0_world2plug = self.ur_arm.X_world2arm * self.socket.X_arm2socket * self.start.random_X_tgt2plug
+        return X0_world2plug
 
     def reset(self, joint_conf: tuple[float, ...] | None = None, render: bool = False) -> None:
         if self.bullet_client is None:
@@ -75,26 +73,27 @@ class WorldPlugger(World):
             # Load plane
             self.plane_id = self.bullet_client.loadURDF(
                 fileName=self.cfg.plane_urdf,
-                basePosition=self.plane_pos,
-                baseOrientation=self.plane_ori
+                basePosition=self.cfg.plane_config.xyz,
+                baseOrientation=self.cfg.plane_config.xyzw
                 )
             # Load environment
             self.env_id = self.bullet_client.loadURDF(
                 fileName=str(self.urdf_pkg_path.joinpath(self.cfg.env_urdf)),
-                basePosition=self.env_pos,
-                baseOrientation=self.env_ori
+                basePosition=self.cfg.env_config.xyz,
+                baseOrientation=self.cfg.env_config.xyzw
             )
             # Load robot
             self.robot_id = self.bullet_client.loadURDF(
                 fileName=str(self.urdf_pkg_path.joinpath(self.cfg.robot_urdf)),
-                basePosition=self.robot_pos,
-                baseOrientation=self.robot_ori
+                basePosition=self.ur_arm.X_world2arm.xyz,
+                baseOrientation=self.ur_arm.X_world2arm.xyzw
                 )
             # Load socket
+            socket_pos, socket_ori = (self.ur_arm.X_world2arm * self.socket.X_arm2socket).xyz_xyzw
             self.socket_id = self.bullet_client.loadURDF(
                 fileName=str(self.urdf_pkg_path.joinpath(self.cfg.socket_urdf)),
-                basePosition=self.socket_pos,
-                baseOrientation=self.socket_ori
+                basePosition=socket_pos,
+                baseOrientation=socket_ori
             )
             # Set gravity
             self.bullet_client.setGravity(*self.cfg.gravity)

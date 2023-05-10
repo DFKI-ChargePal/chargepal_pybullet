@@ -46,7 +46,7 @@ class URArmCfg(ConfigHandler):
     ft_buffer_size: int = 1
     X_world2arm: Pose = Pose().from_xyz(
         (_TABLE_WIDTH - _BASE_PLATE_SIZE/2, _PROFILE_SIZE + _BASE_PLATE_SIZE/2, _BASE_PLATE_HEIGHT)
-        ).from_euler_angle(angles=(0.0, 0.0 ,np.pi/2))
+        ).from_euler_angle(angles=(0.0, 0.0, np.pi/2))
 
 class URArm:
 

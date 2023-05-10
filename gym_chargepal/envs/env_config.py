@@ -21,13 +21,10 @@ testbed_reacher_3dof_position_ctrl_v1 = {
         'T': 100,
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(3,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(7,), dtype=np.float32),
-        # Start configuration relative to target configuration'
-        'start_config': Pose().from_xyz((0.15, 0.3, -0.15)),
-        # 'reset_variance': ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
-        'reset_variance': ((0.1, 0.1, 0.1), (0.0, 0.0, 0.0)),
     },
 
     'start': {
+        # Start configuration w.r.t. target configuration'
         'X_tgt2plug': Pose().from_xyz((0.15, 0.3, -0.15)),
         # Reset variance of the start pose
         'variance': ((0.1, 0.1, 0.1), (0.0, 0.0, 0.0)), 
@@ -43,7 +40,6 @@ testbed_reacher_3dof_position_ctrl_v1 = {
         'linear_enabled_motion_axis': (True, True, True),
         'angular_enabled_motion_axis': (False, False, False),
     },
-
 }
 
 testbed_reacher_6dof_position_ctrl_v1 = {
@@ -53,11 +49,13 @@ testbed_reacher_6dof_position_ctrl_v1 = {
         'T': 100,
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(7,), dtype=np.float32),
-        # Start configuration relative to target configuration'
-        'start_config': Pose().from_xyz((0.15, 0.3, -0.15)),
+    },
+
+    'start': {
+        # Start configuration w.r.t. target configuration'
+        'X_tgt2plug': Pose().from_xyz((0.15, 0.3, -0.15)),
         # Reset variance of the start pose
-        # 'reset_variance': ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
-        'reset_variance': ((0.1, 0.1, 0.1), (0.1 * np.pi, 0.1 * np.pi, 0.1 * np.pi)),
+        'variance': ((0.1, 0.1, 0.1), (0.1 * np.pi, 0.1 * np.pi, 0.1 * np.pi)), 
     },
 
     'target': {
@@ -87,17 +85,18 @@ testbed_plugger_6dof_position_ctrl_v1 = {
         'T': 100,
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(7,), dtype=np.float32),
-        # Start configuration relative to target configuration'
-        # 'start_config': Pose(),
-        'start_config': Pose().from_xyz((0.0, 0.0, -0.1)),
+    },
+
+    'start': {
+        # Start configuration w.r.t. target configuration'
+        'X_tgt2plug': Pose().from_xyz((0.0, 0.0, -0.1)),
         # Reset variance of the start pose
-        'reset_variance': ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
-        # 'reset_variance': ((0.1, 0.1, 0.1), (0.1 * np.pi, 0.1 * np.pi, 0.1 * np.pi)),
+        'variance': ((0.1, 0.1, 0.1), (0.1 * np.pi, 0.1 * np.pi, 0.1 * np.pi)), 
     },
 
     'socket': {
         # Socket configuration w.r.t. the arm base
-        'X_arm2socket': Pose().from_xyz((0.90, 0.50, 0.50)).from_euler_angle((0.0, -np.pi/2, 0.0)),
+        'X_arm2socket': Pose().from_xyz((0.90, 0.50, 0.50)).from_euler_angle((0.0, np.pi/2, 0.0)),
     },
 
     'low_level_control': {

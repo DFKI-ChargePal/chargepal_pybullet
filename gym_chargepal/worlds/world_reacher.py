@@ -9,13 +9,13 @@ from rigmopy import Pose
 from gym_chargepal.bullet.ur_arm import URArm
 import gym_chargepal.bullet.utility as pb_utils
 from gym_chargepal.worlds.world import WorldCfg, World
+from gym_chargepal.utility.start_sampler import StartSampler
 from gym_chargepal.utility.virtual_target import VirtualTarget
 
 # mypy
 from typing import Any
 
 LOGGER = logging.getLogger(__name__)
-
 
 _TABLE_HEIGHT = 0.8136
 
@@ -29,11 +29,19 @@ class WorldReacherCfg(WorldCfg):
 
 class WorldReacher(World):
 
-    def __init__(self, config: dict[str, Any], config_arm: dict[str, Any], config_tgt: dict[str, Any]) -> None:
+    def __init__(self,
+                 config:       dict[str, Any], 
+                 config_arm:   dict[str, Any], 
+                 config_start: dict[str, Any], 
+                 config_tgt:   dict[str, Any]
+                 ) -> None:
         """ Build a robot world where the task is to reach a point from a random start configuration
 
         Args:
-            config: Dictionary to overwrite values of the world configuration class
+            config:       Dictionary to overwrite values of the world configuration class
+            config_arm:   Dictionary to overwrite values of the UR arm configuration class
+            config_start: Dictionary to overwrite values of the start sampler configuration class
+            config_tgt:   Dictionary to overwrite values of the virtual target configuration class
         """
         # Call super class
         super().__init__(config=config)
@@ -46,10 +54,12 @@ class WorldReacher(World):
         self.robot_id = -1
         self.target_id = -1
         self.ur_arm = URArm(config_arm)
+        self.start = StartSampler(config_start)
         self.vrt_tgt = VirtualTarget(config_tgt)
 
     def sample_X0(self) -> Pose:
-        return Pose()
+        X0_world2plug = self.ur_arm.X_world2arm * self.vrt_tgt.X_arm2tgt * self.start.random_X_tgt2plug
+        return X0_world2plug
 
     def reset(self, joint_conf: tuple[float, ...] | None = None, render: bool = False) -> None:
         if self.bullet_client is None:

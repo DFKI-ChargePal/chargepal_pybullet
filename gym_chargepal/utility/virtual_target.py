@@ -15,6 +15,7 @@ from typing import Any
 LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
 class VirtualTargetCfg(ConfigHandler):
     X_arm2tgt: Pose = Pose().from_xyz((0.0, 0.0, 1.2)).from_euler_angle(angles=(np.pi/2, 0.0, 0.0))
 
