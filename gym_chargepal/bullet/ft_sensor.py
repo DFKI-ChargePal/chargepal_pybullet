@@ -49,7 +49,8 @@ class FTSensor:
             jointIndex=self.joint_idx
         )
 
-    def get_wrench(self) -> Vector6d:
+    @property
+    def wrench(self) -> Vector6d:
         state_idx = BulletJointState.JOINT_REACTION_FORCE
         wrench: Tuple[float, ...] = self.state[state_idx]
         self.buffer.append(np.array(wrench, dtype=np.float64))

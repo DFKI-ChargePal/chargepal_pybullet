@@ -50,7 +50,7 @@ class FTSensor(Sensor):
         # Mypy check whether ft sensor object exist 
         assert self.ur_arm._fts
         # Get sensor state and bring values in a range between -1.0 and +1.0
-        wrench = self.ur_arm._fts.get_wrench()
+        wrench = self.ur_arm._fts.wrench
         norm_wrench: npt.NDArray[np.float_] = np.clip(wrench.to_numpy(), self.ft_min, self.ft_max) / self.ft_max
         return Vector6d().from_xyzXYZ(norm_wrench)
 

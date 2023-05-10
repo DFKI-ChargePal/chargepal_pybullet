@@ -86,14 +86,12 @@ class EnvironmentPluggerPositionCtrl(Environment):
         self.world.step(render=self.is_render)
         self.clock.tick()
         self.ft_sensor.render_ft_bar(render=self.is_render)
-        # Get new observation
-        obs = self.get_obs()
-        # Evaluate environment
+        # Update and evaluate state
         done = self.done
-        F_tcp = self.ft_sensor.wrench
-        reward = self.reward.compute(self.world.ur_arm.X_arm2plug, self.world.socket.X_arm2socket, F_tcp, done)
-        # reward = self.reward.compute(X_tcp, X_tgt, done)
+        obs = self.get_obs()
         info = self.compose_info()
+        reward = self.reward.compute(
+            self.world.ur_arm.X_arm2plug, self.world.socket.X_arm2socket, self.ft_sensor.wrench, done)
         return obs, reward, done, info
 
     def close(self) -> None:
@@ -103,17 +101,18 @@ class EnvironmentPluggerPositionCtrl(Environment):
         # Build noisy observation
         noisy_p_plug2socket = (self.noisy_p_arm2socket - self.plug_sensor.noisy_p_arm2sensor).xyz
         noisy_q_plug2socket = rp_math.quaternion_difference(self.plug_sensor.noisy_q_arm2sensor, self.noisy_q_arm2socket).wxyz
-        F_tcp_meas = self.ft_sensor.noisy_wrench.xyzXYZ
-        obs = np.array((noisy_p_plug2socket + noisy_q_plug2socket + F_tcp_meas), dtype=np.float32)
-        # Evaluate metrics
-        q_arm2socket_ = np.array(self.socket_sensor.q_arm2sensor.wxyz)
-        q_arm2plug_ = np.array(self.world.ur_arm.q_arm2plug.wxyz)
-        p_plug2socket = (self.socket_sensor.p_arm2sensor - self.world.ur_arm.p_arm2plug).xyz
-        self.task_pos_error = np.sqrt(np.sum(np.square(p_plug2socket)))
-        self.task_ang_error = np.arccos(np.clip((2 * (q_arm2socket_.dot(q_arm2plug_))**2 - 1), -1.0, 1.0))
+        noisy_F_plug = self.ft_sensor.noisy_wrench.xyzXYZ
+        # Glue observation together
+        obs = np.array((noisy_p_plug2socket + noisy_q_plug2socket + noisy_F_plug), dtype=np.float32)
         return obs
 
     def compose_info(self) -> dict[str, Any]:
+        # Calculate evaluation metrics
+        p_plug2target = (self.world.socket.p_arm2socket - self.world.ur_arm.p_arm2plug).xyz
+        q_arm2tgt = np.array(self.world.socket.q_arm2socket.wxyz)
+        q_arm2plug = np.array(self.world.ur_arm.q_arm2plug.wxyz)
+        self.task_pos_error = np.sqrt(np.sum(np.square(p_plug2target)))
+        self.task_ang_error = np.arccos(np.clip((2 * (q_arm2tgt.dot(q_arm2plug))**2 - 1), -1.0, 1.0))
         info = {
             'error_pos': self.task_pos_error,
             'error_ang': self.task_ang_error,

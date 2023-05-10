@@ -80,13 +80,11 @@ class EnvironmentReacherPositionCtrl(Environment):
         # Step simulation
         self.world.step(render=self.is_render)
         self.clock.tick()
-        # Update states
-        obs = self.get_obs()
-        # Evaluate environment
+        # Update and evaluate state
         done = self.done
-        X_PW = Pose().from_pq(self.plug_sensor.noisy_p_arm2sensor, self.plug_sensor.noisy_q_arm2sensor)
-        reward = self.reward.compute(X_PW, self.world.vrt_tgt.X_arm2tgt, done)
+        obs = self.get_obs()
         info = self.compose_info()
+        reward = self.reward.compute(self.world.ur_arm.X_arm2plug, self.world.vrt_tgt.X_arm2tgt, done)
         return obs, reward, done, info
 
     def close(self) -> None:
@@ -95,22 +93,20 @@ class EnvironmentReacherPositionCtrl(Environment):
     def get_obs(self) -> npt.NDArray[np.float32]:
         # Build observation
         # Translation plug to target in arm frame
-        p_plug2target_arm = (self.noisy_p_arm2tgt - self.plug_sensor.noisy_p_arm2sensor).xyz
-
-        q_arm2plug = self.plug_sensor.noisy_q_arm2sensor
-        q_arm2tgt = self.target_sensor.noisy_q_arm2tgt
+        noisy_p_plug2target = (self.noisy_p_arm2tgt - self.plug_sensor.noisy_p_arm2sensor).xyz
         # Minimal rotation plug to target
-        q_plug2tgt = rp_math.quaternion_difference(q_arm2plug, q_arm2tgt).wxyz
+        noisy_q_plug2tgt = rp_math.quaternion_difference(self.plug_sensor.noisy_q_arm2sensor, self.target_sensor.noisy_q_arm2tgt).wxyz
         # Glue observation together
-        obs = np.array((p_plug2target_arm + q_plug2tgt), dtype=np.float32)
-        # Calculate evaluation metrics
-        q_arm2tgt_ = np.array(q_arm2tgt.wxyz)
-        q_arm2plug_ = np.array(q_arm2plug.wxyz)
-        self.task_pos_error = np.sqrt(np.sum(np.square(p_plug2target_arm)))
-        self.task_ang_error = np.arccos(np.clip((2 * (q_arm2tgt_.dot(q_arm2plug_))**2 - 1), -1.0, 1.0))
+        obs = np.array((noisy_p_plug2target + noisy_q_plug2tgt), dtype=np.float32)
         return obs
 
     def compose_info(self) -> dict[str, Any]:
+        # Calculate evaluation metrics
+        p_plug2target = (self.world.vrt_tgt.p_arm2tgt - self.world.ur_arm.p_arm2plug).xyz
+        q_arm2tgt = np.array(self.world.vrt_tgt.q_arm2tgt.wxyz)
+        q_arm2plug = np.array(self.world.ur_arm.q_arm2plug.wxyz)
+        self.task_pos_error = np.sqrt(np.sum(np.square(p_plug2target)))
+        self.task_ang_error = np.arccos(np.clip((2 * (q_arm2tgt.dot(q_arm2plug))**2 - 1), -1.0, 1.0))
         info = {
             'error_pos': self.task_pos_error,
             'error_ang': self.task_ang_error,
