@@ -36,9 +36,9 @@ class JointSensor(Sensor):
     @property
     def noisy_pos(self) -> Tuple[float, ...]:
         # TODO: Add noise
-        return self.ur_arm.get_joint_pos()
+        return self.ur_arm.joint_pos
 
     @property
     def noisy_vel(self) -> Tuple[float, ...]:
         # TODO: Add noise
-        return self.ur_arm.get_joint_vel()
+        return self.ur_arm.joint_vel

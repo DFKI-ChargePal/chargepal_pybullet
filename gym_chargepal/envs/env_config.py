@@ -23,9 +23,14 @@ testbed_reacher_3dof_position_ctrl_v1 = {
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(7,), dtype=np.float32),
         # Start configuration relative to target configuration'
         'start_config': Pose().from_xyz((0.15, 0.3, -0.15)),
-        # Reset variance of the start pose
         # 'reset_variance': ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
         'reset_variance': ((0.1, 0.1, 0.1), (0.0, 0.0, 0.0)),
+    },
+
+    'start': {
+        'X_tgt2plug': Pose().from_xyz((0.15, 0.3, -0.15)),
+        # Reset variance of the start pose
+        'variance': ((0.1, 0.1, 0.1), (0.0, 0.0, 0.0)), 
     },
 
     'target': {

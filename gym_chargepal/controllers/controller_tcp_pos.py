@@ -77,8 +77,8 @@ class TcpPositionController(Controller):
         self.ori_action_ids = slice(start_idx, stop_idx)
 
     def reset(self) -> None:
-        self.pos0_base2tcp = np.array(self.arm.get_p_base2tcp().xyz)
-        self.ori0_base2tcp = np.array(self.arm.get_q_base2tcp().to_euler_angle())
+        self.pos0_base2tcp = np.array(self.arm.p_arm2plug.xyz)
+        self.ori0_base2tcp = np.array(self.arm.q_arm2plug.to_euler_angle())
 
     def update(self, action: npt.NDArray[np.float32]) -> None:
         """ Updates the tcp position controller
@@ -95,8 +95,8 @@ class TcpPositionController(Controller):
         action[self.pos_action_ids] *= self.wa_lin
         action[self.ori_action_ids] *= self.wa_ang
         # Get current pose
-        pos_base2tcp = np.array(self.arm.get_p_base2tcp().xyz)
-        ori_base2tcp = np.array(self.arm.get_q_base2tcp().to_euler_angle())
+        pos_base2tcp = np.array(self.arm.p_arm2plug.xyz)
+        ori_base2tcp = np.array(self.arm.q_arm2plug.to_euler_angle())
         # Increment pose by new action
         pos_base2tcp[self.pos_motion_axis[MotionAxis.ENABLED]] += action[self.pos_action_ids]
         ori_base2tcp[self.ori_motion_axis[MotionAxis.ENABLED]] += action[self.ori_action_ids]
@@ -106,7 +106,7 @@ class TcpPositionController(Controller):
         # Compose new end-effector pose
         X_base2tcp = Pose().from_xyz(pos_base2tcp).from_euler_angle(ori_base2tcp)
         # Transform into world space
-        X_world2tcp = self.arm.get_X_world2base() * X_base2tcp
+        X_world2tcp = self.arm.X_world2arm * X_base2tcp
         # Transform to joint space positions
         joint_pos = self.ik_solver.solve(X_world2tcp)
         # Send command to robot

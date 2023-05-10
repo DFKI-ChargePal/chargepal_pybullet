@@ -51,7 +51,7 @@ class SocketSensor(Sensor):
     @property
     def X_arm2sensor(self) -> Pose:
         X_world2socket = self.socket.socket.get_X_world2link()
-        X_world2arm = self.ur_arm.get_X_world2base()
+        X_world2arm = self.ur_arm.X_world2arm
         X_arm2socket = X_world2arm.inverse() * X_world2socket
         return X_arm2socket
 

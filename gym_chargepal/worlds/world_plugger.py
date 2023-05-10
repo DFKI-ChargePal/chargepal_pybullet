@@ -65,6 +65,9 @@ class WorldPlugger(World):
         self.robot_pos, self.robot_ori = self.cfg.robot_config.xyz_xyzw
         self.socket_pos, self.socket_ori = (self.cfg.robot_config * self.socket.X_arm2socket).xyz_xyzw
 
+    def sample_X0(self) -> Pose:
+        return Pose()
+
     def reset(self, joint_conf: tuple[float, ...] | None = None, render: bool = False) -> None:
         if self.bullet_client is None:
             # Connect to bullet simulation server

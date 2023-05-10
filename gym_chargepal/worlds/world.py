@@ -7,6 +7,7 @@ import time
 import rospkg
 import pybullet as p
 import pybullet_data
+from rigmopy import Pose
 from dataclasses import dataclass
 from pybullet_utils.bullet_client import BulletClient
 
@@ -122,6 +123,10 @@ class World(metaclass=abc.ABCMeta):
                 if self.cfg.record:
                     self.bullet_client.configureDebugVisualizer(p.COV_ENABLE_SINGLE_STEP_RENDERING, 1)
                 time.sleep(1./self.cfg.freq_sim)
+
+    @abc.abstractmethod
+    def sample_X0(self) -> Pose:
+        raise NotImplementedError('Must be implemented in subclass.')
 
     @abc.abstractmethod
     def reset(self, joint_conf: Union[None, Tuple[float, ...]] = None) -> None:

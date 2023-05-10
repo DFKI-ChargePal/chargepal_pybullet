@@ -93,7 +93,7 @@ class EnvironmentPluggerPositionCtrl(Environment):
         # Evaluate environment
         done = self.done
         F_tcp = self.ft_sensor.wrench
-        reward = self.reward.compute(self.world.ur_arm.get_X_base2tcp(), self.world.socket.X_arm2socket, F_tcp, done)
+        reward = self.reward.compute(self.world.ur_arm.X_arm2plug, self.world.socket.X_arm2socket, F_tcp, done)
         # reward = self.reward.compute(X_tcp, X_tgt, done)
         info = self.compose_info()
         return obs, reward, done, info
@@ -109,8 +109,8 @@ class EnvironmentPluggerPositionCtrl(Environment):
         obs = np.array((noisy_p_plug2socket + noisy_q_plug2socket + F_tcp_meas), dtype=np.float32)
         # Evaluate metrics
         q_arm2socket_ = np.array(self.socket_sensor.q_arm2sensor.wxyz)
-        q_arm2plug_ = np.array(self.world.ur_arm.get_q_base2tcp().wxyz)
-        p_plug2socket = (self.socket_sensor.p_arm2sensor - self.world.ur_arm.get_p_base2tcp()).xyz
+        q_arm2plug_ = np.array(self.world.ur_arm.q_arm2plug.wxyz)
+        p_plug2socket = (self.socket_sensor.p_arm2sensor - self.world.ur_arm.p_arm2plug).xyz
         self.task_pos_error = np.sqrt(np.sum(np.square(p_plug2socket)))
         self.task_ang_error = np.arccos(np.clip((2 * (q_arm2socket_.dot(q_arm2plug_))**2 - 1), -1.0, 1.0))
         return obs

@@ -64,7 +64,7 @@ class EnvironmentReacherPositionCtrl(Environment):
         self.world.reset(render=self.is_render)
         # Get start joint configuration by inverse kinematic
         X0_tgt2plug = self.cfg.start_config.random(*self.cfg.reset_variance)
-        X0_world2plug = self.world.ur_arm.get_X_world2base() * self.world.vrt_tgt.X_arm2tgt * X0_tgt2plug
+        X0_world2plug = self.world.ur_arm.X_world2arm * self.world.vrt_tgt.X_arm2tgt * X0_tgt2plug
         joint_pos0 = self.ik_solver.solve(X0_world2plug)
         # Reset robot again
         self.world.reset(joint_pos0)

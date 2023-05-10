@@ -40,15 +40,15 @@ class PlugSensor(Sensor):
     @property
     def noisy_X_arm2sensor(self) -> Pose:
         # TODO: Add noise
-        return self.ur_arm.get_X_base2tcp()
+        return self.ur_arm.X_arm2plug
 
     @property
     def noisy_p_arm2sensor(self) -> Vector3d:
-        return self.ur_arm.get_p_base2tcp()
+        return self.ur_arm.p_arm2plug
 
     @property
     def noisy_q_arm2sensor(self) -> Quaternion:
-        return self.ur_arm.get_q_base2tcp()
+        return self.ur_arm.q_arm2plug
 
     @property
     def noisy_twist(self) -> Vector6d:

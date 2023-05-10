@@ -20,10 +20,6 @@ LOGGER = logging.getLogger(__name__)
 
 
 _TABLE_HEIGHT = 0.8136
-_TABLE_WIDTH = 0.81
-_PROFILE_SIZE = 0.045
-_BASE_PLATE_SIZE = 0.225
-_BASE_PLATE_HEIGHT = 0.0225
 
 
 class WorldReacherCfg(WorldCfg):
@@ -32,9 +28,6 @@ class WorldReacherCfg(WorldCfg):
     robot_urdf: str = 'ur10e_fix_plug.urdf'
     plane_config: Pose = Pose().from_xyz((0.0, 0.0, -_TABLE_HEIGHT))
     env_config: Pose = Pose()
-    robot_config: Pose = Pose().from_xyz(
-        (_TABLE_WIDTH - _BASE_PLATE_SIZE/2, _PROFILE_SIZE + _BASE_PLATE_SIZE/2, _BASE_PLATE_HEIGHT)
-        ).from_euler_angle(angles=(0.0, 0.0 ,np.pi/2))
 
 class WorldReacher(World):
 
@@ -57,6 +50,9 @@ class WorldReacher(World):
         self.ur_arm = URArm(config_arm)
         self.vrt_tgt = VirtualTarget(config_tgt)
 
+    def sample_X0(self) -> Pose:
+        return Pose()
+
     def reset(self, joint_conf: tuple[float, ...] | None = None, render: bool = False) -> None:
         if self.bullet_client is None:
             # Connect to bullet simulation server
@@ -69,18 +65,16 @@ class WorldReacher(World):
                 baseOrientation=self.cfg.plane_config.xyzw
                 )
             # Load environment
-            f_path_env_urdf = os.path.join(self.urdf_pkg_path, self.cfg.env_urdf)
             self.env_id = self.bullet_client.loadURDF(
-                fileName=f_path_env_urdf,
+                fileName=os.path.join(self.urdf_pkg_path, self.cfg.env_urdf),
                 basePosition=self.cfg.env_config.xyz,
                 baseOrientation=self.cfg.env_config.xyzw
             )
             # Load robot
-            f_path_robot_urdf = os.path.join(self.urdf_pkg_path, self.cfg.robot_urdf)
             self.robot_id = self.bullet_client.loadURDF(
-                fileName=f_path_robot_urdf,
-                basePosition=self.cfg.robot_config.xyz,
-                baseOrientation=self.cfg.robot_config.xyzw
+                fileName=os.path.join(self.urdf_pkg_path, self.cfg.robot_urdf),
+                basePosition=self.ur_arm.X_world2arm.xyz,
+                baseOrientation=self.ur_arm.X_world2arm.xyzw
                 )
             # Set gravity
             self.bullet_client.setGravity(*self.cfg.gravity)

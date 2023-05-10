@@ -3,8 +3,9 @@ from __future__ import annotations
 
 # global
 import logging
+import numpy as np
 from dataclasses import dataclass, field
-from rigmopy import Vector3d, Quaternion,Pose
+from rigmopy import Vector3d, Quaternion, Pose
 from pybullet_utils.bullet_client import BulletClient
 
 # local
@@ -27,6 +28,12 @@ from typing import Any
 LOGGER = logging.getLogger(__name__)
 
 
+_TABLE_WIDTH = 0.81
+_PROFILE_SIZE = 0.045
+_BASE_PLATE_SIZE = 0.225
+_BASE_PLATE_HEIGHT = 0.0225
+
+
 @dataclass
 class URArmCfg(ConfigHandler):
     arm_link_names: list[str] = field(default_factory=lambda: ARM_LINK_NAMES)
@@ -37,7 +44,9 @@ class URArmCfg(ConfigHandler):
     base_link_name: str = 'base'
     ft_joint_name: str = 'mounting_to_wrench'
     ft_buffer_size: int = 1
-
+    X_world2arm: Pose = Pose().from_xyz(
+        (_TABLE_WIDTH - _BASE_PLATE_SIZE/2, _PROFILE_SIZE + _BASE_PLATE_SIZE/2, _BASE_PLATE_HEIGHT)
+        ).from_euler_angle(angles=(0.0, 0.0 ,np.pi/2))
 
 class URArm:
 
@@ -164,17 +173,20 @@ class URArm:
             LOGGER.error(self._CONNECTION_ERROR_MSG)
             raise RuntimeError("Not connect to PyBullet client.")
 
-    def get_joint_pos(self) -> tuple[float, ...]:
+    @property
+    def joint_pos(self) -> tuple[float, ...]:
         state_idx = BulletJointState.JOINT_POSITION
         pos = tuple(joint[state_idx] for joint in self.state)
         return pos
 
-    def get_joint_vel(self) -> tuple[float, ...]:
+    @property
+    def joint_vel(self) -> tuple[float, ...]:
         state_idx = BulletJointState.JOINT_VELOCITY
         vel = tuple(joint[state_idx] for joint in self.state)
         return vel
     
-    def get_X_base2tcp(self) -> Pose:
+    @property
+    def X_arm2plug(self) -> Pose:
         if self.is_connected:
             # Get arm pose
             X_world2arm = self._base.get_X_world2link()  # type: ignore
@@ -187,23 +199,27 @@ class URArm:
             X_arm2tcp = Pose()
         return X_arm2tcp
 
-    def get_p_base2tcp(self) -> Vector3d:
-        return self.get_X_base2tcp().p
+    @property
+    def p_arm2plug(self) -> Vector3d:
+        return self.X_arm2plug.p
 
-    def get_q_base2tcp(self) -> Quaternion:
-        return self.get_X_base2tcp().q
+    @property
+    def q_arm2plug(self) -> Quaternion:
+        return self.X_arm2plug.q
 
-    def get_X_world2base(self) -> Pose:
+    @property
+    def X_world2arm(self) -> Pose:
         if self.is_connected:
             # Get base pose
             X_world2base = self._base.get_X_world2link()  # type: ignore
         else:
-            LOGGER.error(self._CONNECTION_ERROR_MSG)
-            X_world2base = Pose()
+            X_world2base = self.cfg.X_world2arm
         return X_world2base
     
-    def get_p_world2base(self) -> Vector3d:
-        return self.get_X_world2base().p
+    @property
+    def p_world2arm(self) -> Vector3d:
+        return self.X_world2arm.p
     
-    def get_q_world2base(self) -> Quaternion:
-        return self.get_X_world2base().q
+    @property
+    def q_world2arm(self) -> Quaternion:
+        return self.X_world2arm.q
