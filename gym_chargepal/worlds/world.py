@@ -1,12 +1,12 @@
 """ This file defines the worlds base class. """
 # global
-import os
 import abc
-import logging
 import time
 import rospkg
+import logging
 import pybullet as p
 import pybullet_data
+from pathlib import Path
 from rigmopy import Pose
 from dataclasses import dataclass
 from pybullet_utils.bullet_client import BulletClient
@@ -59,7 +59,7 @@ class World(metaclass=abc.ABCMeta):
         # Find chargepal ros description package
         ros_pkg = rospkg.RosPack()
         ros_pkg_path = ros_pkg.get_path(self.cfg.model_description_pkg)
-        self.urdf_pkg_path = os.path.join(ros_pkg_path, self.cfg.urdf_model_dir)
+        self.urdf_pkg_path = Path(ros_pkg_path).joinpath(self.cfg.urdf_model_dir)
 
     def connect(self, gui: bool) -> None:
         # Connecting to bullet server

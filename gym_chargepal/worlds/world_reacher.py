@@ -2,9 +2,7 @@
 from __future__ import annotations
 
 # global
-import os
 import logging
-import numpy as np
 from rigmopy import Pose
 
 # local
@@ -66,13 +64,13 @@ class WorldReacher(World):
                 )
             # Load environment
             self.env_id = self.bullet_client.loadURDF(
-                fileName=os.path.join(self.urdf_pkg_path, self.cfg.env_urdf),
+                fileName=str(self.urdf_pkg_path.joinpath(self.cfg.env_urdf)),
                 basePosition=self.cfg.env_config.xyz,
                 baseOrientation=self.cfg.env_config.xyzw
             )
             # Load robot
             self.robot_id = self.bullet_client.loadURDF(
-                fileName=os.path.join(self.urdf_pkg_path, self.cfg.robot_urdf),
+                fileName=str(self.urdf_pkg_path.joinpath(self.cfg.robot_urdf)),
                 basePosition=self.ur_arm.X_world2arm.xyz,
                 baseOrientation=self.ur_arm.X_world2arm.xyzw
                 )

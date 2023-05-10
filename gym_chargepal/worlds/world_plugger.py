@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 # global
-import os 
 import logging
 import numpy as np
 from rigmopy import Pose
@@ -80,23 +79,20 @@ class WorldPlugger(World):
                 baseOrientation=self.plane_ori
                 )
             # Load environment
-            f_path_env_urdf = os.path.join(self.urdf_pkg_path, self.cfg.env_urdf)
             self.env_id = self.bullet_client.loadURDF(
-                fileName=f_path_env_urdf,
+                fileName=str(self.urdf_pkg_path.joinpath(self.cfg.env_urdf)),
                 basePosition=self.env_pos,
                 baseOrientation=self.env_ori
             )
             # Load robot
-            f_path_robot_urdf = os.path.join(self.urdf_pkg_path, self.cfg.robot_urdf)
             self.robot_id = self.bullet_client.loadURDF(
-                fileName=f_path_robot_urdf,
+                fileName=str(self.urdf_pkg_path.joinpath(self.cfg.robot_urdf)),
                 basePosition=self.robot_pos,
                 baseOrientation=self.robot_ori
                 )
             # Load socket
-            f_path_socket_urdf = os.path.join(self.urdf_pkg_path, self.cfg.socket_urdf)
             self.socket_id = self.bullet_client.loadURDF(
-                fileName=f_path_socket_urdf,
+                fileName=str(self.urdf_pkg_path.joinpath(self.cfg.socket_urdf)),
                 basePosition=self.socket_pos,
                 baseOrientation=self.socket_ori
             )
