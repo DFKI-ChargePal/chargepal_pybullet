@@ -56,6 +56,7 @@ class WorldPlugger(World):
         self.plane_id = -1
         self.robot_id = -1
         self.socket_id = -1
+        config_arm['ft_enable'] = True
         config_arm['ft_buffer_size'] = self.sim_steps + 1
         self.ur_arm = URArm(config_arm)
         self.start = StartSampler(config_start)
@@ -98,7 +99,7 @@ class WorldPlugger(World):
             # Set gravity
             self.bullet_client.setGravity(*self.cfg.gravity)
             # Create bullet body helper objects
-            self.ur_arm.connect(self.bullet_client, self.robot_id, enable_fts=True)
+            self.ur_arm.connect(self.bullet_client, self.robot_id)
             self.socket.connect(self.bullet_client, self.socket_id)
 
         self.ur_arm.reset(joint_cfg=joint_conf)

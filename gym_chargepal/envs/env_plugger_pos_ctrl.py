@@ -91,7 +91,7 @@ class EnvironmentPluggerPositionCtrl(Environment):
         obs = self.get_obs()
         info = self.compose_info()
         reward = self.reward.compute(
-            self.world.ur_arm.X_arm2plug, self.world.socket.X_arm2socket, self.ft_sensor.wrench, done)
+            self.world.ur_arm.X_arm2plug, self.world.socket.X_arm2socket, self.world.ur_arm.wrench, done)
         return obs, reward, done, info
 
     def close(self) -> None:

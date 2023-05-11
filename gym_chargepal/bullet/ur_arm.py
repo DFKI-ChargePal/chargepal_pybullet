@@ -4,8 +4,9 @@ from __future__ import annotations
 # global
 import logging
 import numpy as np
+from collections import deque
 from dataclasses import dataclass, field
-from rigmopy import Vector3d, Quaternion, Pose
+from rigmopy import Pose, Quaternion, Vector3d, Vector6d
 from pybullet_utils.bullet_client import BulletClient
 
 # local
@@ -17,12 +18,12 @@ from gym_chargepal.bullet import (
     ARM_JOINT_DEFAULT_VALUES
 )
 from gym_chargepal.bullet.body_link import BodyLink
-from gym_chargepal.bullet.ft_sensor import FTSensor
 from gym_chargepal.utility.cfg_handler import ConfigHandler
-from gym_chargepal.bullet.utility import create_joint_index_dict
+from gym_chargepal.bullet.utility import create_joint_index_dict, get_joint_idx
 
 # mypy
-from typing import Any
+from typing import Any, Deque
+from numpy import typing as npt
 
 
 LOGGER = logging.getLogger(__name__)
@@ -42,8 +43,11 @@ class URArmCfg(ConfigHandler):
     joint_limits: dict[str, tuple[float, float]] = field(default_factory=lambda: ARM_JOINT_LIMITS)
     tcp_link_name: str = 'plug'
     base_link_name: str = 'base'
+    ft_enable: bool = False
+    ft_buffer_size: int = 10
     ft_joint_name: str = 'mounting_to_wrench'
-    ft_buffer_size: int = 1
+    ft_range: tuple[float, ...] = (500.0, 500.0, 1200.0, 15.0, 15.0, 12.0)
+    ft_overload: tuple[float, ...] = (2000.0, 2000.0, 4000.0, 30.0, 30.0, 30.0)
     X_world2arm: Pose = Pose().from_xyz(
         (_TABLE_WIDTH - _BASE_PLATE_SIZE/2, _PROFILE_SIZE + _BASE_PLATE_SIZE/2, _BASE_PLATE_HEIGHT)
         ).from_euler_angle(angles=(0.0, 0.0, np.pi/2))
@@ -60,55 +64,81 @@ class URArm:
         self._bc: BulletClient | None = None
         self._body_id: int | None = None
         # Arm links and joints
+        self._arm_state: tuple[tuple[float], ...] | None = None
         self._base: BodyLink | None = None
         self._tcp: BodyLink | None = None
-        self._fts: FTSensor | None = None
         self._joint_idx_dict: dict[str, int] = {}
-
-    @property
-    def bullet_client(self) -> BulletClient:
-        if self.is_connected:
-            return self._bc
-        else:
-            raise RuntimeError("Not connected to PyBullet client.")
-
-    @property
-    def bullet_body_id(self) -> int:
-        if self.is_connected and self._body_id:
-            return self._body_id
-        else:
-            raise RuntimeError("Not connected to PyBullet client.")
-
-    @property
-    def base_link(self) -> BodyLink:
-        if self.is_connected and self._base:
-            return self._base
-        else:
-            raise RuntimeError("Not connected to PyBullet client.")
-
-    @property
-    def tcp_link(self) -> BodyLink:
-        if self.is_connected and self._tcp:
-            return self._tcp
-        else:
-            raise RuntimeError("Not connected to PyBullet client.")
-        
-    @property
-    def ft_sensor(self) -> FTSensor:
-        if self.is_connected and self._fts:
-            return self._fts
-        else:
-            if self.is_connected:
-                raise ValueError("F/T sensor is not enabled for this object.")
-            else:
-                raise RuntimeError("Not connected to PyBullet client.")
+        # FT sensor
+        self.ft_enable = self.cfg.ft_enable
+        self._ft_joint_idx: int | None = None
+        self._ft_state: tuple[tuple[float], ...] | None = None
+        self.ft_min = -np.array(self.cfg.ft_range, dtype=np.float64)
+        self.ft_max = np.array(self.cfg.ft_range, dtype=np.float64)
+        self.sensor_readings: Deque[npt.NDArray[np.float64]] = deque(maxlen=self.cfg.ft_buffer_size)
 
     @property
     def is_connected(self) -> bool:
         """ Check if object is connect to PyBullet"""
         return True if self._bc else False
 
-    def connect(self, bullet_client: BulletClient, body_id: int, enable_fts: bool=False) -> None:
+    @property
+    def bullet_client(self) -> BulletClient:
+        if self.is_connected:
+            return self._bc
+        else:
+            raise RuntimeError(self._CONNECTION_ERROR_MSG)
+
+    @property
+    def bullet_body_id(self) -> int:
+        if self.is_connected and self._body_id:
+            return self._body_id
+        else:
+            raise RuntimeError(self._CONNECTION_ERROR_MSG)
+
+    @property
+    def base_link(self) -> BodyLink:
+        if self.is_connected and self._base:
+            return self._base
+        else:
+            raise RuntimeError(self._CONNECTION_ERROR_MSG)
+
+    @property
+    def tcp_link(self) -> BodyLink:
+        if self.is_connected and self._tcp:
+            return self._tcp
+        else:
+            raise RuntimeError(self._CONNECTION_ERROR_MSG)
+
+    @property
+    def ft_joint_idx(self) -> int:
+        if self._ft_joint_idx:
+            return self._ft_joint_idx
+        else:
+            raise RuntimeError("FT-sensor index is not set yet. Please get it first from PyBullet.")
+
+    def _enable_fts(self) -> None:
+        # enable Force-Torque sensor
+        if self.is_connected:
+            self.bullet_client.enableJointForceTorqueSensor(
+                bodyUniqueId=self.bullet_body_id,
+                jointIndex=self.ft_joint_idx,
+                enableSensor=True
+                )
+        else:
+            LOGGER.warn(f"Enable ft-sensor is not possible. {self._CONNECTION_ERROR_MSG}")
+
+    def _disable_fts(self) -> None:
+        # disable Force-Torque sensor
+        if self.is_connected:
+            self.bullet_client.enableJointForceTorqueSensor(
+                bodyUniqueId=self.bullet_body_id,
+                jointIndex=self.ft_joint_idx,
+                enableSensor=False
+            )
+        else:
+            LOGGER.warn(f"Disable ft-sensor is not possible. {self._CONNECTION_ERROR_MSG}")
+
+    def connect(self, bullet_client: BulletClient, body_id: int) -> None:
         # Safe references
         self._bc = bullet_client
         self._body_id = body_id
@@ -128,10 +158,9 @@ class URArm:
             bullet_client=bullet_client,
             body_id=body_id
             )
-        if enable_fts:
-            self._fts = FTSensor(self.cfg.ft_joint_name, bullet_client, body_id, self.cfg.ft_buffer_size)
-        else:
-            self._fts = None
+        if self.ft_enable:
+            self._ft_joint_idx = get_joint_idx(body_id, self.cfg.ft_joint_name, bullet_client)
+            self._enable_fts()
 
     def reset(self, joint_cfg: tuple[float, ...] | None = None) -> None:
         """ Hard arm reset in either default or given joint configuration """
@@ -156,33 +185,37 @@ class URArm:
                         targetVelocity=0.0
                         )
         else:
-            LOGGER.error(self._CONNECTION_ERROR_MSG)
-            raise RuntimeError("Not connect to PyBullet client.")
+            raise RuntimeError(self._CONNECTION_ERROR_MSG)
 
     def update(self) -> None:
         """ Update physical pybullet state """
         if self.is_connected:
-            self.state = self._bc.getJointStates(  # type: ignore
+            self._arm_state = self.bullet_client.getJointStates(
                 bodyUniqueId=self._body_id,
                 jointIndices=[idx for idx in self._joint_idx_dict.values()]
             )
             self.tcp_link.update()
             self.base_link.update()
-            if self._fts: self._fts.update()
+            if self.ft_enable:
+                self._ft_state = self.bullet_client.getJointState(
+                    bodyUniqueId=self._body_id, 
+                    jointIndex=self.ft_joint_idx
+                    )
         else:
-            LOGGER.error(self._CONNECTION_ERROR_MSG)
-            raise RuntimeError("Not connect to PyBullet client.")
+            raise RuntimeError(self._CONNECTION_ERROR_MSG)
 
     @property
     def joint_pos(self) -> tuple[float, ...]:
         state_idx = BulletJointState.JOINT_POSITION
-        pos = tuple(joint[state_idx] for joint in self.state)
+        assert self._arm_state
+        pos = tuple(joint[state_idx] for joint in self._arm_state)
         return pos
 
     @property
     def joint_vel(self) -> tuple[float, ...]:
         state_idx = BulletJointState.JOINT_VELOCITY
-        vel = tuple(joint[state_idx] for joint in self.state)
+        assert self._arm_state
+        vel = tuple(joint[state_idx] for joint in self._arm_state)
         return vel
     
     @property
@@ -223,3 +256,14 @@ class URArm:
     @property
     def q_world2arm(self) -> Quaternion:
         return self.X_world2arm.q
+
+    @property
+    def wrench(self) -> Vector6d:
+        state_idx = BulletJointState.JOINT_REACTION_FORCE
+        assert self._ft_state
+        wrench: tuple[float, ...] = self._ft_state[state_idx]
+        self.sensor_readings.append(np.array(wrench, dtype=np.float64))
+        # Get sensor state and bring values in a range between -1.0 and +1.0
+        mean_wrench = np.mean(self.sensor_readings, axis=0, dtype=np.float64)
+        norm_wrench = Vector6d().from_xyzXYZ(np.clip(mean_wrench, self.ft_min, self.ft_max) / self.ft_max)
+        return norm_wrench

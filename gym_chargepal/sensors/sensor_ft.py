@@ -1,4 +1,6 @@
 """ This file defines the force torque sensors class. """
+from __future__ import annotations
+
 # global
 import logging
 import numpy as np
@@ -11,8 +13,7 @@ from gym_chargepal.bullet.ur_arm import URArm
 from gym_chargepal.sensors.sensor import SensorCfg, Sensor
 
 # mypy
-from typing import Dict, Any, Tuple
-from numpy import typing as npt
+from typing import Any
 
 
 LOGGER = logging.getLogger(__name__)
@@ -23,8 +24,6 @@ class FTSensorCfg(SensorCfg):
     sensor_id: str = 'ft_sensor'
     force_id: str = 'f'
     moment_id: str = 'm'
-    ft_range: Tuple[float, ...] = (500.0, 500.0, 1200.0, 15.0, 15.0, 12.0)
-    overload: Tuple[float, ...] = (2000.0, 2000.0, 4000.0, 30.0, 30.0, 30.0)
     render_bar: bool = False
     render_bar_length: int = 35
     color_bound_med: float = 0.7
@@ -33,7 +32,7 @@ class FTSensorCfg(SensorCfg):
 
 class FTSensor(Sensor):
     """ Force Torque Sensor. """
-    def __init__(self, config: Dict[str, Any], ur_arm: URArm):
+    def __init__(self, config: dict[str, Any], ur_arm: URArm):
         # Call super class
         super().__init__(config=config)
         # Create configuration and override values
@@ -41,28 +40,16 @@ class FTSensor(Sensor):
         self.cfg.update(**config)
         # Safe references
         self.ur_arm = ur_arm
-        # Convert limits to numpy arrays
-        self.ft_min = -np.array(self.cfg.ft_range, dtype=np.float32)
-        self.ft_max = np.array(self.cfg.ft_range, dtype=np.float32)
-
-    @property
-    def wrench(self) -> Vector6d:
-        # Mypy check whether ft sensor object exist 
-        assert self.ur_arm._fts
-        # Get sensor state and bring values in a range between -1.0 and +1.0
-        wrench = self.ur_arm._fts.wrench
-        norm_wrench: npt.NDArray[np.float_] = np.clip(wrench.to_numpy(), self.ft_min, self.ft_max) / self.ft_max
-        return Vector6d().from_xyzXYZ(norm_wrench)
 
     @property
     def noisy_wrench(self) -> Vector6d:
-        meas = self.wrench
+        meas = self.ur_arm.wrench
         # TODO: Add sensor noise
         return meas
 
     def render_ft_bar(self, render: bool) -> None:
         if render and self.cfg.render_bar:
-            wrench = self.wrench.xyzXYZ
+            wrench = self.ur_arm.wrench.xyzXYZ
             # Find outliers
             ft_max = max(wrench)
             # idx = wrench.index(ft_max)
