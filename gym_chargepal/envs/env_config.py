@@ -87,17 +87,17 @@ testbed_plugger_6dof_position_ctrl_v1 = {
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(13,), dtype=np.float32),
     },
 
-    # 'start': {
-    #     # Start configuration w.r.t. target configuration'
-    #     'X_tgt2plug': Pose().from_xyz((0.0, 0.0, -0.1)),
-    #     # Reset variance of the start pose
-    #     'variance': ((0.1, 0.1, 0.1), (0.1 * np.pi, 0.1 * np.pi, 0.1 * np.pi)), 
-    # },
+    'start': {
+        # Start configuration w.r.t. target configuration'
+        'X_tgt2plug': Pose().from_xyz((0.0, 0.0, -0.1)),
+        # Reset variance of the start pose
+        'variance': ((0.025, 0.025, 0.01), (0.01 * np.pi, 0.01 * np.pi, 0.01 * np.pi)), 
+    },
 
-    # 'socket': {
-    #     # Socket configuration w.r.t. the arm base
-    #     'X_arm2socket': Pose().from_xyz((0.90, 0.50, 0.50)).from_euler_angle((0.0, np.pi/2, 0.0)),
-    # },
+    'socket': {
+        # Socket configuration w.r.t. the arm base
+        'X_arm2socket': Pose().from_xyz((0.90, 0.50, 0.50)).from_euler_angle((0.0, np.pi/2, 0.0)),
+    },
 
     'low_level_control': {
         'wa_lin': 0.05,          # action scaling in linear directions [m]
