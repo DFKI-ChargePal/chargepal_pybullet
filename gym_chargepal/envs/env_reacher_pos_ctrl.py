@@ -54,16 +54,15 @@ class EnvironmentReacherPositionCtrl(Environment):
             self.control_interface
         )
         self.reward = DistanceReward(config_reward, self.clock)
-        # Reset robot by default joint configuration
-        self.world.reset()
 
     def reset(self) -> npt.NDArray[np.float32]:
         # Reset environment
         self.clock.reset()
         if self.toggle_render_mode:
             self.world.disconnect()
-            self.world.reset(render=self.is_render)  # Reset robot by default joint configuration
             self.toggle_render_mode = False
+        # Reset robot by default joint configuration
+        self.world.reset(render=self.is_render)
         # Get start joint start configuration by inverse kinematic
         joint_pos0 = self.ik_solver.solve(self.world.sample_X0())
         self.world.reset(joint_conf=joint_pos0, render=self.is_render)

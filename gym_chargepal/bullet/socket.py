@@ -22,6 +22,7 @@ LOGGER = logging.getLogger(__name__)
 @dataclass
 class SocketCfg(ConfigHandler):
     link_name = "socket"
+    X_socket2base: Pose = Pose(). from_xyz((0.0, 0.0, 0.05)).from_euler_angle((np.pi, 0.0, 0.0)).inverse()
     X_arm2socket: Pose = Pose().from_xyz((0.635, 0.319, 0.271)).from_euler_angle((0.0, np.pi/2, 0.0))
 
 
@@ -89,7 +90,8 @@ class Socket:
             # Get socket pose
             X_arm2socket = self.ur_arm.X_world2arm.inverse() * self.socket.X_world2link
         else:
-            X_arm2socket = self.cfg.X_arm2socket
+            LOGGER.error(self._CONNECTION_ERROR_MSG)
+            X_arm2socket = Pose()
         return X_arm2socket
 
     @property

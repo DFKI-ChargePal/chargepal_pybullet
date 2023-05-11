@@ -90,7 +90,8 @@ class WorldPlugger(World):
                 baseOrientation=self.ur_arm.X_world2arm.xyzw
                 )
             # Load socket
-            socket_pos, socket_ori = (self.ur_arm.X_world2arm * self.socket.X_arm2socket).xyz_xyzw
+            socket_pos, socket_ori = (
+                self.ur_arm.X_world2arm * self.socket.cfg.X_arm2socket * self.socket.cfg.X_socket2base).xyz_xyzw
             self.socket_id = self.bullet_client.loadURDF(
                 fileName=str(self.urdf_pkg_path.joinpath(self.cfg.socket_urdf)),
                 basePosition=socket_pos,
