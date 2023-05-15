@@ -82,7 +82,7 @@ testbed_plugger_6dof_position_ctrl_v1 = {
 
     'environment': {
         'type': EnvironmentPluggerPositionCtrl,
-        'T': 100,
+        'T': 200,
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(13,), dtype=np.float32),
     },

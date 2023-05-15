@@ -17,7 +17,7 @@ class PoseWrenchRewardCfg(RewardCfg):
     spatial_pt_distance: float = 1.0  # distance to create reference points
     pose_weight: float = 1.0
     pose_bound: float = 0.1
-    wrench_weight: float = 0.01
+    wrench_weight: float = 0.005
     wrench_bound: float = 0.001
     exp_weight: float = 0.4
 
