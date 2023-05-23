@@ -4,7 +4,7 @@ from __future__ import annotations
 # global
 import logging
 import numpy as np
-from rigmopy import Vector6d
+from rigmopy import Pose, Quaternion, Vector3d, Vector6d
 from termcolor import cprint
 from dataclasses import dataclass
 
@@ -46,6 +46,19 @@ class FTSensor(Sensor):
         meas = self.ur_arm.wrench
         # TODO: Add sensor noise
         return meas
+
+    @property
+    def noisy_X_arm2sensor(self) -> Pose:
+        # TODO: Add noise
+        return self.ur_arm.X_arm2fts
+    
+    @property
+    def noisy_p_arm2sensor(self) -> Vector3d:
+        return self.noisy_X_arm2sensor.p
+    
+    @property
+    def noisy_q_arm2sensor(self) -> Quaternion:
+        return self.noisy_X_arm2sensor.q
 
     def render_ft_bar(self, render: bool) -> None:
         if render and self.cfg.render_bar:

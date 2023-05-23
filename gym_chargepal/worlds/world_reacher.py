@@ -6,7 +6,6 @@ import logging
 from rigmopy import Pose
 
 # local
-from gym_chargepal.bullet.ur_arm import URArm
 import gym_chargepal.bullet.utility as pb_utils
 from gym_chargepal.worlds.world import WorldCfg, World
 from gym_chargepal.utility.start_sampler import StartSampler
@@ -21,18 +20,16 @@ _TABLE_HEIGHT = 0.8136
 
 
 class WorldReacherCfg(WorldCfg):
-    plane_urdf: str = 'plane.urdf'
-    env_urdf: str = 'testbed_table_cic.urdf'
-    robot_urdf: str = 'ur10e_fix_plug.urdf'
     plane_config: Pose = Pose().from_xyz((0.0, 0.0, -_TABLE_HEIGHT))
     env_config: Pose = Pose()
+
 
 class WorldReacher(World):
 
     def __init__(self,
-                 config:       dict[str, Any], 
-                 config_arm:   dict[str, Any], 
-                 config_start: dict[str, Any], 
+                 config:       dict[str, Any],
+                 config_arm:   dict[str, Any],
+                 config_start: dict[str, Any],
                  config_tgt:   dict[str, Any]
                  ) -> None:
         """ Build a robot world where the task is to reach a point from a random start configuration
@@ -44,7 +41,7 @@ class WorldReacher(World):
             config_tgt:   Dictionary to overwrite values of the virtual target configuration class
         """
         # Call super class
-        super().__init__(config=config)
+        super().__init__(config=config, config_arm=config_arm)
         # Create configuration and override values
         self.cfg: WorldReacherCfg = WorldReacherCfg()
         self.cfg.update(**config)
@@ -53,7 +50,6 @@ class WorldReacher(World):
         self.plane_id = -1
         self.robot_id = -1
         self.target_id = -1
-        self.ur_arm = URArm(config_arm)
         self.start = StartSampler(config_start)
         self.vrt_tgt = VirtualTarget(config_tgt)
 

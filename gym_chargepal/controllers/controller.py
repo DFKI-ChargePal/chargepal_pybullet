@@ -1,13 +1,17 @@
 """ This file defines the controllers base class. """
+from __future__ import annotations
+
 # global
 import abc
+import numpy as np
 from dataclasses import dataclass
 
 # local
 from gym_chargepal.utility.cfg_handler import ConfigHandler
 
 # mypy
-from typing import Dict, Any
+from typing import Any
+from numpy import typing as npt
 
 
 @dataclass
@@ -18,7 +22,11 @@ class ControllerCfg(ConfigHandler):
 
 class Controller(metaclass=abc.ABCMeta):
     """ Controller superclass. """
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         # Create configuration and override values
         self.cfg = ControllerCfg()
         self.cfg.update(**config)
+
+    @abc.abstractmethod
+    def update(self, action: npt.NDArray[np.float32]) -> None:
+        raise NotImplementedError('Must be implemented in subclass.')

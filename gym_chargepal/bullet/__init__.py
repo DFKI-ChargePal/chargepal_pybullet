@@ -53,6 +53,24 @@ class BulletJointState:
     JOINT_MOTOR_TORQUE = 3
 
 
+class BulletDynamicsInfo:
+    """
+    Indices of the return values of the PyBullet getDynamicsInfo() function.
+    """
+    MASS = 0
+    LATERAL_FRICTION = 1
+    LOCAL_INERTIAL_DIAGONAL = 2
+    LOCAL_INERTIAL_POS = 3
+    LOCAL_INERTIAL_ORI = 4
+    RESTITUTION = 5
+    ROLLING_FRICTION = 6
+    SPINNING_FRICTION = 7
+    CONTACT_DAMPING = 8
+    CONTACT_STIFFNESS = 9
+    BODY_TYPE = 10
+    COLLISION_MARGIN = 11
+
+
 ARM_JOINT_NAMES = [
     'shoulder_pan_joint',
     'shoulder_lift_joint',

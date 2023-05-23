@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from pybullet_utils.bullet_client import BulletClient
 
 # local
+from gym_chargepal.bullet.ur_arm import URArm
 from gym_chargepal.utility.cfg_handler import ConfigHandler
 
 # mypy
@@ -28,6 +29,10 @@ class WorldCfg(ConfigHandler):
     gravity: Tuple[float, ...] = (0.0, 0.0, -9.81)
     urdf_model_dir: str = '_bullet_urdf_models'
     model_description_pkg = 'chargepal_description'
+    # URDF models
+    plane_urdf: str = 'plane.urdf'
+    env_urdf: str = 'testbed_table_cic.urdf'
+    robot_urdf: str = 'ur10e_fix_plug.urdf'
     # Gui configurations
     gui_width: int = 1280
     gui_height: int = 720
@@ -50,7 +55,7 @@ class WorldCfg(ConfigHandler):
 
 class World(metaclass=abc.ABCMeta):
     """ World superclass. """
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: Dict[str, Any], config_arm:   Dict[str, Any]):
         # Create configuration and override values
         self.cfg = WorldCfg()
         self.cfg.update(**config)
@@ -60,6 +65,11 @@ class World(metaclass=abc.ABCMeta):
         ros_pkg = rospkg.RosPack()
         ros_pkg_path = ros_pkg.get_path(self.cfg.model_description_pkg)
         self.urdf_pkg_path = Path(ros_pkg_path).joinpath(self.cfg.urdf_model_dir)
+        self.ur_arm = URArm(config_arm)
+
+    @property
+    def ctrl_period(self) -> float:
+        return 1.0 / self.cfg.freq_ctrl
 
     def connect(self, gui: bool) -> None:
         # Connecting to bullet server

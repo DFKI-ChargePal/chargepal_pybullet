@@ -93,7 +93,7 @@ class EnvironmentReacherVelocityCtrl(Environment):
         done = self.done
         X_tcp = Pose().from_pq(self.plug_sensor.noisy_p_arm2sensor, self.plug_sensor.noisy_q_arm2sensor)
         X_tgt = Pose().from_pq(self.plug_sensor.noisy_p_arm2sensor, self.plug_sensor.noisy_q_arm2sensor)
-        V_tcp = self.plug_sensor.noisy_twist
+        V_tcp = self.plug_sensor.noisy_V_wrt_world
         reward = self.reward.compute(X_tcp=X_tcp, V_tcp=V_tcp, X_tgt=X_tgt, done=done)
         info = self.compose_info()
         return obs, reward, done, info
@@ -114,7 +114,7 @@ class EnvironmentReacherVelocityCtrl(Environment):
         q_SW = self.target_sensor.noisy_q_arm2tgt
         q_SP = rp_math.quaternion_difference(q_PW, q_SW).wxyz
         # Get velocity signal
-        i_twist_PW = self.plug_sensor.noisy_twist.xyzXYZ
+        i_twist_PW = self.plug_sensor.noisy_V_wrt_world.xyzXYZ
         # Glue observation together
         obs = np.array((x_SP + q_SP + i_twist_PW), dtype=np.float32)
         # Calculate evaluation metrics

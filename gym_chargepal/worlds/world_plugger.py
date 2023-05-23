@@ -7,7 +7,6 @@ import numpy as np
 from rigmopy import Pose
 
 # local
-from gym_chargepal.bullet.ur_arm import URArm
 from gym_chargepal.bullet.socket import Socket
 from gym_chargepal.worlds.world import WorldCfg, World
 from gym_chargepal.utility.start_sampler import StartSampler
@@ -22,9 +21,6 @@ _TABLE_HEIGHT = 0.8136
 
 
 class WorldPluggerCfg(WorldCfg):
-    plane_urdf: str = 'plane.urdf'
-    env_urdf: str = 'testbed_table_cic.urdf'
-    robot_urdf: str = 'ur10e_fix_plug.urdf'
     socket_urdf: str = 'tdt_socket.urdf'
     plane_config: Pose = Pose().from_xyz((0.0, 0.0, -_TABLE_HEIGHT))
     env_config: Pose = Pose()
@@ -47,7 +43,7 @@ class WorldPlugger(World):
             config_socket: Dictionary to overwrite values of the socket configuration class
         """
         # Call super class
-        super().__init__(config=config)
+        super().__init__(config=config, config_arm=config_arm)
         # Create configuration and override values
         self.cfg: WorldPluggerCfg = WorldPluggerCfg()
         self.cfg.update(**config)
@@ -58,7 +54,6 @@ class WorldPlugger(World):
         self.socket_id = -1
         config_arm['ft_enable'] = True
         config_arm['ft_buffer_size'] = self.sim_steps + 1
-        self.ur_arm = URArm(config_arm)
         self.start = StartSampler(config_start)
         self.socket = Socket(config_socket, self.ur_arm)
 

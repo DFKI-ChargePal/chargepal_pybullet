@@ -6,7 +6,7 @@ from pybullet_utils.bullet_client import BulletClient
 
 # local
 import gym_chargepal.bullet.utility as pb_utils
-from gym_chargepal.bullet import BulletLinkState
+from gym_chargepal.bullet import BulletLinkState, BulletDynamicsInfo
 
 # typing
 from typing import Any
@@ -24,6 +24,7 @@ class BodyLink:
             bullet_client=bullet_client
         )
         self.__state = None
+        self.__dyn_info = None
         if self.idx < 0:
             raise ValueError(f"Link with name {name} could not be found! ")
 
@@ -34,6 +35,11 @@ class BodyLink:
             computeLinkVelocity=True,
             computeForwardKinematics=True
         )
+        if self.__dyn_info is None:
+            self.__dyn_info = self.bc.getDynamicsInfo(
+                bodyUniqueId=self.body_id,
+                linkIndex=self.idx,
+            )
 
     @property
     def raw_state(self) -> tuple[tuple[float, ...], ...]:
@@ -41,6 +47,13 @@ class BodyLink:
             return self.__state
         else:
             raise ValueError("Link state is not set. Please update the link before access state.")
+
+    @property
+    def dynamics_info(self) -> tuple[Any, ...]:
+        if self.__dyn_info:
+            return self.__dyn_info
+        else:
+            raise ValueError("Link dynamics info is not set. Please update the link before access dynamics info.")
 
     # //////////////////////////////////////////////////////////////////////// #
     # /// make sure to update the sensor state before calling this methods /// #
@@ -75,3 +88,8 @@ class BodyLink:
         lin_vel_state_idx = BulletLinkState.WORLD_LINK_LIN_VEL
         ang_vel_state_idx = BulletLinkState.WORLD_LINK_ANG_VEL
         return Vector6d().from_xyzXYZ(self.raw_state[lin_vel_state_idx] + self.raw_state[ang_vel_state_idx])
+
+    @property
+    def mass(self) -> float:
+        m: float = self.dynamics_info[BulletDynamicsInfo.MASS]
+        return m
