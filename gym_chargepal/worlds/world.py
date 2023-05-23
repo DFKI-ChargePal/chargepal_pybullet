@@ -1,4 +1,6 @@
 """ This file defines the worlds base class. """
+from __future__ import annotations
+
 # global
 import abc
 import time
@@ -16,7 +18,7 @@ from gym_chargepal.bullet.ur_arm import URArm
 from gym_chargepal.utility.cfg_handler import ConfigHandler
 
 # mypy
-from typing import Dict, Any, Union, Tuple, List, Optional
+from typing import Any
 from gym_chargepal.sensors.sensor import Sensor
 
 
@@ -26,7 +28,7 @@ LOGGER = logging.getLogger(__name__)
 class WorldCfg(ConfigHandler):
     freq_sim: int = 240
     freq_ctrl: int = 40
-    gravity: Tuple[float, ...] = (0.0, 0.0, -9.81)
+    gravity: tuple[float, ...] = (0.0, 0.0, -9.81)
     urdf_model_dir: str = '_bullet_urdf_models'
     model_description_pkg = 'chargepal_description'
     # URDF models
@@ -45,8 +47,8 @@ class WorldCfg(ConfigHandler):
     # Gui text
     gui_txt: str = ""
     gui_txt_size: float = 5.0
-    gui_txt_pos: Tuple[float, ...] = (0.0, 0.0, 0.0)
-    gui_txt_rgb: Tuple[float, ...] = (1.0, 1.0, 1.0)
+    gui_txt_pos: tuple[float, ...] = (0.0, 0.0, 0.0)
+    gui_txt_rgb: tuple[float, ...] = (1.0, 1.0, 1.0)
     # Record video stream
     record: bool = False
     rec_file_name: str = "exp_record.mp4"
@@ -55,7 +57,7 @@ class WorldCfg(ConfigHandler):
 
 class World(metaclass=abc.ABCMeta):
     """ World superclass. """
-    def __init__(self, config: Dict[str, Any], config_arm:   Dict[str, Any]):
+    def __init__(self, config: dict[str, Any], config_arm: dict[str, Any]):
         # Create configuration and override values
         self.cfg = WorldCfg()
         self.cfg.update(**config)
@@ -117,7 +119,7 @@ class World(metaclass=abc.ABCMeta):
                 self.bullet_client.disconnect()
             self.bullet_client = None
 
-    def step(self, render: bool, sensors: Optional[List[Sensor]] = None) -> None:
+    def step(self, render: bool) -> None:
         # Step bullet simulation
         if self.bullet_client is None:
             error_msg = f'Unable to step simulation! Did you connect with a Bullet physics server?'
@@ -139,7 +141,7 @@ class World(metaclass=abc.ABCMeta):
         raise NotImplementedError('Must be implemented in subclass.')
 
     @abc.abstractmethod
-    def reset(self, joint_conf: Union[None, Tuple[float, ...]] = None) -> None:
+    def reset(self, joint_conf: tuple[float, ...] | None = None, render: bool = False) -> None:
         raise NotImplementedError('Must be implemented in subclass.')
 
     @abc.abstractmethod

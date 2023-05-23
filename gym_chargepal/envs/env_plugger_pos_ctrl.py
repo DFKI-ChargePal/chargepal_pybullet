@@ -3,7 +3,7 @@ from __future__ import annotations
 # global
 import numpy as np
 from rigmopy import utils_math as rp_math
-from rigmopy import Quaternion, Pose, Vector3d
+from rigmopy import Quaternion, Vector3d
 
 # local
 import gym_chargepal.utility.cfg_handler as ch

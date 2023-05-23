@@ -22,13 +22,13 @@ from numpy import typing as npt
 
 
 @dataclass
-class TCPCompliantControllerCfg(ControllerCfg):
+class TCPComplianceControllerCfg(ControllerCfg):
     gravity: Vector3d = Vector3d().from_xyz([0.0, 0.0, -9.81])
+    p_gain: npt.NDArray[np.float64] = 10000.0 * np.identity(6)
     v_damping: npt.NDArray[np.float64] = 0.1 * np.identity(3, dtype=np.float64)
-    w_damping: npt.NDArray[np.float64] = 0.1 * np.pi * np.identity(3, dtype=np.float64)
 
 
-class TCPCompliantController(Controller):
+class TCPComplianceController(Controller):
 
     def __init__(self,
                  config: dict[str, Any],
@@ -39,14 +39,14 @@ class TCPCompliantController(Controller):
                  ft_sensor: FTSensor,
                  plug_sensor: PlugSensor
                  ) -> None:
-        """ Cartesian tool center point compliant controller
+        """ Cartesian tool center point compliance controller
 
         Args:
             config: Dictionary to overwrite configuration values
         """
         super().__init__(config=config)
         # Create configuration and overwrite values
-        self.cfg: TCPCompliantControllerCfg = TCPCompliantControllerCfg()
+        self.cfg: TCPComplianceControllerCfg = TCPComplianceControllerCfg()
         self.cfg.update(**config)
         self.spatial_pd_ctrl = SpatialPDController(config=config)
         self.period = self.spatial_pd_ctrl.cfg.period
@@ -98,17 +98,21 @@ class TCPCompliantController(Controller):
         noisy_t_wrt_arm += t_sensor_weight_wrt_arm + t_plug_weight_wrt_arm
 
         # Merge force and torque signal
-        noisy_ft_wrt_arm = Vector6d().from_xyzXYZ(noisy_f_wrt_arm.xyz + noisy_t_wrt_arm.xyz)
+        noisy_ft_wrt_arm = Vector6d().from_Vector3d(noisy_f_wrt_arm, noisy_t_wrt_arm)
+
+        # Get pose of the plug and scale it
+        pos_arm2plug = self.plug_sensor.noisy_p_arm2sensor.xyz
+        eul_arm2plug = self.plug_sensor.noisy_q_arm2sensor.to_euler_angle()
+        pose_arm2plug_ctrl = Vector6d().from_xyzXYZ(
+            self.cfg.p_gain.dot(np.array(pos_arm2plug + eul_arm2plug, dtype=np.float64)))
 
         # Get the speed of the plug and damp it
-        v_plug_wrt_arm, w_plug_wrt_arm = self.plug_sensor.noisy_V_wrt_world.split()
-        # Controller input
-        v_plug_ctrl = self.cfg.v_damping.dot(v_plug_wrt_arm.xyz)
-        w_plug_ctrl = self.cfg.w_damping.dot(w_plug_wrt_arm.xyz)
-        V_plug_ctrl_wrt_arm = Vector6d().from_xyzXYZ(v_plug_ctrl.tolist() + w_plug_ctrl.tolist())
+        V_plug_ctrl_wrt_arm = Vector6d().from_xyzXYZ(
+            self.cfg.v_damping.dot(self.plug_sensor.noisy_V_wrt_arm.to_numpy()))
+
 
         # Desired end-effector force
-        f_net = action_wrt_arm - noisy_ft_wrt_arm - V_plug_ctrl_wrt_arm
+        f_net = action_wrt_arm - noisy_ft_wrt_arm + pose_arm2plug_ctrl - V_plug_ctrl_wrt_arm
         f_ctrl = self.spatial_pd_ctrl.update(f_net)
 
         # Get joint configuration
