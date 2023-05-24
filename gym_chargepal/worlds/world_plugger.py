@@ -43,6 +43,7 @@ class WorldPlugger(World):
             config_socket: Dictionary to overwrite values of the socket configuration class
         """
         # Call super class
+        config_arm['ft_enable'] = True
         super().__init__(config=config, config_arm=config_arm)
         # Create configuration and override values
         self.cfg: WorldPluggerCfg = WorldPluggerCfg()
@@ -52,8 +53,6 @@ class WorldPlugger(World):
         self.plane_id = -1
         self.robot_id = -1
         self.socket_id = -1
-        config_arm['ft_enable'] = True
-        config_arm['ft_buffer_size'] = self.sim_steps + 1
         self.start = StartSampler(config_start)
         self.socket = Socket(config_socket, self.ur_arm)
 
@@ -99,6 +98,7 @@ class WorldPlugger(World):
             self.socket.connect(self.bullet_client, self.socket_id)
 
         self.ur_arm.reset(joint_cfg=joint_conf)
+        self.step(False)
         self.ur_arm.update()
         self.socket.update()
 

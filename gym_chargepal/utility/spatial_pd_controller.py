@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 # global
+import numpy as np
 from rigmopy import Vector6d
 from dataclasses import dataclass
 
@@ -16,8 +17,7 @@ Tuple6DType = Tuple[float, float, float, float, float, float]
 
 @dataclass
 class SpatialPDControllerCfg(ConfigHandler):
-    period: float = -1.0
-    kp: Tuple6DType = (0.5, 0.5, 0.5, 0.1, 0.1, 0.1)
+    kp: Tuple6DType = (0.99, 0.99, 0.99, 0.9 * np.pi, 0.9 * np.pi, 0.9 * np.pi)
     kd: Tuple6DType = (0.001, 0.001, 0.001, 0.001, 0.001, 0.001)
 
 
@@ -33,16 +33,13 @@ class SpatialPDController:
         self.cfg = SpatialPDControllerCfg()
         self.cfg.update(**config)
         self.ctrl_l = [PDController(kp, kd) for kp, kd in zip(self.cfg.kp, self.cfg.kd)]
-        if self.cfg.period < 0.0:
-            raise ValueError(f"Controller period ({self.cfg.period}) smaller than 0.0."
-                             f"Probably not set via config dictionary: {config}")
 
     def reset(self) -> None:
         """ Reset all sub-controllers """
         for ctrl in self.ctrl_l:
             ctrl.reset()
 
-    def update(self, errors: Vector6d) -> Vector6d:
+    def update(self, errors: Vector6d, period: float) -> Vector6d:
         """ Update sub-controllers
 
         Args:
@@ -52,5 +49,5 @@ class SpatialPDController:
         Returns:
             List with new controller outputs
         """
-        out = [ctrl.update(err, self.cfg.period) for ctrl, err in zip(self.ctrl_l, errors.xyzXYZ)]
+        out = [ctrl.update(err, period) for ctrl, err in zip(self.ctrl_l, errors.xyzXYZ)]
         return Vector6d().from_xyzXYZ(out)

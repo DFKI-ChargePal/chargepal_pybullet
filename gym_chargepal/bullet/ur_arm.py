@@ -75,7 +75,7 @@ class URArm:
         # Tool physics
         self._update_physics = True
         self.tool_mass = 0.0
-        self._tool_com: Vector3d | None = None
+        self._tool_com_wrt_arm: Vector3d | None = None
         # FT sensor
         self.fts_enable = self.cfg.ft_enable
         self._fts_joint_idx: int | None = None
@@ -176,17 +176,14 @@ class URArm:
             body_id=body_id
             )
         for link_name in self.cfg.tool_com_link_names:
-            self._tool_com_links.append(
-                BodyLink(
-                name=link_name,
-                bullet_client=bullet_client,
-                body_id=body_id
-                )
-            )
+            tcl = BodyLink(name=link_name, bullet_client=bullet_client, body_id=body_id)
+            tcl.update()
+            self._tool_com_links.append(tcl)
         if self.fts_enable:
             self._fts = BodyLink(name=self.cfg.ft_link_name, bullet_client=bullet_client, body_id=body_id)
             self._fts_joint_idx = get_joint_idx(body_id, self.cfg.ft_joint_name, bullet_client)
             self._enable_fts()
+            self._fts.update()
             self._ft_mass = self._fts.mass
 
     def reset(self, joint_cfg: tuple[float, ...] | None = None) -> None:
@@ -238,8 +235,6 @@ class URArm:
                     self._fts_com = q_inertial2arm.apply(self.fts_link.p_link2inertial)
 
             if self._update_physics:
-                # Update ft-sensor physics
-                self.fts_mass = self.fts_link.mass
                 # Update tool physics
                 N = len(self._tool_com_links)
                 com_x, com_y, com_z = 0.0, 0.0, 0.0
@@ -247,12 +242,16 @@ class URArm:
                 for tool_link in self._tool_com_links:
                     tool_mass += tool_link.mass
                     q_inertial2arm = tool_link.q_link2inertial.inverse() * tool_link.q_world2link.inverse() * self.q_world2arm
-                    p_link2inertial_arm = q_inertial2arm.apply(tool_link.p_link2inertial).xyz
-                    com_x += p_link2inertial_arm[0]
-                    com_x += p_link2inertial_arm[1]
-                    com_x += p_link2inertial_arm[2]
+                    p_arm2link_arm = self.q_world2arm.apply(tool_link.p_world2link - self.p_world2arm)
+                    p_link2inertial_arm = q_inertial2arm.apply(tool_link.p_link2inertial)
+                    p_arm2inertial_arm = p_arm2link_arm + p_link2inertial_arm
+                    p_arm2fts_arm = self.p_arm2fts
+                    p_fts2inertial_arm = (p_arm2inertial_arm - p_arm2fts_arm).xyz
+                    com_x += p_fts2inertial_arm[0]
+                    com_x += p_fts2inertial_arm[1]
+                    com_x += p_fts2inertial_arm[2]
                 self.tool_mass = tool_mass
-                self._tool_com = Vector3d().from_xyz((com_x/N, com_y/N, com_z/N))
+                self._tool_com_wrt_arm = Vector3d().from_xyz((com_x/N, com_y/N, com_z/N))
                 # Update physics only after reset.
                 self._update_physics = False
         else:
@@ -312,11 +311,15 @@ class URArm:
         return self.X_world2arm.q
 
     @property
-    def wrench(self) -> Vector6d:
+    def raw_wrench(self) -> Vector6d:
         state_idx = BulletJointState.JOINT_REACTION_FORCE
         assert self._fts_state
         wrench: tuple[float, ...] = self._fts_state[state_idx]
-        self.sensor_readings.append(np.array(wrench, dtype=np.float64))
+        return Vector6d().from_xyzXYZ(wrench)
+
+    @property
+    def wrench(self) -> Vector6d:
+        self.sensor_readings.append(self.raw_wrench.to_numpy())
         # Get sensor state and bring values in a range between -1.0 and +1.0
         mean_wrench = np.mean(self.sensor_readings, axis=0, dtype=np.float64)
         norm_wrench = Vector6d().from_xyzXYZ(np.clip(mean_wrench, self.ft_min, self.ft_max) / self.ft_max)
@@ -345,14 +348,14 @@ class URArm:
         return self.X_arm2fts.q
     
     @property
-    def tool_com(self) -> Vector3d:
-        if self._tool_com:
-            return self._tool_com
+    def tool_com_wrt_arm(self) -> Vector3d:
+        if self._tool_com_wrt_arm:
+            return self._tool_com_wrt_arm
         else:
             raise RuntimeError(self._CONNECTION_ERROR_MSG)
 
     @property
-    def fts_com(self) -> Vector3d:
+    def fts_com_wrt_sensor(self) -> Vector3d:
         if self._fts_com:
             return self._fts_com
         else:

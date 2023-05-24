@@ -11,6 +11,7 @@ from pybullet_utils.bullet_client import BulletClient
 
 # local
 from gym_chargepal.worlds.world import World
+from gym_chargepal.bullet.body_link import BodyLink
 from gym_chargepal.utility.cfg_handler import ConfigHandler
 
 # typing
@@ -23,6 +24,7 @@ LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class VirtualURArmCfg(ConfigHandler):
+    tcp_link_name: str = ''
     mass_min: float = 1e-3
     inertia_min: float = 1e-6
     mass_generic: float = 1.0
@@ -36,10 +38,13 @@ class VirtualURArm:
         self.cfg = VirtualURArmCfg()
         self.cfg.update(**config)
         # PyBullet elements
+        self._tcp: BodyLink | None = None
         self._bc: BulletClient | None = None
         self.robot_id = -1
         # Save references
         self.world = world
+        if not self.cfg.tcp_link_name:
+            raise ValueError(f"Please set a TCP link name.")
 
     @property
     def bullet_client(self) -> BulletClient:
@@ -47,6 +52,13 @@ class VirtualURArm:
             return self._bc
         else:
             raise RuntimeError(f"No connection to PyBullet. Please fist connect via {__name__}.connect()")
+
+    @property
+    def tcp(self) -> BodyLink:
+        if self._tcp is not None:
+            return self._tcp
+        else:
+            raise RuntimeError(f"TCP link not initialize. Please load robot model first.")
 
     @property
     def is_connected(self) -> bool:
@@ -57,7 +69,7 @@ class VirtualURArm:
         self._bc = BulletClient(connection_mode=p.DIRECT)
         self._bc.setRealTimeSimulation(False)
         self._bc.resetSimulation()
-        self._bc.setPhysicalEngineParameter(deterministicOverlappingPairs=1)
+        self._bc.setPhysicsEngineParameter(deterministicOverlappingPairs=1)
         # Load and manipulate robot description
         self._load_robot()
         self._model_homogenization()
@@ -78,6 +90,18 @@ class VirtualURArm:
         dim = len(joint_pos)
         return np.array(mm, dtype=np.float64).reshape([dim, dim])
 
+    def jacobian(self, pos: tuple[float, ...], vel: tuple[float, ...], acc: tuple[float, ...]) -> tuple[tuple[float, ...], tuple[float, ...]]:
+        self.tcp.update()
+        jac: tuple[tuple[float], tuple[float]] = self.bullet_client.calculateJacobian(
+            bodyUniqueId=self.robot_id,
+            linkIndex=self.tcp.idx,
+            localPosition=self.tcp.p_link2inertial.xyz,
+            objPositions=pos,
+            objVelocities=vel,
+            objAccelerations=acc,
+        )
+        return jac[0], jac[1]
+
     def _load_robot(self) -> None:
         arm_urdf_path = self.world.urdf_pkg_path.joinpath(self.world.cfg.robot_urdf)
         # Initial pose
@@ -91,6 +115,11 @@ class VirtualURArm:
         )
         # Set gravity
         self.bullet_client.setGravity(*self.world.cfg.gravity)
+        self._tcp = BodyLink(
+            name=self.cfg.tcp_link_name,
+            bullet_client=self.bullet_client,
+            body_id=self.robot_id
+        )
 
     def _model_homogenization(self) -> None:
         """ Change the model mass and inertias to homogenize the  inertia matrix

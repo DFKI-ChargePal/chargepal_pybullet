@@ -31,7 +31,7 @@ class PDController:
         if period > 0.0:
             if self.prev_error is None:
                 self.prev_error = error
-            result = self.kp * error * self.kd * (error - self.prev_error) / period
+            result = self.kp * error + self.kd * (error - self.prev_error) / period
             self.prev_error = error
         else:
             result = 0.0

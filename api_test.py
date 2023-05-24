@@ -34,11 +34,15 @@ def main(env_name: str, n_episodes: int, gui: bool) -> None:
     episode = 1
     run_inf = n_episodes < 0
     ep_return = 0.0
+    n_step = 0
     while True:
 
         action = env.action_space.sample()
-        # action = np.zeros_like(action)
+        action = np.zeros_like(action)
+        # if n_step < 10000:
+        # action[0] = 1.0
         obs, reward, done, _ = env.step(action=action)
+        n_step += 1
         ep_return += reward
 
         act_string = " ".join(format(f, '6.2f') for f in action)
@@ -54,6 +58,7 @@ def main(env_name: str, n_episodes: int, gui: bool) -> None:
             if not run_inf and episode > n_episodes:
                 break
             obs = env.reset()
+            n_step = 0
 
     env.close()
 
