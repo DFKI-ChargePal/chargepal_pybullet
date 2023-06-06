@@ -10,6 +10,7 @@ from rigmopy import Quaternion, Vector3d
 from pybullet_utils.bullet_client import BulletClient
 
 # local
+from gym_chargepal.bullet import BulletDynamicsInfo
 from gym_chargepal.worlds.world import World
 from gym_chargepal.bullet.body_link import BodyLink
 from gym_chargepal.utility.cfg_handler import ConfigHandler
@@ -25,10 +26,10 @@ LOGGER = logging.getLogger(__name__)
 @dataclass
 class VirtualURArmCfg(ConfigHandler):
     tcp_link_name: str = ''
-    mass_min: float = 1e-3
-    inertia_min: float = 1e-6
-    mass_generic: float = 1.0
-    inertia_generic: float = 1.0
+    mass_min: float = 1e-4
+    inertia_min: float = 1e-7
+    mass_generic: float = 10.0
+    inertia_generic: float = 100.0
 
 
 class VirtualURArm:
@@ -126,20 +127,30 @@ class VirtualURArm:
         See https://arxiv.org/pdf/1908.06252.pdf for a motivation for this setting.
         """
         # Set all masses and inertias to minimal (but stable) values
-        ip_min_diag = 3 * [self.cfg.inertia_min]
         n_links = self.bullet_client.getNumJoints(bodyUniqueId=self.robot_id)
         for idx in range(n_links):
+            dyn_info = self.bullet_client.getDynamicsInfo(
+                bodyUniqueId=self.robot_id,
+                linkIndex=idx
+            )
+            vrt_link_mass = self.cfg.mass_min * dyn_info[BulletDynamicsInfo.MASS]
+            vrt_link_inertia: npt.NDArray[np.float64] = self.cfg.inertia_min * np.array(
+                dyn_info[BulletDynamicsInfo.LOCAL_INERTIAL_DIAGONAL]
+            )
             self.bullet_client.changeDynamics(
                 bodyUniqueId=self.robot_id,
                 linkIndex=idx,
-                mass=self.cfg.mass_min,
-                localInertiaDiagonal=ip_min_diag
+                mass=vrt_link_mass,
+                localInertiaDiagonal=vrt_link_inertia.tolist()
             )
         # Only give the tcp segment a generic mass and inertia
-        ip_generic_diag = 3 * [self.cfg.inertia_generic]
+        dyn_info = self.bullet_client.getDynamicsInfo(
+            bodyUniqueId=self.robot_id,
+            linkIndex=self.world.ur_arm.tcp_link.idx
+        )
         self.bullet_client.changeDynamics(
             bodyUniqueId=self.robot_id,
             linkIndex=self.world.ur_arm.tcp_link.idx,
             mass=self.cfg.mass_generic,
-            localInertiaDiagonal=ip_generic_diag
-            )
+            localInertiaDiagonal= 3 * [self.cfg.inertia_generic]
+        )

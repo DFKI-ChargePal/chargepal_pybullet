@@ -5,7 +5,7 @@ import numpy as np
 from numpy.linalg import inv
 from dataclasses import dataclass
 from rigmopy import utils_math as rp_math
-from rigmopy import Vector3d, Vector6d, Pose
+from rigmopy import Vector3d, Vector6d, Pose, Quaternion
 
 # local
 import gym_chargepal.utility.cfg_handler as ch
@@ -27,7 +27,10 @@ from numpy import typing as npt
 class TCPComplianceControllerCfg(ControllerCfg):
     period: float = -1.0
     gravity: Vector3d = Vector3d().from_xyz([0.0, 0.0, -9.81])
-    Kp: npt.NDArray[np.float64] = 500.0 * np.identity(6)
+    wa_force: float = 1e2
+    wa_torque: float = np.pi * 1e2
+    Kp_lin: npt.NDArray[np.float64] = 1000.0 * np.identity(3)
+    Kp_ang: npt.NDArray[np.float64] = 10000.0 * np.pi * np.identity(3)
     Kd: npt.NDArray[np.float64] = 350.0 * np.identity(6)
 
 
@@ -75,10 +78,25 @@ class TCPComplianceController(Controller):
         self.joint_pos = np.array(self.ur_arm.joint_pos)
 
     def update(self, action: npt.NDArray[np.float32]) -> None:
-        # Scale actions
-        action[0:3] *= self.cfg.wa_lin
-        action[0:6] *= self.cfg.wa_ang
-        action_wrt_arm = Vector6d().from_xyzXYZ(action.tolist())
+        # Split action and scale it
+        # Wrench action
+        action[0:3] *= self.cfg.wa_force
+        action[3:6] *= self.cfg.wa_torque
+        F_action = Vector6d().from_xyzXYZ(action[0:6])
+        
+        # Spatial action
+        p_action = Vector3d().from_xyz(action[6:9] * self.cfg.wa_lin)
+        q_action = Quaternion().from_euler_angle(action[9:] * self.cfg.wa_ang)
+        p_arm2goal = self.X_arm2goal.p + p_action
+        q_arm2goal = self.X_arm2goal.q * q_action
+        X_goal_wrt_arm = Pose().from_pq(p_arm2goal, q_arm2goal)
+        self.X_arm2goal = self.plug_sensor.noisy_X_arm2sensor
+        q_error_wrt_arm = rp_math.quaternion_difference(self.X_arm2goal.q, X_goal_wrt_arm.q)
+        p_error_wrt_arm = X_goal_wrt_arm.p - self.X_arm2goal.p
+        # Get 6d vector
+        x_ctrl_wrt_arm = Vector3d().from_xyz(self.cfg.Kp_lin.dot(np.array(p_error_wrt_arm.xyz)))
+        aa_ctrl_wrt_arm = Vector3d().from_xyz(self.cfg.Kp_ang.dot(np.array(q_error_wrt_arm.axis_angle)))
+        X_ctrl_wrt_arm = Vector6d().from_Vector3d(x_ctrl_wrt_arm, aa_ctrl_wrt_arm)
 
         # Get latest force readings
         ft_wrt_ft = self.ur_arm.raw_wrench.split()
@@ -111,34 +129,13 @@ class TCPComplianceController(Controller):
         # Merge force and torque signal
         ft_wrt_arm = Vector6d().from_Vector3d(f_wrt_arm, t_wrt_arm)
 
-        # Get pose of the plug and scale it
-        X_goal_wrt_arm = Pose().from_xyz([0.7, 0.5, 0.5]).from_axis_angle([0.0, np.pi/2, 0.0])
-        X_plug_wrt_arm = self.plug_sensor.noisy_X_arm2sensor
-        q_error_wrt_arm = rp_math.quaternion_difference(X_plug_wrt_arm.q, X_goal_wrt_arm.q)
-        p_error_wrt_arm = X_goal_wrt_arm.p - X_plug_wrt_arm.p
-        # Get 6d vector
-        X_ctrl_wrt_arm = self.cfg.Kp.dot(np.array(p_error_wrt_arm.xyz + q_error_wrt_arm.axis_angle))
-        X_ctrl_wrt_arm = Vector6d().from_xyzXYZ(X_ctrl_wrt_arm)
-
-        # # pos_arm2plug = np.array(self.ur_arm.tcp_link.p_world2link.xyz, dtype=np.float64)
-        # # eul_arm2plug = np.array(self.ur_arm.tcp_link.q_world2link.to_euler_angle(), dtype=np.float64)
-        # pos_arm2plug = self.plug_sensor.noisy_p_arm2sensor.xyz
-        # eul_arm2plug = self.plug_sensor.noisy_q_arm2sensor.to_euler_angle()
-        
-        # pos_arm2goal = np.array([0.8, 0.5, 0.5], dtype=np.float64)
-        # eul_arm2goal = np.array([-0.378, np.pi/2, 0.378], dtype=np.float64)
-
-        # pos_error = (pos_arm2goal - pos_arm2plug).tolist()  # type: ignore
-        # eul_error = (eul_arm2goal - eul_arm2plug).tolist()  # type: ignore
-        # X_error = Vector6d().from_xyzXYZ(self.cfg.Kp.dot(np.array(pos_error + eul_error)))
-
         # Get the speed of the plug and damp it
         V_goal_wrt_arm = Vector6d()
         V_plug_wrt_arm = self.plug_sensor.noisy_V_wrt_arm
         V_ctrl_wrt_arm = Vector6d().from_xyzXYZ(self.cfg.Kd.dot((V_goal_wrt_arm - V_plug_wrt_arm).to_numpy()))
 
         # Desired end-effector force
-        f_net = action_wrt_arm - ft_wrt_arm + X_ctrl_wrt_arm + V_ctrl_wrt_arm
+        f_net = F_action - ft_wrt_arm + X_ctrl_wrt_arm + V_ctrl_wrt_arm
         # f_net = action_wrt_arm - ft_wrt_arm - V_plug_ctrl_wrt_arm
         f_ctrl = self.spatial_pd_ctrl.update(f_net, self.cfg.period)
         # Get joint configuration
@@ -150,8 +147,6 @@ class TCPComplianceController(Controller):
         # jac_t, jac_r = self.jacobian.calculate(j_pos, j_vel, j_acc)
         jac_t, jac_r = self.vrt_ur_arm.jacobian(j_pos, j_vel, j_acc)
         # merge into one jacobian matrix
-        # jac_t_wrt_arm = self.ur_arm.q_world2arm.apply(Vector3d().from_xyz(jac_t))
-        # jac_r_wrt_arm = self.ur_arm.q_world2arm.apply(Vector3d().from_xyz(jac_r))
         J = np.array(jac_t + jac_r)
 
         H = self.vrt_ur_arm.calc_inertial_matrix(joint_pos=j_pos)
@@ -163,9 +158,9 @@ class TCPComplianceController(Controller):
         # Limit joint velocities. TODO: Limit velocities in Cartesian space
         clip_value = 0.5
         joint_vel = np.clip(joint_vel, a_min=-clip_value, a_max=clip_value)
-        # Additional 10 % global damping against unwanted null space motion.
+        # Additional 15 % global damping against unwanted null space motion.
         # This will cause exponential slow-down with action input == 0
-        joint_vel *= 0.9
+        joint_vel *= 0.85
 
         # Send commands to robot
         if isinstance(self.control_interface, JointVelocityMotorControl):

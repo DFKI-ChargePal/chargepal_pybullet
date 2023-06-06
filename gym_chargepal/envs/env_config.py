@@ -118,7 +118,7 @@ testbed_plugger_6dof_compliance_ctrl_v1 = {
     'environment': {
         'type': EnvironmentPluggerComplianceCtrl,
         'T': 300,
-        'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
+        'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(12,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(13,), dtype=np.float32),
     },
 
@@ -135,8 +135,8 @@ testbed_plugger_6dof_compliance_ctrl_v1 = {
     },
 
     'low_level_control': {
-        'wa_lin': 3.5,          # action scaling in linear directions [m]
-        'wa_ang': 3.5 * np.pi,  # action scaling in angular directions [rad]
+        'wa_lin': 0.05,          # action scaling in linear directions [m]
+        'wa_ang': 0.05 * np.pi,  # action scaling in angular directions [rad]
     },
 
 }
