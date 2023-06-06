@@ -234,26 +234,25 @@ class URArm:
                     q_inertial2arm = self.fts_link.q_link2inertial.inverse() * self.fts_link.q_world2link.inverse() * self.q_world2arm
                     self._fts_com = q_inertial2arm.apply(self.fts_link.p_link2inertial)
 
-            if self._update_physics:
-                # Update tool physics
-                N = len(self._tool_com_links)
-                com_x, com_y, com_z = 0.0, 0.0, 0.0
-                tool_mass = 0.0
-                for tool_link in self._tool_com_links:
-                    tool_mass += tool_link.mass
-                    q_inertial2arm = tool_link.q_link2inertial.inverse() * tool_link.q_world2link.inverse() * self.q_world2arm
-                    p_arm2link_arm = self.q_world2arm.apply(tool_link.p_world2link - self.p_world2arm)
-                    p_link2inertial_arm = q_inertial2arm.apply(tool_link.p_link2inertial)
-                    p_arm2inertial_arm = p_arm2link_arm + p_link2inertial_arm
-                    p_arm2fts_arm = self.p_arm2fts
-                    p_fts2inertial_arm = (p_arm2inertial_arm - p_arm2fts_arm).xyz
-                    com_x += p_fts2inertial_arm[0]
-                    com_x += p_fts2inertial_arm[1]
-                    com_x += p_fts2inertial_arm[2]
-                self.tool_mass = tool_mass
-                self._tool_com_wrt_arm = Vector3d().from_xyz((com_x/N, com_y/N, com_z/N))
-                # Update physics only after reset.
-                self._update_physics = False
+                    # Update tool physics
+                    N = len(self._tool_com_links)
+                    com_x, com_y, com_z = 0.0, 0.0, 0.0
+                    tool_mass = 0.0
+                    for tool_link in self._tool_com_links:
+                        tool_mass += tool_link.mass
+                        q_inertial2arm = tool_link.q_link2inertial.inverse() * tool_link.q_world2link.inverse() * self.q_world2arm
+                        p_arm2link_arm = self.q_world2arm.apply(tool_link.p_world2link - self.p_world2arm)
+                        p_link2inertial_arm = q_inertial2arm.apply(tool_link.p_link2inertial)
+                        p_arm2inertial_arm = p_arm2link_arm + p_link2inertial_arm
+                        p_arm2fts_arm = self.p_arm2fts
+                        p_fts2inertial_arm = (p_arm2inertial_arm - p_arm2fts_arm).xyz
+                        com_x += p_fts2inertial_arm[0]
+                        com_x += p_fts2inertial_arm[1]
+                        com_x += p_fts2inertial_arm[2]
+                    self.tool_mass = tool_mass
+                    self._tool_com_wrt_arm = Vector3d().from_xyz((com_x/N, com_y/N, com_z/N))
+                    # Update physics only after reset.
+                    self._update_physics = False
         else:
             raise RuntimeError(self._CONNECTION_ERROR_MSG)
 
