@@ -27,10 +27,10 @@ from numpy import typing as npt
 class TCPComplianceControllerCfg(ControllerCfg):
     period: float = -1.0
     gravity: Vector3d = Vector3d().from_xyz([0.0, 0.0, -9.81])
-    wa_force: float = 1e2
-    wa_torque: float = np.pi * 1e2
-    Kp_lin: npt.NDArray[np.float64] = 1000.0 * np.identity(3)
-    Kp_ang: npt.NDArray[np.float64] = 10000.0 * np.pi * np.identity(3)
+    wa_force: float = 1e3
+    wa_torque: float = np.pi * 1e3
+    Kp_lin: npt.NDArray[np.float64] = 1e4 * np.identity(3)
+    Kp_ang: npt.NDArray[np.float64] = 1e5 * np.pi * np.identity(3)
     Kd: npt.NDArray[np.float64] = 350.0 * np.identity(6)
 
 
@@ -160,7 +160,7 @@ class TCPComplianceController(Controller):
         joint_vel = np.clip(joint_vel, a_min=-clip_value, a_max=clip_value)
         # Additional 15 % global damping against unwanted null space motion.
         # This will cause exponential slow-down with action input == 0
-        joint_vel *= 0.85
+        joint_vel *= 0.25
 
         # Send commands to robot
         if isinstance(self.control_interface, JointVelocityMotorControl):

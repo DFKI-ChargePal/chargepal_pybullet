@@ -4,17 +4,19 @@ from __future__ import annotations
 import numpy as np
 from rigmopy import utils_math as rp_math
 from rigmopy import Quaternion, Vector3d
+from dataclasses import dataclass
 
 # local
 import gym_chargepal.utility.cfg_handler as ch
 from gym_chargepal.bullet.jacobian import Jacobian
 from gym_chargepal.bullet.ik_solver import IKSolver
-from gym_chargepal.envs.env_base import Environment
+from gym_chargepal.envs.env_base import Environment, EnvironmentCfg
 from gym_chargepal.sensors.sensor_ft import FTSensor
 from gym_chargepal.sensors.sensor_plug import PlugSensor
 from gym_chargepal.worlds.world_plugger import WorldPlugger
 from gym_chargepal.sensors.sensor_socket import SocketSensor
 from gym_chargepal.bullet.ur_arm_virtual import VirtualURArm
+from gym_chargepal.reward.reward_dist import DistanceReward
 from gym_chargepal.reward.reward_pose_wrench import PoseWrenchReward
 from gym_chargepal.controllers.controller_tcp_compliance import TCPComplianceController
 from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotorControl
@@ -24,6 +26,9 @@ from gym_chargepal.bullet.joint_velocity_motor_control import JointVelocityMotor
 from typing import Any
 from numpy import typing as npt
 
+@dataclass
+class EnvironmentPluggerComplianceCtrlCfg(EnvironmentCfg):
+    hw_interface: str = 'joint_velocity'
 
 
 class EnvironmentPluggerComplianceCtrl(Environment):
@@ -33,6 +38,9 @@ class EnvironmentPluggerComplianceCtrl(Environment):
         # Update environment configuration
         config_env = ch.search(kwargs, 'environment')
         Environment.__init__(self, config_env)
+        # create configuration and overwrite values
+        self.cfg: EnvironmentPluggerComplianceCtrlCfg = EnvironmentPluggerComplianceCtrlCfg()
+        self.cfg.update(**config_env)
         # Extract component hyperparameter from kwargs
         config_start = ch.search(kwargs, 'start')
         config_world = ch.search(kwargs, 'world')
@@ -56,8 +64,14 @@ class EnvironmentPluggerComplianceCtrl(Environment):
         self.virtual_arm = VirtualURArm(config_virtual_arm, self.world)
         self.jacobian = Jacobian(config_jacobian, self.world.ur_arm)
         self.ik_solver = IKSolver(config_ik_solver, self.world.ur_arm)
-        self.control_interface = JointPositionMotorControl(config_control_interface, self.world.ur_arm)
-        # self.control_interface = JointVelocityMotorControl(config_control_interface, self.world.ur_arm)
+        self.control_interface: JointPositionMotorControl | JointVelocityMotorControl
+        if self.cfg.hw_interface == 'joint_velocity':
+            self.control_interface = JointVelocityMotorControl(config_control_interface, self.world.ur_arm)
+        elif self.cfg.hw_interface == 'joint_position':
+            self.control_interface = JointPositionMotorControl(config_control_interface, self.world.ur_arm)
+        else:
+            raise ValueError(f"Unknown Hardware interface '{self.cfg.hw_interface}'. "
+                             f"Options are: 'joint_velocity', 'joint_position'")
         self.ft_sensor = FTSensor(config_ft_sensor, self.world.ur_arm)
         self.plug_sensor = PlugSensor(config_plug_sensor, self.world.ur_arm)
         self.socket_sensor = SocketSensor(config_socket_sensor, self.world.ur_arm, self.world.socket)
@@ -70,7 +84,8 @@ class EnvironmentPluggerComplianceCtrl(Environment):
             self.control_interface,
             self.plug_sensor
         )
-        self.reward = PoseWrenchReward(config_reward, self.clock)
+        # self.reward = PoseWrenchReward(config_reward, self.clock)
+        self.reward = DistanceReward(config_reward, self.clock)
 
     def reset(self) -> npt.NDArray[np.float32]:
         # Reset environment
@@ -101,8 +116,9 @@ class EnvironmentPluggerComplianceCtrl(Environment):
         done = self.done
         obs = self.get_obs()
         info = self.compose_info()
-        reward = self.reward.compute(
-            self.world.ur_arm.X_arm2plug, self.world.socket.X_arm2socket, self.world.ur_arm.wrench, done)
+        reward = self.reward.compute(self.world.ur_arm.X_arm2plug, self.world.socket.X_arm2socket, done)
+        # reward = self.reward.compute(
+        #     self.world.ur_arm.X_arm2plug, self.world.socket.X_arm2socket, self.world.ur_arm.wrench, done)
         return obs, reward, done, info
 
     def close(self) -> None:

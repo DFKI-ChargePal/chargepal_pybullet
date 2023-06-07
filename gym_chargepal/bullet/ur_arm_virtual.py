@@ -28,8 +28,8 @@ class VirtualURArmCfg(ConfigHandler):
     tcp_link_name: str = ''
     mass_min: float = 1e-4
     inertia_min: float = 1e-7
-    mass_generic: float = 10.0
-    inertia_generic: float = 100.0
+    mass_generic: float = 1.0
+    inertia_generic: float = 1.0
 
 
 class VirtualURArm:
