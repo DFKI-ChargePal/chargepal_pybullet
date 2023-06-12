@@ -13,8 +13,9 @@ from pybullet_utils.bullet_client import BulletClient
 from gym_chargepal.bullet import (
     ARM_LINK_NAMES,
     ARM_JOINT_NAMES,
-    ARM_JOINT_LIMITS,
     BulletJointState,
+    ARM_JOINT_POS_LIMITS,
+    ARM_JOINT_VEL_LIMITS,
     ARM_JOINT_DEFAULT_VALUES
 )
 from gym_chargepal.bullet.body_link import BodyLink
@@ -40,7 +41,8 @@ class URArmCfg(ConfigHandler):
     arm_link_names: list[str] = field(default_factory=lambda: ARM_LINK_NAMES)
     arm_joint_names: list[str] = field(default_factory=lambda: ARM_JOINT_NAMES)
     joint_default_values: dict[str, float] = field(default_factory=lambda: ARM_JOINT_DEFAULT_VALUES)
-    joint_limits: dict[str, tuple[float, float]] = field(default_factory=lambda: ARM_JOINT_LIMITS)
+    joint_pos_limits: dict[str, tuple[float, float]] = field(default_factory=lambda: ARM_JOINT_POS_LIMITS)
+    joint_vel_limits: dict[str, float] = field(default_factory=lambda: ARM_JOINT_VEL_LIMITS)
     tcp_link_name: str = 'plug'
     tool_com_link_names: tuple[str, ...] = ('plug_root', 'plug')
     base_link_name: str = 'base'
@@ -209,6 +211,7 @@ class URArm:
                         targetVelocity=0.0
                         )
             self._update_physics = True
+            self.update()
         else:
             raise RuntimeError(self._CONNECTION_ERROR_MSG)
 
@@ -263,6 +266,30 @@ class URArm:
         pos = tuple(joint[state_idx] for joint in self._arm_state)
         return pos
 
+    def clip_joint_pos(self, joint_pos: tuple[float, ...]) -> tuple[float, ...]:
+        """ Helper function to clip joint positions to the robot configuration limits.
+
+        Args:
+            joint_pos: Joint position vector
+
+        Returns:
+            Clipped joint position vector
+        """
+        clipped_pos = [np.clip(jp, *jp_min_max) for jp, jp_min_max in zip(joint_pos, self.cfg.joint_pos_limits.values())]
+        return tuple(clipped_pos)
+
+    def clip_joint_vel(self, joint_vel: tuple[float, ...]) -> tuple[float, ...]:
+        """ Helper function to clip joint velocities to the robot configuration limits.
+
+        Args:
+            joint_vel: Joint velocity vector
+
+        Returns:
+            Clipped joint velocity vector
+        """
+        clipped_vel = [np.clip(jv, -v_lim, v_lim) for jv, v_lim in zip(joint_vel, self.cfg.joint_vel_limits.values())] 
+        return tuple(clipped_vel)
+
     @property
     def joint_vel(self) -> tuple[float, ...]:
         state_idx = BulletJointState.JOINT_VELOCITY
@@ -300,11 +327,11 @@ class URArm:
         else:
             X_world2base = self.cfg.X_world2arm
         return X_world2base
-    
+
     @property
     def p_world2arm(self) -> Vector3d:
         return self.X_world2arm.p
-    
+
     @property
     def q_world2arm(self) -> Quaternion:
         return self.X_world2arm.q
@@ -325,7 +352,7 @@ class URArm:
         return norm_wrench
 
     @property
-    def X_arm2fts(self) -> Pose:        
+    def X_arm2fts(self) -> Pose:
         if self.is_connected:
             # Get arm pose
             X_world2arm = self.base_link.X_world2link
@@ -359,5 +386,3 @@ class URArm:
             return self._fts_com
         else:
             raise RuntimeError(self._CONNECTION_ERROR_MSG)
-
-

@@ -63,6 +63,10 @@ class World(metaclass=abc.ABCMeta):
         self.cfg.update(**config)
         self.bullet_client: BulletClient = None
         self.sim_steps = int(self.cfg.freq_sim // self.cfg.freq_ctrl)
+        if self.cfg.freq_sim % self.cfg.freq_ctrl != 0:
+            LOGGER.warning(f"Simulation frequency '{self.cfg.freq_sim}' is not a multiple of"
+                           f"control frequency '{self.cfg.freq_ctrl}'")
+        LOGGER.debug(f"World will be simulated in {self.sim_steps} steps per control cycle")
         # Find chargepal ros description package
         ros_pkg = rospkg.RosPack()
         ros_pkg_path = ros_pkg.get_path(self.cfg.model_description_pkg)

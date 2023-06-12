@@ -84,7 +84,7 @@ class WorldReacher(World):
             self.bullet_client.setGravity(*self.cfg.gravity)
             # Create bullet body helper objects
             self.ur_arm.connect(self.bullet_client, self.robot_id)
-        
+
         self.ur_arm.reset(joint_cfg=joint_conf)
         self.ur_arm.update()
         self.draw_target(render)

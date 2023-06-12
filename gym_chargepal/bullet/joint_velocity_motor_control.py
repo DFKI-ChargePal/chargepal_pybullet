@@ -33,7 +33,12 @@ class JointVelocityMotorControl:
         self.ur_arm = ur_arm
 
     def update(self, tgt_vel: Tuple[float, ...]) -> None:
-        """ Update velocity controllers. Inputs are the desired joint velocities of the arm. """
+        """ Update velocity controllers.
+
+        Args:
+            tgt_vel: Desired joint velocities of the arm
+        """
+        
         self.ur_arm.bullet_client.setJointMotorControlArray(
             bodyIndex=self.ur_arm._body_id,
             jointIndices=[idx for idx in self.ur_arm._joint_idx_dict.values()],

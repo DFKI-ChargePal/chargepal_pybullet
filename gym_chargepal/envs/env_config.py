@@ -5,6 +5,7 @@ from gym import spaces
 from rigmopy import Pose
 
 # local
+from gym_chargepal.envs.env_plugger_mot_ctrl import EnvironmentPluggerMotionCtrl
 from gym_chargepal.envs.env_reacher_pos_ctrl import EnvironmentReacherPositionCtrl
 from gym_chargepal.envs.env_plugger_pos_ctrl import EnvironmentPluggerPositionCtrl
 from gym_chargepal.envs.env_plugger_cop_ctrl import EnvironmentPluggerComplianceCtrl
@@ -107,18 +108,17 @@ testbed_plugger_6dof_position_ctrl_v1 = {
 }
 
 
+# /////////////////////////////////////////////////////////// #
+# ///                                                     /// #
+# ///   Environments Plugger with TCP motion controller   /// #
+# ///                                                     /// #
+# /////////////////////////////////////////////////////////// #
 
-# /////////////////////////////////////////////////////////////// #
-# ///                                                         /// #
-# ///   Environments Plugger with TCP compliance controller   /// #
-# ///                                                         /// #
-# /////////////////////////////////////////////////////////////// #
-
-testbed_plugger_6dof_compliance_ctrl_v1 = {
+testbed_plugger_6dof_motion_ctrl_v1 = {
     'environment': {
-        'type': EnvironmentPluggerComplianceCtrl,
-        'T': 100,
-        'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(12,), dtype=np.float32),
+        'type': EnvironmentPluggerMotionCtrl,
+        'T': 200,
+        'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(13,), dtype=np.float32),
     },
 
@@ -135,8 +135,52 @@ testbed_plugger_6dof_compliance_ctrl_v1 = {
     },
 
     'low_level_control': {
-        'wa_lin': 0.5,          # action scaling in linear directions [m]
-        'wa_ang': 0.5 * np.pi,  # action scaling in angular directions [rad]
+        'wa_lin': 0.005,          # action scaling in linear directions [m]
+        'wa_ang': 0.005,  # action scaling in angular directions [rad]
+        'pd_controller': {
+            'kp': (2.5, 2.5, 2.5, 2.5, 2.5, 2.5),
+            # 'kp': (1e5, 1e5, 1e5, 1e6, 1e6, 1e6),
+            'kd': (0.5, 0.5, 0.5, 0.5, 0.5, 0.5),
+            # 'kd': (1e4, 1e4, 1e4, 1e4, 1e4, 1e4),
+        },
     },
 
+}
+
+
+# /////////////////////////////////////////////////////////////// #
+# ///                                                         /// #
+# ///   Environments Plugger with TCP compliance controller   /// #
+# ///                                                         /// #
+# /////////////////////////////////////////////////////////////// #
+
+testbed_plugger_6dof_compliance_ctrl_v1 = {
+    'environment': {
+        'type': EnvironmentPluggerComplianceCtrl,
+        'T': 1000,
+        'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
+        'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(13,), dtype=np.float32),
+    },
+
+    'world': {
+        'freq_ctrl': 120,
+    },
+
+    'start': {
+        # Start configuration w.r.t. target configuration'
+        # 'X_tgt2plug': Pose().from_xyz((0.0, 0.0, -0.1)),
+        'X_tgt2plug': Pose().from_xyz((0.06, 0.0, -0.1)),
+        # Reset variance of the start pose
+        # 'variance': ((0.025, 0.025, 0.01), (0.01 * np.pi, 0.01 * np.pi, 0.01 * np.pi)),
+    },
+
+    'socket': {
+        # Socket configuration w.r.t. the arm base
+        'X_arm2socket': Pose().from_xyz((0.90, 0.50, 0.50)).from_euler_angle((0.0, np.pi/2, 0.0)),
+    },
+
+    'low_level_control': {
+        'wa_lin': 0.001,  # action scaling in linear directions [m]
+        'wa_ang': 0.01,  # action scaling in angular directions [rad]
+    },
 }

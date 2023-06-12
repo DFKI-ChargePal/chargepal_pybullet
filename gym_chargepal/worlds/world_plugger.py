@@ -98,7 +98,6 @@ class WorldPlugger(World):
             self.socket.connect(self.bullet_client, self.socket_id)
 
         self.ur_arm.reset(joint_cfg=joint_conf)
-        self.step(render=False)
         self.ur_arm.update()
         self.socket.update()
 
