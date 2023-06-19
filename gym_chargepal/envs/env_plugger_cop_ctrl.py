@@ -46,7 +46,6 @@ class EnvironmentPluggerComplianceCtrl(Environment):
         config_ur_arm = ch.search(kwargs, 'ur_arm')
         config_socket = ch.search(kwargs, 'socket')
         config_reward = ch.search(kwargs, 'reward')
-        config_jacobian = ch.search(kwargs, 'jacobian')
         config_ik_solver = ch.search(kwargs, 'ik_solver')
         config_ft_sensor = ch.search(kwargs, 'ft_sensor')
         config_virtual_arm = ch.search(kwargs, 'virtual_arm')

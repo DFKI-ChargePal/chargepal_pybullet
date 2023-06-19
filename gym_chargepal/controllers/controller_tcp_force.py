@@ -46,4 +46,10 @@ class TCPForceController(TCPController):
         self.cfg.update(**config)
 
     def update(self, action: npt.NDArray[np.float32]) -> None:
-        return super().update(action)
+        # Scale action represented in TCP frame
+        xyz = Vector3d().from_xyz(action[0:3] * self.cfg.wa_lin)
+        rpy = Vector3d().from_xyz(action[3:6] * self.cfg.wa_ang)
+
+
+
+

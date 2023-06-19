@@ -15,7 +15,7 @@ from gym_chargepal.sensors.sensor_plug import PlugSensor
 from gym_chargepal.worlds.world_plugger import WorldPlugger
 from gym_chargepal.sensors.sensor_socket import SocketSensor
 from gym_chargepal.bullet.ur_arm_virtual import VirtualURArm
-from gym_chargepal.reward.reward_dist import DistanceReward
+# from gym_chargepal.reward.reward_dist import DistanceReward
 from gym_chargepal.reward.reward_pose_wrench import PoseWrenchReward
 from gym_chargepal.controllers.controller_tcp_motion import TCPMotionController
 from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotorControl
@@ -46,7 +46,6 @@ class EnvironmentPluggerMotionCtrl(Environment):
         config_ur_arm = ch.search(kwargs, 'ur_arm')
         config_socket = ch.search(kwargs, 'socket')
         config_reward = ch.search(kwargs, 'reward')
-        config_jacobian = ch.search(kwargs, 'jacobian')
         config_ik_solver = ch.search(kwargs, 'ik_solver')
         config_ft_sensor = ch.search(kwargs, 'ft_sensor')
         config_virtual_arm = ch.search(kwargs, 'virtual_arm')
@@ -81,8 +80,8 @@ class EnvironmentPluggerMotionCtrl(Environment):
             self.control_interface,
             self.plug_sensor
         )
-        # self.reward = PoseWrenchReward(config_reward, self.clock)
-        self.reward = DistanceReward(config_reward, self.clock)
+        self.reward = PoseWrenchReward(config_reward, self.clock)
+        # self.reward = DistanceReward(config_reward, self.clock)
 
     def reset(self) -> npt.NDArray[np.float32]:
         # Reset environment
@@ -113,9 +112,9 @@ class EnvironmentPluggerMotionCtrl(Environment):
         done = self.done
         obs = self.get_obs()
         info = self.compose_info()
-        reward = self.reward.compute(self.world.ur_arm.X_arm2plug, self.world.socket.X_arm2socket, done)
-        # reward = self.reward.compute(
-        #     self.world.ur_arm.X_arm2plug, self.world.socket.X_arm2socket, self.world.ur_arm.wrench, done)
+        # reward = self.reward.compute(self.world.ur_arm.X_arm2plug, self.world.socket.X_arm2socket, done)
+        reward = self.reward.compute(
+            self.world.ur_arm.X_arm2plug, self.world.socket.X_arm2socket, self.world.ur_arm.wrench, done)
         return obs, reward, done, info
 
     def close(self) -> None:
