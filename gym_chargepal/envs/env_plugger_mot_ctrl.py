@@ -8,7 +8,6 @@ from dataclasses import dataclass
 
 # local
 import gym_chargepal.utility.cfg_handler as ch
-from gym_chargepal.bullet.jacobian import Jacobian
 from gym_chargepal.bullet.ik_solver import IKSolver
 from gym_chargepal.envs.env_base import Environment, EnvironmentCfg
 from gym_chargepal.sensors.sensor_ft import FTSensor
@@ -62,7 +61,6 @@ class EnvironmentPluggerMotionCtrl(Environment):
         self.world = WorldPlugger(config_world, config_ur_arm, config_start, config_socket)
         config_virtual_arm['tcp_link_name'] = self.world.ur_arm.cfg.tcp_link_name
         self.virtual_arm = VirtualURArm(config_virtual_arm, self.world)
-        self.jacobian = Jacobian(config_jacobian, self.world.ur_arm)
         self.ik_solver = IKSolver(config_ik_solver, self.world.ur_arm)
         self.control_interface: JointPositionMotorControl | JointVelocityMotorControl
         if self.cfg.hw_interface == 'joint_velocity':
@@ -78,7 +76,6 @@ class EnvironmentPluggerMotionCtrl(Environment):
         config_low_level_control['period'] = self.world.ctrl_period
         self.low_level_control = TCPMotionController(
             config_low_level_control,
-            self.jacobian,
             self.world.ur_arm,
             self.virtual_arm,
             self.control_interface,

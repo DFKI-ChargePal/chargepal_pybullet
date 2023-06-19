@@ -135,13 +135,11 @@ testbed_plugger_6dof_motion_ctrl_v1 = {
     },
 
     'low_level_control': {
-        'wa_lin': 0.005,          # action scaling in linear directions [m]
-        'wa_ang': 0.005,  # action scaling in angular directions [rad]
+        'wa_lin': 0.01,  # action scaling in linear directions [m]
+        'wa_ang': 0.01,  # action scaling in angular directions [rad]
         'pd_controller': {
             'kp': (2.5, 2.5, 2.5, 2.5, 2.5, 2.5),
-            # 'kp': (1e5, 1e5, 1e5, 1e6, 1e6, 1e6),
             'kd': (0.5, 0.5, 0.5, 0.5, 0.5, 0.5),
-            # 'kd': (1e4, 1e4, 1e4, 1e4, 1e4, 1e4),
         },
     },
 

@@ -19,7 +19,6 @@ from gym_chargepal.utility.cfg_handler import ConfigHandler
 
 # mypy
 from typing import Any
-from gym_chargepal.sensors.sensor import Sensor
 
 
 LOGGER = logging.getLogger(__name__)
