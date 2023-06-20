@@ -18,7 +18,7 @@ LOGGER = logging.getLogger(__name__)
 class JointVelocityMotorControlCfg(ConfigHandler):
     control_mode: int = p.VELOCITY_CONTROL
     target_pos: Tuple[float, ...] = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)  # no effect in velocity control mode
-    forces: Tuple[float, ...] = (330.0, 330.0, 150.0, 54.0, 54.0, 54.0)
+    forces: Tuple[float, ...] = (999.0, 999.0, 999.0, 999.0, 999.0, 999.0) # (330.0, 330.0, 150.0, 54.0, 54.0, 54.0)
     pos_gains: Tuple[float, ...] = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)  # no effect in velocity control mode
     vel_gains: Tuple[float, ...] = (1.0, 1.0, 1.0, 1.0, 1.0, 1.0)
 
