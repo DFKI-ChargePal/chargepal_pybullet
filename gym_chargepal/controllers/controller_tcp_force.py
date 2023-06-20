@@ -21,6 +21,7 @@ from numpy import typing as npt
 @dataclass
 class TCPForceControllerCfg(TCPControllerCfg):
     gravity: Vector3d = Vector3d().from_xyz([0.0, 0.0, -9.81])
+    error_scale: float = 0.5
 
 
 class TCPForceController(TCPController):
@@ -47,17 +48,18 @@ class TCPForceController(TCPController):
 
     def update(self, action: npt.NDArray[np.float32]) -> None:
         # Scale action represented in sensor frame
-        f_add_sensor = Vector3d().from_xyz(action[0:3] * self.cfg.wa_lin)
-        t_add_sensor = Vector3d().from_xyz(action[3:6] * self.cfg.wa_ang)
+        f_add_plug = Vector3d().from_xyz(action[0:3] * self.cfg.wa_lin)
+        t_add_plug = Vector3d().from_xyz(action[3:6] * self.cfg.wa_ang)
 
         # Rotate action wrench in arm base frame.
-        q_ft2arm = self.ur_arm.q_arm2fts.inverse()
-        f_add_arm = q_ft2arm.apply(f_add_sensor)
-        t_add_arm = q_ft2arm.apply(t_add_sensor)
+        q_arm2plug = self.ur_arm.q_arm2plug
+        f_add_arm = q_arm2plug.apply(f_add_plug)
+        t_add_arm = q_arm2plug.apply(t_add_plug)
         ft_add_arm = Vector6d().from_Vector3d(f_add_arm, t_add_arm)
 
         # Get latest force readings in arm base frame
         ft_old_sensor = self.ur_arm.raw_wrench.split()
+        q_ft2arm = self.ur_arm.q_arm2fts.inverse()
         f_old_arm = q_ft2arm.apply(ft_old_sensor[0])
         t_old_arm = q_ft2arm.apply(ft_old_sensor[1])
 
@@ -86,5 +88,5 @@ class TCPForceController(TCPController):
 
         # New force torque signal
         f_net = ft_add_arm - ft_old_arm_comp
-        f_ctrl = self.spatial_pd_ctrl.update(f_net, self.cfg.period)
+        f_ctrl = self.cfg.error_scale * self.spatial_pd_ctrl.update(f_net, self.cfg.period)
         self._to_joint_commands(f_ctrl)

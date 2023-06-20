@@ -118,7 +118,7 @@ testbed_plugger_6dof_position_ctrl_v1 = {
 testbed_plugger_6dof_force_ctrl_v1 = {
     'environment': {
         'type': EnvironmentPluggerForceCtrl,
-        'T': 200,
+        'T': 300,
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(13,), dtype=np.float32),
     },
@@ -127,7 +127,7 @@ testbed_plugger_6dof_force_ctrl_v1 = {
         # Start configuration w.r.t. target configuration'
         'X_tgt2plug': Pose().from_xyz((0.0, 0.0, -0.1)),
         # Reset variance of the start pose
-        'variance': ((0.025, 0.025, 0.01), (0.01 * np.pi, 0.01 * np.pi, 0.01 * np.pi)),
+        # 'variance': ((0.025, 0.025, 0.01), (0.01 * np.pi, 0.01 * np.pi, 0.01 * np.pi)),
     },
 
     'socket': {
@@ -136,11 +136,11 @@ testbed_plugger_6dof_force_ctrl_v1 = {
     },
 
     'low_level_control': {
-        'wa_lin': 0.01,  # action scaling in linear directions [m]
-        'wa_ang': 0.01,  # action scaling in angular directions [rad]
+        'wa_lin': 1.0,  # action scaling in linear directions [m]
+        'wa_ang': 1.0,  # action scaling in angular directions [rad]
         'pd_controller': {
-            'kp': (2.5, 2.5, 2.5, 2.5, 2.5, 2.5),
-            'kd': (0.5, 0.5, 0.5, 0.5, 0.5, 0.5),
+            'kp': (0.05, 0.05, 0.05, 1.5, 1.5, 1.5),
+            'kd': (0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         },
     },
 }
