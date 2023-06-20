@@ -20,7 +20,6 @@ from numpy import typing as npt
 
 @dataclass
 class TCPForceControllerCfg(TCPControllerCfg):
-    gravity: Vector3d = Vector3d().from_xyz([0.0, 0.0, -9.81])
     error_scale: float = 0.5
 
 
@@ -46,10 +45,20 @@ class TCPForceController(TCPController):
         self.cfg: TCPForceControllerCfg = TCPForceControllerCfg()
         self.cfg.update(**config)
 
-    def update(self, action: npt.NDArray[np.float32]) -> None:
+    def _compute_ft_error(self, fta_plug: Vector6d, fts_sensor: Vector6d) -> Vector6d:
+        """ Computes the force torque error wrt. the robot arm base frame
+
+        Args:
+            fta_plug: Desired force torques wrt. to the plug frame
+            fts_sensor: Current force torques readings wrt. the sensor frame
+
+        Returns:
+            Force torque error wrt. the robot arm base frame
+        """
         # Scale action represented in sensor frame
-        f_add_plug = Vector3d().from_xyz(action[0:3] * self.cfg.wa_lin)
-        t_add_plug = Vector3d().from_xyz(action[3:6] * self.cfg.wa_ang)
+        ft_add_plug = fta_plug.split()
+        f_add_plug = self.cfg.wa_lin * ft_add_plug[0]
+        t_add_plug = self.cfg.wa_ang * ft_add_plug[1]
 
         # Rotate action wrench in arm base frame.
         q_arm2plug = self.ur_arm.q_arm2plug
@@ -58,7 +67,7 @@ class TCPForceController(TCPController):
         ft_add_arm = Vector6d().from_Vector3d(f_add_arm, t_add_arm)
 
         # Get latest force readings in arm base frame
-        ft_old_sensor = self.ur_arm.raw_wrench.split()
+        ft_old_sensor = fts_sensor.split()
         q_ft2arm = self.ur_arm.q_arm2fts.inverse()
         f_old_arm = q_ft2arm.apply(ft_old_sensor[0])
         t_old_arm = q_ft2arm.apply(ft_old_sensor[1])
@@ -86,7 +95,15 @@ class TCPForceController(TCPController):
         else:
             ft_old_arm_comp = Vector6d().from_Vector3d(f_old_arm_comp, t_old_arm_comp)
 
-        # New force torque signal
-        f_net = ft_add_arm - ft_old_arm_comp
+        ft_error_arm = ft_add_arm - ft_old_arm_comp
+        return ft_error_arm
+
+    def update(self, action: npt.NDArray[np.float32]) -> None:
+        """ Concrete update rule of the force controller
+
+        Args:
+            action: Target wrench
+        """
+        f_net = self._compute_ft_error(Vector6d().from_xyzXYZ(np.array(action, dtype=np.float64)), self.ur_arm.raw_wrench)
         f_ctrl = self.cfg.error_scale * self.spatial_pd_ctrl.update(f_net, self.cfg.period)
         self._to_joint_commands(f_ctrl)

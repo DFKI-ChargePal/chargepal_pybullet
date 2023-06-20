@@ -5,7 +5,7 @@ import abc
 import numpy as np
 from numpy.linalg import inv
 from dataclasses import dataclass
-from rigmopy import Pose, Vector6d
+from rigmopy import Pose, Vector3d, Vector6d
 
 # local
 import gym_chargepal.utility.cfg_handler as ch
@@ -25,6 +25,7 @@ from numpy import typing as npt
 @dataclass
 class TCPControllerCfg(ControllerCfg):
     period: float = -1.0
+    gravity: Vector3d = Vector3d().from_xyz([0.0, 0.0, -9.81])
 
 
 class TCPController(Controller):

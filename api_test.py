@@ -38,8 +38,8 @@ def main(env_name: str, n_episodes: int, gui: bool) -> None:
     while True:
 
         action = env.action_space.sample()
-        action = np.zeros_like(action)
-        action[2] = 1.0
+        # action = np.zeros_like(action)
+        # action[2] = 1.0
         # if n_step <= 67:
         #     action[2] = 1.0
         obs, reward, done, _ = env.step(action=action)

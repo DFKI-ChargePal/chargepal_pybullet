@@ -48,21 +48,29 @@ class TCPMotionController(TCPController):
         self.cfg: TCPMotionControllerCfg = TCPMotionControllerCfg()
         self.cfg.update(**config)
 
-    def update(self, action: npt.NDArray[np.float32]) -> None:
-        # Compute motion error wrt robot arm base frame
+    def _compute_motion_error(self, X_plug2goal: Vector6d, X_arm2plug: Pose) -> Vector6d:
+        """ Computes the motion error wrt. the robot arm base frame
 
-        # Rotate action into robot base frame
+        Args:
+            X_plug2goal: Desired action input between plug and goal (euler angle)
+            X_arm2plug: Current pose between arm and plug
+
+        Returns:
+            6D motion error wrt. the robot arm base frame
+        """
+        # Rotate linear action into robot base frame
         q_arm2tcp = self.ur_arm.q_arm2plug
-        p_action = q_arm2tcp.apply(Vector3d().from_xyz(action[0:3] * self.cfg.wa_lin))
-        q_action = Quaternion().from_euler_angle(action[3:6] * self.cfg.wa_ang)
+        pos_plug2goal, eul_plug2goal = X_plug2goal.split()
+        p_plug2goal = q_arm2tcp.apply(self.cfg.wa_lin * pos_plug2goal)
+        q_plug2goal = Quaternion().from_euler_angle((self.cfg.wa_ang * eul_plug2goal).xyz)
 
         # Compute spatial error
-        p_arm2goal = self.X_arm2goal.p + p_action
-        q_arm2goal = self.X_arm2goal.q * q_action
+        p_arm2goal = self.X_arm2goal.p + p_plug2goal
+        q_arm2goal = self.X_arm2goal.q * q_plug2goal
         self.X_arm2goal = Pose().from_pq(p_arm2goal, q_arm2goal)
-        X_arm2tcp = self.plug_sensor.noisy_X_arm2sensor
-        q_error_wrt_arm = rp_math.quaternion_difference(X_arm2tcp.q, self.X_arm2goal.q)
-        p_error_wrt_arm = self.X_arm2goal.p - X_arm2tcp.p
+        
+        q_error_wrt_arm = rp_math.quaternion_difference(X_arm2plug.q, self.X_arm2goal.q)
+        p_error_wrt_arm = self.X_arm2goal.p - X_arm2plug.p
 
         r_error = np.array(q_error_wrt_arm.axis_angle)
 
@@ -82,7 +90,17 @@ class TCPMotionController(TCPController):
         distance_error = np.clip(p_error_wrt_arm.magnitude, -1.0, 1.0)
         pos_error = distance_error * p_error_wrt_arm
 
-        error = self.cfg.error_scale * Vector6d().from_Vector3d(pos_error, ax_error)
-        f_net = error
-        f_ctrl = self.spatial_pd_ctrl.update(f_net, self.cfg.period)
+        motion_error = Vector6d().from_Vector3d(pos_error, ax_error)
+        return motion_error
+
+    def update(self, action: npt.NDArray[np.float32]) -> None:
+        """ Concrete update rule of the motion controller
+
+        Args:
+            action: Relative motion command
+        """
+        X_plug2goal = Vector6d().from_xyzXYZ(np.array(action, dtype=np.float64))
+        X_arm2plug = self.plug_sensor.noisy_X_arm2sensor
+        f_net = self._compute_motion_error(X_plug2goal, X_arm2plug)
+        f_ctrl = self.cfg.error_scale * self.spatial_pd_ctrl.update(f_net, self.cfg.period)
         self._to_joint_commands(f_ctrl)
