@@ -8,12 +8,10 @@ from dataclasses import dataclass
 from rigmopy import Pose, Vector3d, Vector6d
 
 # local
-import gym_chargepal.utility.cfg_handler as ch
 from gym_chargepal.bullet.ur_arm import URArm
 from gym_chargepal.sensors.sensor_plug import PlugSensor
 from gym_chargepal.bullet.ur_arm_virtual import VirtualURArm
 from gym_chargepal.controllers.controller import Controller, ControllerCfg
-from gym_chargepal.utility.spatial_pd_controller import SpatialPDController
 from gym_chargepal.bullet.joint_velocity_motor_control import JointVelocityMotorControl
 from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotorControl
 
@@ -50,8 +48,6 @@ class TCPController(Controller):
                 # Create configuration and overwrite values
         self.cfg: TCPControllerCfg = TCPControllerCfg()
         self.cfg.update(**config)
-        config_pd_ctrl = ch.search(config, 'pd_controller')
-        self.spatial_pd_ctrl = SpatialPDController(config=config_pd_ctrl)
         # Controller state
         self.X_arm2goal = Pose()
         self.joint_pos = np.zeros(6)
@@ -68,7 +64,6 @@ class TCPController(Controller):
     def reset(self) -> None:
         if not self.vrt_ur_arm.is_connected:
             self.vrt_ur_arm.connect()
-        self.spatial_pd_ctrl.reset()
         self.X_arm2goal = self.plug_sensor.noisy_X_arm2sensor
         self.joint_vel = np.array(self.ur_arm.joint_vel)
         self.joint_pos = np.array(self.ur_arm.joint_pos)

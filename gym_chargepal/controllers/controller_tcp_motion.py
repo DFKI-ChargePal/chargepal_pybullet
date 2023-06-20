@@ -11,6 +11,7 @@ from rigmopy import Vector3d, Vector6d, Pose, Quaternion
 from gym_chargepal.bullet.ur_arm import URArm
 from gym_chargepal.sensors.sensor_plug import PlugSensor
 from gym_chargepal.bullet.ur_arm_virtual import VirtualURArm
+from gym_chargepal.utility.spatial_pd_controller import SpatialPDController
 from gym_chargepal.controllers.controller_tcp import TCPController, TCPControllerCfg
 from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotorControl
 from gym_chargepal.bullet.joint_velocity_motor_control import JointVelocityMotorControl
@@ -23,6 +24,10 @@ from numpy import typing as npt
 @dataclass
 class TCPMotionControllerCfg(TCPControllerCfg):
     error_scale: float = 100.0
+    action_scale_lin: float = 0.005
+    action_scale_ang: float = 0.005
+    spatial_kp: tuple[float, ...] = (2.5, 2.5, 2.5, 2.5, 2.5, 2.5)
+    spatial_kd: tuple[float, ...] = (0.5, 0.5, 0.5, 0.5, 0.5, 0.5)
 
 
 class TCPMotionController(TCPController):
@@ -47,6 +52,15 @@ class TCPMotionController(TCPController):
         # Create configuration and overwrite values
         self.cfg: TCPMotionControllerCfg = TCPMotionControllerCfg()
         self.cfg.update(**config)
+        config_pd_ctrl = {
+            'kp': self.cfg.spatial_kp,
+            'kd': self.cfg.spatial_kd,
+        }
+        self.spatial_pd_ctrl = SpatialPDController(config=config_pd_ctrl)
+
+    def reset(self) -> None:
+        self.spatial_pd_ctrl.reset()
+        return super().reset()
 
     def _compute_motion_error(self, X_plug2goal: Vector6d, X_arm2plug: Pose) -> Vector6d:
         """ Computes the motion error wrt. the robot arm base frame
@@ -61,8 +75,8 @@ class TCPMotionController(TCPController):
         # Rotate linear action into robot base frame
         q_arm2tcp = self.ur_arm.q_arm2plug
         pos_plug2goal, eul_plug2goal = X_plug2goal.split()
-        p_plug2goal = q_arm2tcp.apply(self.cfg.wa_lin * pos_plug2goal)
-        q_plug2goal = Quaternion().from_euler_angle((self.cfg.wa_ang * eul_plug2goal).xyz)
+        p_plug2goal = q_arm2tcp.apply(self.cfg.action_scale_lin * pos_plug2goal)
+        q_plug2goal = Quaternion().from_euler_angle((self.cfg.action_scale_ang * eul_plug2goal).xyz)
 
         # Compute spatial error
         p_arm2goal = self.X_arm2goal.p + p_plug2goal

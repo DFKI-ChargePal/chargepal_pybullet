@@ -9,6 +9,7 @@ from rigmopy import Vector3d, Vector6d
 from gym_chargepal.bullet.ur_arm import URArm
 from gym_chargepal.sensors.sensor_plug import PlugSensor
 from gym_chargepal.bullet.ur_arm_virtual import VirtualURArm
+from gym_chargepal.utility.spatial_pd_controller import SpatialPDController
 from gym_chargepal.controllers.controller_tcp import TCPController, TCPControllerCfg
 from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotorControl
 from gym_chargepal.bullet.joint_velocity_motor_control import JointVelocityMotorControl
@@ -21,6 +22,10 @@ from numpy import typing as npt
 @dataclass
 class TCPForceControllerCfg(TCPControllerCfg):
     error_scale: float = 0.5
+    action_scale_lin: float = 5.0
+    action_scale_ang: float = 5.0
+    spatial_kp: tuple[float, ...] = (0.05, 0.05, 0.05, 1.5, 1.5, 1.5)
+    spatial_kd: tuple[float, ...] = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
 
 class TCPForceController(TCPController):
@@ -44,6 +49,15 @@ class TCPForceController(TCPController):
         # Create configuration and overwrite values
         self.cfg: TCPForceControllerCfg = TCPForceControllerCfg()
         self.cfg.update(**config)
+        config_pd_ctrl = {
+            'kp': self.cfg.spatial_kp,
+            'kd': self.cfg.spatial_kd,
+        }
+        self.spatial_pd_ctrl = SpatialPDController(config=config_pd_ctrl)
+
+    def reset(self) -> None:
+        self.spatial_pd_ctrl.reset()
+        return super().reset()
 
     def _compute_ft_error(self, fta_plug: Vector6d, fts_sensor: Vector6d) -> Vector6d:
         """ Computes the force torque error wrt. the robot arm base frame
@@ -57,8 +71,8 @@ class TCPForceController(TCPController):
         """
         # Scale action represented in sensor frame
         ft_add_plug = fta_plug.split()
-        f_add_plug = self.cfg.wa_lin * ft_add_plug[0]
-        t_add_plug = self.cfg.wa_ang * ft_add_plug[1]
+        f_add_plug = self.cfg.action_scale_lin * ft_add_plug[0]
+        t_add_plug = self.cfg.action_scale_ang * ft_add_plug[1]
 
         # Rotate action wrench in arm base frame.
         q_arm2plug = self.ur_arm.q_arm2plug

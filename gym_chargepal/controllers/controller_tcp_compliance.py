@@ -10,6 +10,7 @@ from rigmopy import Vector3d, Vector6d, Pose, Quaternion
 from gym_chargepal.bullet.ur_arm import URArm
 from gym_chargepal.sensors.sensor_plug import PlugSensor
 from gym_chargepal.bullet.ur_arm_virtual import VirtualURArm
+from gym_chargepal.utility.spatial_pd_controller import SpatialPDController
 from gym_chargepal.controllers.controller_tcp import TCPController, TCPControllerCfg
 from gym_chargepal.bullet.joint_velocity_motor_control import JointVelocityMotorControl
 from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotorControl
@@ -24,6 +25,8 @@ class TCPComplianceControllerCfg(TCPControllerCfg):
     gravity: Vector3d = Vector3d().from_xyz([0.0, 0.0, -9.81])
     wa_force: float = 1e2
     wa_torque: float = np.pi * 1e2
+    spatial_kp: tuple[float, ...] = (0.09, 0.09, 0.09, 0.9, 0.9, 0.9)
+    spatial_kd: tuple[float, ...] = (1e-3, 1e-3, 1e-3, 1e-4, 1e-4, 1e-4)
     Kp_lin: npt.NDArray[np.float64] = 1.85e1 * np.identity(3)  # max 1e5 * np.identity(3)
     Kp_ang: npt.NDArray[np.float64] = 1.25e2 * np.identity(3)  # max 1e3 * np.identity(3)
     Kd: npt.NDArray[np.float64] = 0.1 * np.identity(6)
@@ -51,6 +54,15 @@ class TCPComplianceController(TCPController):
         # Create configuration and overwrite values
         self.cfg: TCPComplianceControllerCfg = TCPComplianceControllerCfg()
         self.cfg.update(**config)
+        config_pd_ctrl = {
+            'kp': self.cfg.spatial_kp,
+            'kd': self.cfg.spatial_kd,
+        }
+        self.spatial_pd_ctrl = SpatialPDController(config=config_pd_ctrl)
+
+    def reset(self) -> None:
+        self.spatial_pd_ctrl.reset()
+        return super().reset()
 
     def update(self, action: npt.NDArray[np.float32]) -> None:
         # Split action and scale it

@@ -134,15 +134,6 @@ testbed_plugger_6dof_force_ctrl_v1 = {
         # Socket configuration w.r.t. the arm base
         'X_arm2socket': Pose().from_xyz((0.90, 0.50, 0.50)).from_euler_angle((0.0, np.pi/2, 0.0)),
     },
-
-    'low_level_control': {
-        'wa_lin': 5.0,  # action scaling in linear directions [m]
-        'wa_ang': 5.0,  # action scaling in angular directions [rad]
-        'pd_controller': {
-            'kp': (0.05, 0.05, 0.05, 1.5, 1.5, 1.5),
-            'kd': (0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        },
-    },
 }
 
 
@@ -171,16 +162,6 @@ testbed_plugger_6dof_motion_ctrl_v1 = {
         # Socket configuration w.r.t. the arm base
         'X_arm2socket': Pose().from_xyz((0.90, 0.50, 0.50)).from_euler_angle((0.0, np.pi/2, 0.0)),
     },
-
-    'low_level_control': {
-        'wa_lin': 0.005,  # action scaling in linear directions [m]
-        'wa_ang': 0.005,  # action scaling in angular directions [rad]
-        'pd_controller': {
-            'kp': (2.5, 2.5, 2.5, 2.5, 2.5, 2.5),
-            'kd': (0.5, 0.5, 0.5, 0.5, 0.5, 0.5),
-        },
-    },
-
 }
 
 

@@ -17,8 +17,8 @@ Tuple6DType = Tuple[float, float, float, float, float, float]
 
 @dataclass
 class SpatialPDControllerCfg(ConfigHandler):
-    kp: Tuple6DType = (0.09, 0.09, 0.09, 0.9, 0.9, 0.9)
-    kd: Tuple6DType = (1e-3, 1e-3, 1e-3, 1e-4, 1e-4, 1e-4)
+    kp: Tuple6DType = (1e0, 1e0, 1e0, 1e0, 1e0, 1e0)
+    kd: Tuple6DType = (1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3)
 
 
 class SpatialPDController:
