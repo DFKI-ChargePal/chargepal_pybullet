@@ -21,10 +21,10 @@ from numpy import typing as npt
 
 @dataclass
 class TCPForceControllerCfg(TCPControllerCfg):
-    error_scale: float = 0.5
-    action_scale_lin: float = 5.0
-    action_scale_ang: float = 5.0
-    spatial_kp: tuple[float, ...] = (0.05, 0.05, 0.05, 1.5, 1.5, 1.5)
+    error_scale: float = 1.0
+    action_scale_lin: float = 0.005
+    action_scale_ang: float = 0.005
+    spatial_kp: tuple[float, ...] = (1e2, 1e2, 1e2, 1e2, 1e2, 1e2)
     spatial_kd: tuple[float, ...] = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
 
@@ -59,7 +59,7 @@ class TCPForceController(TCPController):
         self.spatial_pd_ctrl.reset()
         return super().reset()
 
-    def _compute_ft_error(self, fta_plug: Vector6d, fts_sensor: Vector6d) -> Vector6d:
+    def compute_ft_error(self, fta_plug: Vector6d, fts_sensor: Vector6d) -> Vector6d:
         """ Computes the force torque error wrt. the robot arm base frame
 
         Args:
@@ -81,7 +81,7 @@ class TCPForceController(TCPController):
         ft_add_arm = Vector6d().from_Vector3d(f_add_arm, t_add_arm)
 
         # Get latest force readings in arm base frame
-        ft_old_sensor = fts_sensor.split()
+        ft_old_sensor = self.ur_arm.clip_wrench(fts_sensor).split()
         q_ft2arm = self.ur_arm.q_arm2fts.inverse()
         f_old_arm = q_ft2arm.apply(ft_old_sensor[0])
         t_old_arm = q_ft2arm.apply(ft_old_sensor[1])
@@ -108,7 +108,7 @@ class TCPForceController(TCPController):
             ft_old_arm_comp = Vector6d()
         else:
             ft_old_arm_comp = Vector6d().from_Vector3d(f_old_arm_comp, t_old_arm_comp)
-
+        ft_old_arm_comp = self.ur_arm.norm_wrench(ft_old_arm_comp)
         ft_error_arm = ft_add_arm - ft_old_arm_comp
         return ft_error_arm
 
@@ -118,6 +118,8 @@ class TCPForceController(TCPController):
         Args:
             action: Target wrench
         """
-        f_net = self._compute_ft_error(Vector6d().from_xyzXYZ(np.array(action, dtype=np.float64)), self.ur_arm.raw_wrench)
+        fta_plug = Vector6d().from_xyzXYZ(np.array(action, dtype=np.float64))
+        fts_sensor = self.ur_arm.raw_wrench
+        f_net = self.compute_ft_error(fta_plug, fts_sensor)
         f_ctrl = self.cfg.error_scale * self.spatial_pd_ctrl.update(f_net, self.cfg.period)
         self._to_joint_commands(f_ctrl)

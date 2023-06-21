@@ -343,6 +343,12 @@ class URArm:
         wrench: tuple[float, ...] = self._fts_state[state_idx]
         return Vector6d().from_xyzXYZ(wrench)
 
+    def clip_wrench(self, raw_wrench: Vector6d) -> Vector6d:
+        return Vector6d().from_xyzXYZ(np.clip(raw_wrench.xyzXYZ, self.ft_min, self.ft_max))
+    
+    def norm_wrench(self, wrench: Vector6d) -> Vector6d:
+        return Vector6d().from_xyzXYZ(Vector6d().to_numpy() / self.ft_max)
+
     @property
     def wrench(self) -> Vector6d:
         self.sensor_readings.append(self.raw_wrench.to_numpy())

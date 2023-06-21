@@ -127,7 +127,7 @@ testbed_plugger_6dof_force_ctrl_v1 = {
         # Start configuration w.r.t. target configuration'
         'X_tgt2plug': Pose().from_xyz((0.0, 0.0, -0.1)),
         # Reset variance of the start pose
-        # 'variance': ((0.025, 0.025, 0.01), (0.01 * np.pi, 0.01 * np.pi, 0.01 * np.pi)),
+        'variance': ((0.025, 0.025, 0.01), (0.01 * np.pi, 0.01 * np.pi, 0.01 * np.pi)),
     },
 
     'socket': {
@@ -174,30 +174,21 @@ testbed_plugger_6dof_motion_ctrl_v1 = {
 testbed_plugger_6dof_compliance_ctrl_v1 = {
     'environment': {
         'type': EnvironmentPluggerComplianceCtrl,
-        'T': 1000,
-        'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
+        'T': 500,
+        'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(12,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(13,), dtype=np.float32),
-    },
-
-    'world': {
-        'freq_ctrl': 120,
     },
 
     'start': {
         # Start configuration w.r.t. target configuration'
-        # 'X_tgt2plug': Pose().from_xyz((0.0, 0.0, -0.1)),
-        'X_tgt2plug': Pose().from_xyz((0.06, 0.0, -0.1)),
+        'X_tgt2plug': Pose().from_xyz((0.0, 0.0, -0.1)),
+        # 'X_tgt2plug': Pose().from_xyz((0.06, 0.0, -0.1)),
         # Reset variance of the start pose
-        # 'variance': ((0.025, 0.025, 0.01), (0.01 * np.pi, 0.01 * np.pi, 0.01 * np.pi)),
+        'variance': ((0.025, 0.025, 0.01), (0.01 * np.pi, 0.01 * np.pi, 0.01 * np.pi)),
     },
 
     'socket': {
         # Socket configuration w.r.t. the arm base
         'X_arm2socket': Pose().from_xyz((0.90, 0.50, 0.50)).from_euler_angle((0.0, np.pi/2, 0.0)),
-    },
-
-    'low_level_control': {
-        'wa_lin': 0.001,  # action scaling in linear directions [m]
-        'wa_ang': 0.01,  # action scaling in angular directions [rad]
     },
 }

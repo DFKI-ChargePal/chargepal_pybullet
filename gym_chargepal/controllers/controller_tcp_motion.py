@@ -62,7 +62,7 @@ class TCPMotionController(TCPController):
         self.spatial_pd_ctrl.reset()
         return super().reset()
 
-    def _compute_motion_error(self, X_plug2goal: Vector6d, X_arm2plug: Pose) -> Vector6d:
+    def compute_motion_error(self, X_plug2goal: Vector6d, X_arm2plug: Pose) -> Vector6d:
         """ Computes the motion error wrt. the robot arm base frame
 
         Args:
@@ -115,6 +115,6 @@ class TCPMotionController(TCPController):
         """
         X_plug2goal = Vector6d().from_xyzXYZ(np.array(action, dtype=np.float64))
         X_arm2plug = self.plug_sensor.noisy_X_arm2sensor
-        f_net = self._compute_motion_error(X_plug2goal, X_arm2plug)
+        f_net = self.compute_motion_error(X_plug2goal, X_arm2plug)
         f_ctrl = self.cfg.error_scale * self.spatial_pd_ctrl.update(f_net, self.cfg.period)
         self._to_joint_commands(f_ctrl)
