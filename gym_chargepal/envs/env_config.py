@@ -213,8 +213,7 @@ testbed_searcher_6dof_compliance_ctrl_v0 = {
         # Start configuration w.r.t. target configuration'
         'X_tgt2plug': Pose().from_xyz((0.0, 0.0, -0.04)),
         # Reset variance of the start pose
-        'variance': ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
-        # 'variance': ((0.015, 0.015, 0.0), (0.01 * np.pi, 0.01 * np.pi, 0.01 * np.pi)),
+        'variance': ((0.015, 0.015, 0.0), (0.01 * np.pi, 0.01 * np.pi, 0.01 * np.pi)),
     },
 
     'socket': {
