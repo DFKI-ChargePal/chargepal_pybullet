@@ -1,5 +1,7 @@
 """ This file defines the reward base class. """
-# global
+from __future__ import annotations
+
+#  global
 import abc
 from dataclasses import dataclass
 
@@ -8,7 +10,7 @@ from gym_chargepal.utility.cfg_handler import ConfigHandler
 from gym_chargepal.utility.env_clock import EnvironmentClock
 
 # mypy
-from typing import Any, Dict
+from typing import Any
 
 
 @dataclass
@@ -19,7 +21,7 @@ class RewardCfg(ConfigHandler):
 class Reward(metaclass=abc.ABCMeta):
     """ Reward superclass. """
 
-    def __init__(self, config: Dict[str, Any], env_clock: EnvironmentClock):
+    def __init__(self, config: dict[str, Any], env_clock: EnvironmentClock):
         # Create configuration and override values
         self.cfg = RewardCfg()
         self.cfg.update(**config)

@@ -8,15 +8,15 @@ from rigmopy import utils_math as rp_math
 
 # local
 import gym_chargepal.utility.cfg_handler as ch
+from gym_chargepal.envs.env_base import (
+    Environment, EnvironmentCfg)
 from gym_chargepal.bullet.ik_solver import IKSolver
-from gym_chargepal.envs.env_base import Environment, EnvironmentCfg
 from gym_chargepal.sensors.sensor_ft import FTSensor
 from gym_chargepal.sensors.sensor_plug import PlugSensor
 from gym_chargepal.worlds.world_plugger import WorldPlugger
 from gym_chargepal.sensors.sensor_socket import SocketSensor
 from gym_chargepal.bullet.ur_arm_virtual import VirtualURArm
-from gym_chargepal.reward.reward_dist import DistanceReward
-from gym_chargepal.reward.reward_pose_wrench import PoseWrenchReward
+from gym_chargepal.reward.reward_sparse import SparseFinderReward
 from gym_chargepal.controllers.controller_tcp_compliance import TCPComplianceController
 from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotorControl
 from gym_chargepal.bullet.joint_velocity_motor_control import JointVelocityMotorControl
@@ -27,19 +27,22 @@ from numpy import typing as npt
 
 
 @dataclass
-class EnvironmentPluggerComplianceCtrlCfg(EnvironmentCfg):
+class EnvironmentSearcherComplianceCtrlCfg(EnvironmentCfg):
     hw_interface: str = 'joint_velocity'
 
 
-class EnvironmentPluggerComplianceCtrl(Environment):
-    """ Cartesian environment with compliance controller - Task: Peg in Hole """
+class EnvironmentSearcherComplianceCtrl(Environment):
+    """ Cartesian environment with compliance controller - Task: Search the socket
 
+    Args:
+        Environment: Base class
+    """
     def __init__(self, **kwargs: dict[str, Any]):
         # Update environment configuration
         config_env = ch.search(kwargs, 'environment')
         Environment.__init__(self, config_env)
-        # create configuration and overwrite values
-        self.cfg: EnvironmentPluggerComplianceCtrlCfg = EnvironmentPluggerComplianceCtrlCfg()
+        # Create configuration and overwrite values
+        self.cfg: EnvironmentSearcherComplianceCtrlCfg = EnvironmentSearcherComplianceCtrlCfg()
         self.cfg.update(**config_env)
         # Extract component hyperparameter from kwargs
         config_start = ch.search(kwargs, 'start')
@@ -81,8 +84,7 @@ class EnvironmentPluggerComplianceCtrl(Environment):
             self.control_interface,
             self.plug_sensor
         )
-        # self.reward = PoseWrenchReward(config_reward, self.clock)
-        self.reward = DistanceReward(config_reward, self.clock)
+        self.reward = SparseFinderReward(config_reward, self.clock)
 
     def reset(self) -> npt.NDArray[np.float32]:
         # Reset environment
@@ -100,9 +102,12 @@ class EnvironmentPluggerComplianceCtrl(Environment):
         self.noisy_p_arm2socket = self.socket_sensor.noisy_p_arm2sensor
         self.noisy_q_arm2socket = self.socket_sensor.noisy_q_arm2sensor
         return self.get_obs()
-    
+
     def step(self, action: npt.NDArray[np.float32]) -> tuple[npt.NDArray[np.float32], float, bool, dict[Any, Any]]:
         """ Execute environment/simulation step. """
+        # Manipulate action. Always add some force in plugging direction
+        if action[8] < 0.05:
+            action[8] = 0.05
         # Apply action
         self.low_level_control.update(action=np.array(action))
         # Step simulation
@@ -111,11 +116,11 @@ class EnvironmentPluggerComplianceCtrl(Environment):
         self.ft_sensor.render_ft_bar(render=self.is_render)
         # Update and evaluate state
         done = self.done
+        solved = self.solved
         obs = self.get_obs()
         info = self.compose_info()
-        reward = self.reward.compute(self.world.ur_arm.X_arm2plug, self.world.socket.X_arm2socket, done)
-        # reward = self.reward.compute(
-        #     self.world.ur_arm.X_arm2plug, self.world.socket.X_arm2socket, self.world.ur_arm.wrench, done)
+        reward = self.reward.compute(
+            solved, self.world.ur_arm.X_arm2plug, self.world.socket.X_arm2socket, self.world.ur_arm.wrench, done)
         return obs, reward, done, info
 
     def close(self) -> None:
@@ -129,7 +134,7 @@ class EnvironmentPluggerComplianceCtrl(Environment):
         # Glue observation together
         obs = np.array((noisy_p_plug2socket + noisy_q_plug2socket + noisy_F_plug), dtype=np.float32)
         return obs
-    
+
     def compose_info(self) -> dict[str, Any]:
         # Calculate evaluation metrics
         p_plug2target = (self.world.socket.p_arm2socket - self.world.ur_arm.p_arm2plug).xyz

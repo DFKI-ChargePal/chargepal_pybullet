@@ -74,7 +74,7 @@ class TCPComplianceController(TCPController):
         self.motion_ctrl.reset()
         self.spatial_pd_ctrl.reset()
         return super().reset()
-    
+
     def update(self, action: npt.NDArray[np.float32]) -> None:
         """ Concrete update rule of the compliance controller
 

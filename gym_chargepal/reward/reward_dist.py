@@ -1,4 +1,6 @@
 """ This file defines the reward class for distances between two frames. """
+from __future__ import annotations
+
 # global
 import numpy as np
 from rigmopy import Pose
@@ -8,9 +10,9 @@ from dataclasses import dataclass
 from gym_chargepal.utility.env_clock import EnvironmentClock
 from gym_chargepal.reward.reward import RewardCfg, Reward
 
-# mypy
+# typing
+from typing import Any
 from numpy import typing as npt
-from typing import Any, Dict
 
 
 @dataclass
@@ -22,7 +24,7 @@ class DistanceRewardCfg(RewardCfg):
 
 class DistanceReward(Reward):
     """ Evaluation class for spatial distances. """
-    def __init__(self, config: Dict[str, Any], env_clock: EnvironmentClock):
+    def __init__(self, config: dict[str, Any], env_clock: EnvironmentClock):
         # Call super class
         super().__init__(config=config, env_clock=env_clock)
         # Create configuration and override values
