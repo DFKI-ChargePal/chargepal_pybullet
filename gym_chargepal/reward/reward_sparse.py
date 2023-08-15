@@ -4,7 +4,7 @@ from __future__ import annotations
 # global
 import numpy as np
 from dataclasses import dataclass
-from rigmopy import Pose, Vector3d, Vector6d
+from rigmopy import Pose, Vector6d
 
 # local
 from gym_chargepal.reward.reward import (
@@ -14,7 +14,6 @@ from gym_chargepal.utility.env_clock import EnvironmentClock
 
 # typing
 from typing import Any
-from numpy import typing as npt
 
 
 @dataclass

@@ -1,16 +1,20 @@
 """ This file defines the reward class for distances between two frames weighted by the TCP speed. """
+from __future__ import annotations
+
 # global
 import numpy as np
 from rigmopy import Pose, Vector6d
 from dataclasses import dataclass
 
 # local
-from gym_chargepal.reward.reward import RewardCfg, Reward
+from gym_chargepal.reward.reward import (
+    RewardCfg, Reward
+)
 from gym_chargepal.utility.env_clock import EnvironmentClock
 
 # typing
 from numpy import typing as npt
-from typing import Any, Dict
+from typing import Any
 
 
 @dataclass
@@ -25,7 +29,7 @@ class DistanceSpeedRewardCfg(RewardCfg):
 
 class DistanceSpeedReward(Reward):
     """ Reward class for speed weighted spatial distances. """
-    def __init__(self, config: Dict[str, Any], env_clock: EnvironmentClock) -> None:
+    def __init__(self, config: dict[str, Any], env_clock: EnvironmentClock) -> None:
         # Call super class
         super().__init__(config=config, env_clock=env_clock)
         # Create configuration and override values

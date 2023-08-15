@@ -1,14 +1,18 @@
+from __future__ import annotations
+
 # global
 import numpy as np
-from rigmopy import Pose, Vector6d
 from dataclasses import dataclass
+from rigmopy import Pose, Vector6d
 
 # local
-from gym_chargepal.reward.reward import RewardCfg, Reward
+from gym_chargepal.reward.reward import (
+    RewardCfg, Reward
+)
 from gym_chargepal.utility.env_clock import EnvironmentClock
 
 # typing
-from typing import Any, Dict
+from typing import Any
 from numpy import typing as npt
 
 
@@ -24,7 +28,7 @@ class PoseWrenchRewardCfg(RewardCfg):
 
 class PoseWrenchReward(Reward):
     """ Reward class that rewards small spatial errors and a small wrenching. """
-    def __init__(self, config: Dict[str, Any], env_clock: EnvironmentClock):
+    def __init__(self, config: dict[str, Any], env_clock: EnvironmentClock):
         # Call super class
         super().__init__(config, env_clock)
         # Create configuration object and update values

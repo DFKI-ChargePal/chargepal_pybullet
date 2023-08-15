@@ -7,8 +7,10 @@ from rigmopy import Pose
 from dataclasses import dataclass
 
 # local
+from gym_chargepal.reward.reward import (
+    RewardCfg, Reward
+)
 from gym_chargepal.utility.env_clock import EnvironmentClock
-from gym_chargepal.reward.reward import RewardCfg, Reward
 
 # typing
 from typing import Any
