@@ -49,16 +49,24 @@ class SparseFinderReward(Reward):
         ft_vec = [abs(ft) for ft in ft_vec]
         ft_max = max(ft_vec)
         force_reward = -ft_max
+        # Reward to keep orientation to avoid diverging
+        q_arm2tgt = np.array(X_tgt.q.wxyz)
+        q_arm2tcp = np.array(X_tcp.q.wxyz)
+        ang_error = np.arccos(np.clip((2 * (q_arm2tgt.dot(q_arm2tcp))**2 - 1), -1.0, 1.0))
+        if ang_error > (15/180) * np.pi:
+            div_ang_reward = -1.0
+        else:
+            div_ang_reward = 0.0
         # Reward if plug stay close to the target to avoid diverging
         p_tcp2tgt_wrt_base = (X_tgt.p - X_tcp.p)
-        dist_norm = np.sum(np.square(p_tcp2tgt_wrt_base.xyz))
-        if dist_norm > 0.05:
-            div_reward = -1.0 * self.clock.t
+        p_tcp2tgt_wrt_tool = X_tcp.q.apply(p_tcp2tgt_wrt_base, inverse=True)
+        xy_norm = np.sum(np.square(p_tcp2tgt_wrt_tool.xyz[0:2]))
+        if xy_norm > 0.0025:  # radius of 5cm
+            div_pos_reward = -1.0
         else:
-            div_reward = 0.0
+            div_pos_reward = 0.0
         # Check if there is spatial progress in plugging direction
         # Shift target by 2 cm since we are not interested in full plug in
-        p_tcp2tgt_wrt_tool = X_tcp.q.apply(p_tcp2tgt_wrt_base, inverse=True)
         # Distance to goal in plugging direction
         dz = p_tcp2tgt_wrt_tool.xyz[2] - 0.02
         if dz < 0.02:
@@ -70,8 +78,8 @@ class SparseFinderReward(Reward):
         if solved:
             reward = (1 / self.clock.t) * self.clock.t_end
         elif done:
-            reward = distance_reward + div_reward
+            reward = distance_reward + div_pos_reward + div_ang_reward
         else:
-            reward = -1.0 + contact_reward + force_reward + distance_reward + div_reward
+            reward = -1.0 + contact_reward + force_reward + distance_reward + div_pos_reward + div_ang_reward
 
         return reward
