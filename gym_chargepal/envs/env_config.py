@@ -204,7 +204,7 @@ testbed_plugger_6dof_compliance_ctrl_v1 = {
 testbed_searcher_6dof_compliance_ctrl_v0 = {
     'environment': {
         'type': EnvironmentSearcherComplianceCtrl,
-        'T': 250,
+        'T': 180,
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(12,), dtype=np.float32),
         'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(13,), dtype=np.float32),
     },

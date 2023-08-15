@@ -20,6 +20,7 @@ from typing import Any
 class SparseFinderRewardCfg(RewardCfg):
     spatial_pt_distance: float = 1.0  # distance to create reference points
     pose_weight: float = 1.0
+    force_weight: float = 0.1
 
 
 class SparseFinderReward(Reward):
@@ -38,16 +39,16 @@ class SparseFinderReward(Reward):
         # Get force in plugging direction
         ft_z = ft_vec[2]
         # Check if force in plugging direction within 15% of maximal force
-        if 0.0 < ft_z < 0.15:
+        if 0.025 < ft_z < 0.15:
             contact_reward = 1.0
         else:
             contact_reward = 0.0
         # For the the other directions penalize high forces. 
         # However, search for the force-torque outlier and negatively reward only that one.
-        del ft_vec[2]
-        ft_vec = [abs(ft) for ft in ft_vec]
-        ft_max = max(ft_vec)
-        force_reward = -ft_max
+        # del ft_vec[2]
+        # ft_vec = [abs(ft) for ft in ft_vec]
+        # ft_max = max(ft_vec)
+        # force_reward = -abs(ft_max)
         # Reward to keep orientation to avoid diverging
         q_arm2tgt = np.array(X_tgt.q.wxyz)
         q_arm2tcp = np.array(X_tcp.q.wxyz)
@@ -79,6 +80,6 @@ class SparseFinderReward(Reward):
         elif done:
             reward = distance_reward + div_pos_reward + div_ang_reward
         else:
-            reward = -1.0 + contact_reward + force_reward + distance_reward + div_pos_reward + div_ang_reward
+            reward = -1.0 + contact_reward + distance_reward + div_pos_reward + div_ang_reward
 
         return reward
