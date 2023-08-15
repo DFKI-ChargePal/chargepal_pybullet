@@ -51,6 +51,16 @@ class PlugSensor(Sensor):
         return self.ur_arm.q_arm2plug
 
     @property
-    def noisy_twist(self) -> Vector6d:
+    def noisy_V_wrt_world(self) -> Vector6d:
         # TODO: Add noise
         return self.ur_arm.tcp_link.twist_world2link
+
+    @property
+    def noisy_V_wrt_arm(self) -> Vector6d:
+        V_wrt_world = self.noisy_V_wrt_world
+        v_wrt_world, w_wrt_world = V_wrt_world.split()
+        v_wrt_arm = self.ur_arm.q_world2arm.inverse().apply(v_wrt_world)
+        w_wrt_arm = self.ur_arm.q_world2arm.inverse().apply(w_wrt_world)
+        # v_wrt_arm = self.ur_arm.q_world2arm.apply(v_wrt_world)
+        # w_wrt_arm = self.ur_arm.q_world2arm.apply(w_wrt_world)
+        return Vector6d().from_xyzXYZ(v_wrt_arm.xyz + w_wrt_arm.xyz)

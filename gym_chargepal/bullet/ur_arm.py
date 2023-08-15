@@ -13,8 +13,9 @@ from pybullet_utils.bullet_client import BulletClient
 from gym_chargepal.bullet import (
     ARM_LINK_NAMES,
     ARM_JOINT_NAMES,
-    ARM_JOINT_LIMITS,
     BulletJointState,
+    ARM_JOINT_POS_LIMITS,
+    ARM_JOINT_VEL_LIMITS,
     ARM_JOINT_DEFAULT_VALUES
 )
 from gym_chargepal.bullet.body_link import BodyLink
@@ -40,11 +41,14 @@ class URArmCfg(ConfigHandler):
     arm_link_names: list[str] = field(default_factory=lambda: ARM_LINK_NAMES)
     arm_joint_names: list[str] = field(default_factory=lambda: ARM_JOINT_NAMES)
     joint_default_values: dict[str, float] = field(default_factory=lambda: ARM_JOINT_DEFAULT_VALUES)
-    joint_limits: dict[str, tuple[float, float]] = field(default_factory=lambda: ARM_JOINT_LIMITS)
+    joint_pos_limits: dict[str, tuple[float, float]] = field(default_factory=lambda: ARM_JOINT_POS_LIMITS)
+    joint_vel_limits: dict[str, float] = field(default_factory=lambda: ARM_JOINT_VEL_LIMITS)
     tcp_link_name: str = 'plug'
+    tool_com_link_names: tuple[str, ...] = ('plug_root', 'plug')
     base_link_name: str = 'base'
     ft_enable: bool = False
     ft_buffer_size: int = 10
+    ft_link_name: str = 'ft_sensor_wrench'
     ft_joint_name: str = 'mounting_to_wrench'
     ft_range: tuple[float, ...] = (500.0, 500.0, 1200.0, 15.0, 15.0, 12.0)
     ft_overload: tuple[float, ...] = (2000.0, 2000.0, 4000.0, 30.0, 30.0, 30.0)
@@ -63,15 +67,23 @@ class URArm:
         # PyBullet references
         self._bc: BulletClient | None = None
         self._body_id: int | None = None
+        self._joint_idx_dict: dict[str, int] = {}
         # Arm links and joints
         self._arm_state: tuple[tuple[float], ...] | None = None
         self._base: BodyLink | None = None
         self._tcp: BodyLink | None = None
-        self._joint_idx_dict: dict[str, int] = {}
+        self._fts: BodyLink | None = None
+        self._tool_com_links: list[BodyLink] = []
+        # Tool physics
+        self._update_physics = True
+        self.tool_mass = 0.0
+        self._tool_com_wrt_arm: Vector3d | None = None
         # FT sensor
-        self.ft_enable = self.cfg.ft_enable
-        self._ft_joint_idx: int | None = None
-        self._ft_state: tuple[tuple[float], ...] | None = None
+        self.fts_enable = self.cfg.ft_enable
+        self._fts_joint_idx: int | None = None
+        self._fts_state: tuple[tuple[float], ...] | None = None
+        self.fts_mass = 0.0
+        self._fts_com: Vector3d | None = None
         self.ft_min = -np.array(self.cfg.ft_range, dtype=np.float64)
         self.ft_max = np.array(self.cfg.ft_range, dtype=np.float64)
         self.sensor_readings: Deque[npt.NDArray[np.float64]] = deque(maxlen=self.cfg.ft_buffer_size)
@@ -110,9 +122,16 @@ class URArm:
             raise RuntimeError(self._CONNECTION_ERROR_MSG)
 
     @property
-    def ft_joint_idx(self) -> int:
-        if self._ft_joint_idx:
-            return self._ft_joint_idx
+    def fts_link(self) -> BodyLink:
+        if self.is_connected and self._fts:
+            return self._fts
+        else:
+            raise RuntimeError(self._CONNECTION_ERROR_MSG)
+
+    @property
+    def fts_joint_idx(self) -> int:
+        if self._fts_joint_idx:
+            return self._fts_joint_idx
         else:
             raise RuntimeError("FT-sensor index is not set yet. Please get it first from PyBullet.")
 
@@ -121,7 +140,7 @@ class URArm:
         if self.is_connected:
             self.bullet_client.enableJointForceTorqueSensor(
                 bodyUniqueId=self.bullet_body_id,
-                jointIndex=self.ft_joint_idx,
+                jointIndex=self.fts_joint_idx,
                 enableSensor=True
                 )
         else:
@@ -132,7 +151,7 @@ class URArm:
         if self.is_connected:
             self.bullet_client.enableJointForceTorqueSensor(
                 bodyUniqueId=self.bullet_body_id,
-                jointIndex=self.ft_joint_idx,
+                jointIndex=self.fts_joint_idx,
                 enableSensor=False
             )
         else:
@@ -158,9 +177,16 @@ class URArm:
             bullet_client=bullet_client,
             body_id=body_id
             )
-        if self.ft_enable:
-            self._ft_joint_idx = get_joint_idx(body_id, self.cfg.ft_joint_name, bullet_client)
+        for link_name in self.cfg.tool_com_link_names:
+            tcl = BodyLink(name=link_name, bullet_client=bullet_client, body_id=body_id)
+            tcl.update()
+            self._tool_com_links.append(tcl)
+        if self.fts_enable:
+            self._fts = BodyLink(name=self.cfg.ft_link_name, bullet_client=bullet_client, body_id=body_id)
+            self._fts_joint_idx = get_joint_idx(body_id, self.cfg.ft_joint_name, bullet_client)
             self._enable_fts()
+            self._fts.update()
+            self._ft_mass = self._fts.mass
 
     def reset(self, joint_cfg: tuple[float, ...] | None = None) -> None:
         """ Hard arm reset in either default or given joint configuration """
@@ -184,6 +210,8 @@ class URArm:
                         targetValue=joint_state,
                         targetVelocity=0.0
                         )
+            self._update_physics = True
+            self.update()
         else:
             raise RuntimeError(self._CONNECTION_ERROR_MSG)
 
@@ -196,11 +224,38 @@ class URArm:
             )
             self.tcp_link.update()
             self.base_link.update()
-            if self.ft_enable:
-                self._ft_state = self.bullet_client.getJointState(
+            
+            if self.fts_enable:
+                self.fts_link.update()
+                self._fts_state = self.bullet_client.getJointState(
                     bodyUniqueId=self._body_id, 
-                    jointIndex=self.ft_joint_idx
+                    jointIndex=self.fts_joint_idx
                     )
+                if self._update_physics:
+                    # Update ft-sensor physics
+                    self.fts_mass = self.fts_link.mass
+                    q_inertial2arm = self.fts_link.q_link2inertial.inverse() * self.fts_link.q_world2link.inverse() * self.q_world2arm
+                    self._fts_com = q_inertial2arm.apply(self.fts_link.p_link2inertial)
+
+                    # Update tool physics
+                    N = len(self._tool_com_links)
+                    com_x, com_y, com_z = 0.0, 0.0, 0.0
+                    tool_mass = 0.0
+                    for tool_link in self._tool_com_links:
+                        tool_mass += tool_link.mass
+                        q_inertial2arm = tool_link.q_link2inertial.inverse() * tool_link.q_world2link.inverse() * self.q_world2arm
+                        p_arm2link_arm = self.q_world2arm.apply(tool_link.p_world2link - self.p_world2arm)
+                        p_link2inertial_arm = q_inertial2arm.apply(tool_link.p_link2inertial)
+                        p_arm2inertial_arm = p_arm2link_arm + p_link2inertial_arm
+                        p_arm2fts_arm = self.p_arm2fts
+                        p_fts2inertial_arm = (p_arm2inertial_arm - p_arm2fts_arm).xyz
+                        com_x += p_fts2inertial_arm[0]
+                        com_x += p_fts2inertial_arm[1]
+                        com_x += p_fts2inertial_arm[2]
+                    self.tool_mass = tool_mass
+                    self._tool_com_wrt_arm = Vector3d().from_xyz((com_x/N, com_y/N, com_z/N))
+                    # Update physics only after reset.
+                    self._update_physics = False
         else:
             raise RuntimeError(self._CONNECTION_ERROR_MSG)
 
@@ -210,6 +265,30 @@ class URArm:
         assert self._arm_state
         pos = tuple(joint[state_idx] for joint in self._arm_state)
         return pos
+
+    def clip_joint_pos(self, joint_pos: tuple[float, ...]) -> tuple[float, ...]:
+        """ Helper function to clip joint positions to the robot configuration limits.
+
+        Args:
+            joint_pos: Joint position vector
+
+        Returns:
+            Clipped joint position vector
+        """
+        clipped_pos = [np.clip(jp, *jp_min_max) for jp, jp_min_max in zip(joint_pos, self.cfg.joint_pos_limits.values())]
+        return tuple(clipped_pos)
+
+    def clip_joint_vel(self, joint_vel: tuple[float, ...]) -> tuple[float, ...]:
+        """ Helper function to clip joint velocities to the robot configuration limits.
+
+        Args:
+            joint_vel: Joint velocity vector
+
+        Returns:
+            Clipped joint velocity vector
+        """
+        clipped_vel = [np.clip(jv, -v_lim, v_lim) for jv, v_lim in zip(joint_vel, self.cfg.joint_vel_limits.values())] 
+        return tuple(clipped_vel)
 
     @property
     def joint_vel(self) -> tuple[float, ...]:
@@ -248,22 +327,68 @@ class URArm:
         else:
             X_world2base = self.cfg.X_world2arm
         return X_world2base
-    
+
     @property
     def p_world2arm(self) -> Vector3d:
         return self.X_world2arm.p
-    
+
     @property
     def q_world2arm(self) -> Quaternion:
         return self.X_world2arm.q
 
     @property
-    def wrench(self) -> Vector6d:
+    def raw_wrench(self) -> Vector6d:
         state_idx = BulletJointState.JOINT_REACTION_FORCE
-        assert self._ft_state
-        wrench: tuple[float, ...] = self._ft_state[state_idx]
-        self.sensor_readings.append(np.array(wrench, dtype=np.float64))
+        assert self._fts_state
+        wrench: tuple[float, ...] = self._fts_state[state_idx]
+        return Vector6d().from_xyzXYZ(wrench)
+
+    def clip_wrench(self, raw_wrench: Vector6d) -> Vector6d:
+        return Vector6d().from_xyzXYZ(np.clip(raw_wrench.xyzXYZ, self.ft_min, self.ft_max))
+    
+    def norm_wrench(self, wrench: Vector6d) -> Vector6d:
+        return Vector6d().from_xyzXYZ(Vector6d().to_numpy() / self.ft_max)
+
+    @property
+    def wrench(self) -> Vector6d:
+        self.sensor_readings.append(self.raw_wrench.to_numpy())
         # Get sensor state and bring values in a range between -1.0 and +1.0
         mean_wrench = np.mean(self.sensor_readings, axis=0, dtype=np.float64)
         norm_wrench = Vector6d().from_xyzXYZ(np.clip(mean_wrench, self.ft_min, self.ft_max) / self.ft_max)
         return norm_wrench
+
+    @property
+    def X_arm2fts(self) -> Pose:
+        if self.is_connected:
+            # Get arm pose
+            X_world2arm = self.base_link.X_world2link
+            # Get ft-sensor pose
+            X_world2fts = self.fts_link.X_world2link
+            # Get tcp pose wrt arm pose
+            X_arm2fts = X_world2arm.inverse() * X_world2fts
+        else:
+            LOGGER.error(self._CONNECTION_ERROR_MSG)
+            X_arm2fts = Pose()
+        return X_arm2fts
+    
+    @property
+    def p_arm2fts(self) -> Vector3d:
+        return self.X_arm2fts.p
+    
+    @property
+    def q_arm2fts(self) -> Quaternion:
+        return self.X_arm2fts.q
+    
+    @property
+    def tool_com_wrt_arm(self) -> Vector3d:
+        if self._tool_com_wrt_arm:
+            return self._tool_com_wrt_arm
+        else:
+            raise RuntimeError(self._CONNECTION_ERROR_MSG)
+
+    @property
+    def fts_com_wrt_sensor(self) -> Vector3d:
+        if self._fts_com:
+            return self._fts_com
+        else:
+            raise RuntimeError(self._CONNECTION_ERROR_MSG)

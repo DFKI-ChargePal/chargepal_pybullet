@@ -102,7 +102,7 @@ class TcpVelocityController(Controller):
         action[self.ang_action_ids] *= self.wa_ang
 
         # Get current tcp velocities
-        tcp_dot_twist = self.plug_sensor.noisy_twist.to_numpy()
+        tcp_dot_twist = self.plug_sensor.noisy_V_wrt_world.to_numpy()
         # Separate into linear and angular part
         tcp_dot_lin = tcp_dot_twist[0:3]
         tcp_dot_ang = tcp_dot_twist[3:6]

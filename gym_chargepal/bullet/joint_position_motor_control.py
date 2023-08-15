@@ -22,7 +22,6 @@ class JointPositionMotorControlCfg(ConfigHandler):
     pos_gains: Tuple[float, ...] = (0.03, 0.03, 0.03, 0.03, 0.03, 0.03)
     vel_gains: Tuple[float, ...] = (1.0, 1.0, 1.0, 1.0, 1.0, 1.0)
 
-
 class JointPositionMotorControl:
     """ Interface to use PyBullet Position Controller. """
     def __init__(self, config: Dict[str, Any], ur_arm: URArm):
@@ -33,7 +32,14 @@ class JointPositionMotorControl:
         self.ur_arm = ur_arm
 
     def update(self, tgt_pos: Tuple[float, ...]) -> None:
-        """ Update position controllers. Inputs are the desired joint angels of the arm. """
+        """ Update position controllers
+
+        Args:
+            tgt_pos: Desired joint angels of the arm
+        """
+        # Clip target positions to the arm limits
+        tgt_pos = self.ur_arm.clip_joint_pos(tgt_pos)
+        # Set motor controllers
         self.ur_arm.bullet_client.setJointMotorControlArray(
             bodyIndex=self.ur_arm._body_id,
             jointIndices=[idx for idx in self.ur_arm._joint_idx_dict.values()],
