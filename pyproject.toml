@@ -1,3 +1,32 @@
+[tool.poetry]
+name = "chargepal-pybullet"
+version = "0.10.0"
+license = "MIT License"
+description = "PyBullet simulation for ChargePal manipulation"
+authors = ["Georg John <georg.john@dfki.de>"]
+readme = "README.md"
+packages = [{include = "gym_chargepal"}]
+
+[tool.poetry.dependencies]
+python = "^3.8,<3.12"
+gymnasium = "^0.29.0"
+numpy = "1.23.5"
+pybullet = "^3.2.5"
+rigmopy = {path = "lib/rigmopy"}
+termcolor = "^2.3.0"
+rospkg = "^1.5.0"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.4.0"
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.5.0"
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
 [build-system]
-requires = ["setuptools"]
-build_backend = "setuptools.build_meta"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
