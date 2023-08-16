@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # global
 import numpy as np
 from rigmopy import utils_math as rp_math
@@ -18,13 +20,17 @@ from gym_chargepal.controllers.controller_tcp_vel import TcpVelocityController
 from gym_chargepal.bullet.joint_velocity_motor_control import JointVelocityMotorControl
 
 # mypy
+from typing import Any
 from numpy import typing as npt
-from typing import Any, Dict, Tuple
+
+ObsType = npt.NDArray[np.float32]
+ActType = npt.NDArray[np.float32]
 
 
-class EnvironmentReacherVelocityCtrl(Environment):
+class EnvironmentReacherVelocityCtrl(Environment[ObsType, ActType]):
     """ Cartesian Environment with velocity controller - Task: point to point """
-    def __init__(self, **kwargs: Dict[str, Any]):
+
+    def __init__(self, **kwargs: dict[str, Any]):
         # Update environment configuration
         config_env = ch.search(kwargs, 'environment')
         Environment.__init__(self, config_env)
@@ -44,8 +50,8 @@ class EnvironmentReacherVelocityCtrl(Environment):
         # Placeholder noisy target sensor state
         self.x_arm2socket = Vector3d()
         self.q_arm2socket = Quaternion()
-        config_low_level_control['plug_lin_config'] = self.x0_WP.xyz
-        config_low_level_control['plug_ang_config'] = self.q0_WP.to_euler_angle()
+        # config_low_level_control['plug_lin_config'] = self.x0_WP.xyz
+        # config_low_level_control['plug_ang_config'] = self.q0_WP.to_euler_angle()
         # Components
         self.world = WorldReacher(config_world, config_ur_arm, config_start, config_target)
         self.jacobian = Jacobian(config_jacobian, self.world.ur_arm)
@@ -63,12 +69,9 @@ class EnvironmentReacherVelocityCtrl(Environment):
         )
         self.reward = DistanceSpeedReward(config_reward, self.clock)
 
-    def reset(self) -> npt.NDArray[np.float32]:
+    def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> tuple[ObsType, dict[str, Any]]:
         # Reset environment
         self.clock.reset()
-        if self.toggle_render_mode:
-            self.world.disconnect()
-            self.toggle_render_mode = False
         # Reset robot by default joint configuration
         self.world.reset(render=self.is_render)
         # Get start joint configuration by inverse kinematic
@@ -77,9 +80,11 @@ class EnvironmentReacherVelocityCtrl(Environment):
         self.world.reset(joint_config_0)
         # Update sensors states
         self.update_sensors(target_sensor=True)
-        return self.get_obs()
+        obs = self.get_obs()
+        info = self.compose_info()
+        return obs, info
 
-    def step(self, action: npt.NDArray[np.float32]) -> Tuple[npt.NDArray[np.float32], float, bool, Dict[Any, Any]]:
+    def step(self, action: ActType) -> tuple[ObsType, float, bool, bool, dict[Any, Any]]:
         """ Execute environment/simulation step. """
         # Apply action
         self.low_level_control.update(action=np.array(action))
@@ -90,13 +95,14 @@ class EnvironmentReacherVelocityCtrl(Environment):
         self.update_sensors()
         obs = self.get_obs()
         # Evaluate environment
-        done = self.done
+        terminated = self.done
         X_tcp = Pose().from_pq(self.plug_sensor.noisy_p_arm2sensor, self.plug_sensor.noisy_q_arm2sensor)
         X_tgt = Pose().from_pq(self.plug_sensor.noisy_p_arm2sensor, self.plug_sensor.noisy_q_arm2sensor)
         V_tcp = self.plug_sensor.noisy_V_wrt_world
-        reward = self.reward.compute(X_tcp=X_tcp, V_tcp=V_tcp, X_tgt=X_tgt, done=done)
+        reward = self.reward.compute(X_tcp=X_tcp, V_tcp=V_tcp, X_tgt=X_tgt, done=terminated)
         info = self.compose_info()
-        return obs, reward, done, info
+        truncated = False
+        return obs, reward, terminated, truncated, info
 
     def close(self) -> None:
         self.world.disconnect()
@@ -124,7 +130,7 @@ class EnvironmentReacherVelocityCtrl(Environment):
         self.task_ang_error = np.arccos(np.clip((2 * (q_SW_.dot(q_PW_))**2 - 1), -1.0, 1.0))
         return obs
 
-    def compose_info(self) -> Dict[str, Any]:
+    def compose_info(self) -> dict[str, Any]:
         info = {
             'error_pos': self.task_pos_error,
             'error_ang': self.task_ang_error,

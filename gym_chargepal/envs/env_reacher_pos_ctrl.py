@@ -20,13 +20,16 @@ from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotor
 from typing import Any
 from numpy import typing as npt
 
+ObsType = npt.NDArray[np.float32]
+ActType = npt.NDArray[np.float32]
 
-class EnvironmentReacherPositionCtrl(Environment):
+
+class EnvironmentReacherPositionCtrl(Environment[ObsType, ActType]):
     """ Cartesian Environment with position controller - Task: point to point """
-    def __init__(self, **kwargs: dict[str, Any]):
+    def __init__(self, **kwargs: Any):
         # Update environment configuration
         config_env = ch.search(kwargs, 'environment')
-        Environment.__init__(self, config_env)
+        Environment.__init__(self, config_env, render_mode=kwargs.get('render_mode'))
         # Extract component hyperparameter from kwargs
         config_world = ch.search(kwargs, 'world')
         config_ur_arm = ch.search(kwargs, 'ur_arm')
@@ -55,12 +58,9 @@ class EnvironmentReacherPositionCtrl(Environment):
         )
         self.reward = DistanceReward(config_reward, self.clock)
 
-    def reset(self) -> npt.NDArray[np.float32]:
+    def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> tuple[ObsType, dict[str, Any]]:
         # Reset environment
         self.clock.reset()
-        if self.toggle_render_mode:
-            self.world.disconnect()
-            self.toggle_render_mode = False
         # Reset robot by default joint configuration
         self.world.reset(render=self.is_render)
         # Get start joint start configuration by inverse kinematic
@@ -70,9 +70,11 @@ class EnvironmentReacherPositionCtrl(Environment):
         # Set new noisy target pose
         self.noisy_p_arm2tgt = self.target_sensor.noisy_p_arm2tgt
         self.noisy_q_arm2tgt = self.target_sensor.noisy_q_arm2tgt
-        return self.get_obs()
+        obs = self.get_obs()
+        info = self.compose_info()
+        return obs, info
 
-    def step(self, action: npt.NDArray[np.float32]) -> tuple[npt.NDArray[np.float32], float, bool, dict[Any, Any]]:
+    def step(self, action: ActType) -> tuple[ObsType, float, bool, bool, dict[Any, Any]]:
         """ Execute environment/simulation step. """
         # Apply action
         self.low_level_control.update(action=np.array(action))
@@ -80,11 +82,12 @@ class EnvironmentReacherPositionCtrl(Environment):
         self.world.step(render=self.is_render)
         self.clock.tick()
         # Update and evaluate state
-        done = self.done
+        terminated = self.done
         obs = self.get_obs()
         info = self.compose_info()
-        reward = self.reward.compute(self.world.ur_arm.X_arm2plug, self.world.vrt_tgt.X_arm2tgt, done)
-        return obs, reward, done, info
+        reward = self.reward.compute(self.world.ur_arm.X_arm2plug, self.world.vrt_tgt.X_arm2tgt, terminated)
+        truncated = False
+        return obs, reward, terminated, truncated, info
 
     def close(self) -> None:
         self.world.disconnect()

@@ -71,6 +71,7 @@ class World(metaclass=abc.ABCMeta):
         ros_pkg_path = ros_pkg.get_path(self.cfg.model_description_pkg)
         self.urdf_pkg_path = Path(ros_pkg_path).joinpath(self.cfg.urdf_model_dir)
         self.ur_arm = URArm(config_arm)
+        self.connection_mode = p.DIRECT
 
     @property
     def ctrl_period(self) -> float:
@@ -78,7 +79,7 @@ class World(metaclass=abc.ABCMeta):
 
     def connect(self, gui: bool) -> None:
         # Connecting to bullet server
-        connection_mode = p.GUI if gui else p.DIRECT
+        self.connection_mode = p.GUI if gui else p.DIRECT
         if gui:
             # Add GUI options
             width_opt = f"--width={self.cfg.gui_width}"
@@ -90,7 +91,7 @@ class World(metaclass=abc.ABCMeta):
                 connection_opt = f"{width_opt} {height_opt} {rec_file_opt} {rec_fps_opt}"
         else:
             connection_opt = ""
-        self.bullet_client = BulletClient(connection_mode=connection_mode, options=connection_opt)
+        self.bullet_client = BulletClient(connection_mode=self.connection_mode, options=connection_opt)
         assert self.bullet_client
         # Set common bullet data path
         self.bullet_client.setAdditionalSearchPath(pybullet_data.getDataPath())
@@ -140,12 +141,22 @@ class World(metaclass=abc.ABCMeta):
                 time.sleep(1./self.cfg.freq_sim)
 
     @abc.abstractmethod
+    def reset(self, joint_conf: tuple[float, ...] | None = None, render: bool = False) -> None:
+        if render:
+            if self.connection_mode == p.GUI:
+                pass
+            else:
+                self.disconnect()
+        else:
+            if self.connection_mode == p.DIRECT:
+                pass
+            else:
+                self.disconnect()
+
+    @abc.abstractmethod
     def sample_X0(self) -> Pose:
         raise NotImplementedError('Must be implemented in subclass.')
 
-    @abc.abstractmethod
-    def reset(self, joint_conf: tuple[float, ...] | None = None, render: bool = False) -> None:
-        raise NotImplementedError('Must be implemented in subclass.')
 
     @abc.abstractmethod
     def sub_step(self) -> None:

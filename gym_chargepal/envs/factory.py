@@ -4,7 +4,7 @@ import copy
 import logging
 
 # local
-from gym_chargepal.envs.env_base import Environment
+from gym_chargepal.envs.env_base import Environment, ObsType, ActType
 
 # typing
 from typing import Any
@@ -18,7 +18,7 @@ class EnvironmentFactory:
     def __init__(self, **kwargs: Any) -> None:
         pass
 
-    def __new__(cls: type, **kwargs: Any) -> Environment:
+    def __new__(cls: type, **kwargs: Any) -> Environment[ObsType, ActType]:  # type: ignore
         """
             create a new gym environment
         """
@@ -32,9 +32,8 @@ class EnvironmentFactory:
                 if class_cfg in config_kwargs:
                     config[class_cfg].update(config_kwargs[class_cfg])
 
-
         # extract environment type
         env_type = config['environment']['type']
         # create environment
-        env: Environment = env_type(**config)
+        env: Environment[ObsType, ActType] = env_type(**config)
         return env

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 # global
-import gym
+import gymnasium as gym
 import logging
 import argparse
 import numpy as np
@@ -26,10 +26,12 @@ def main(env_name: str, n_episodes: int, gui: bool) -> None:
     #     }
     # }
     kwargs_cfg: dict[str, Any] = {}
-    env = gym.make("gym_chargepal:" + env_name, **{'kwargs': kwargs_cfg})
+    rm = "human" if gui else None 
+    env = gym.make("gym_chargepal:" + env_name, render_mode=rm, kwargs={'kwargs': kwargs_cfg})
+    # env = gym.make("gym_chargepal:" + env_name, kwargs={'kwargs': kwargs_cfg})
     env.action_space.seed(42)
+    obs, _ = env.reset()
     if gui: env.render()
-    obs = env.reset()
 
     episode = 1
     run_inf = n_episodes < 0
@@ -42,9 +44,9 @@ def main(env_name: str, n_episodes: int, gui: bool) -> None:
         # # action[2] = 1.0
         # if n_step <= 50:
         #     action[2] = 1.0
-        obs, reward, done, _ = env.step(action=action)
+        obs, reward, terminated, _, _ = env.step(action=action)
         n_step += 1
-        ep_return += reward
+        ep_return += float(reward)
 
         act_string = " ".join(format(f, '6.2f') for f in action)
         obs_string = " ".join(format(f, '6.2f') for f in obs)
@@ -52,7 +54,7 @@ def main(env_name: str, n_episodes: int, gui: bool) -> None:
         LOGGER.debug(f'Action: {act_string}  ----  Observation: {obs_string}  ----  Reward: {reward:5.2}')
         if gui: env.render()
         # reset environment
-        if done:
+        if terminated:
             LOGGER.info(f'Finish episode {episode} with return: {ep_return}')
             episode += 1
             ep_return = 0.0

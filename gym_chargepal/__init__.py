@@ -1,6 +1,6 @@
 # global
 import logging
-import gym.envs.registration as gym_registration
+import gymnasium.envs.registration as gym_registration
 
 # local
 from gym_chargepal.envs import environment_register

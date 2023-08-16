@@ -25,13 +25,16 @@ from gym_chargepal.bullet.joint_velocity_motor_control import JointVelocityMotor
 from typing import Any
 from numpy import typing as npt
 
+ObsType = npt.NDArray[np.float32]
+ActType = npt.NDArray[np.float32]
+
 
 @dataclass
-class EnvironmentSearcherComplianceCtrlCfg(EnvironmentCfg):
+class EnvironmentSearcherComplianceCtrlCfg(EnvironmentCfg[ObsType, ActType]):
     hw_interface: str = 'joint_velocity'
 
 
-class EnvironmentSearcherComplianceCtrl(Environment):
+class EnvironmentSearcherComplianceCtrl(Environment[ObsType, ActType]):
     """ Cartesian environment with compliance controller - Task: Search the socket
 
     Args:
@@ -86,12 +89,9 @@ class EnvironmentSearcherComplianceCtrl(Environment):
         )
         self.reward = SparseFinderReward(config_reward, self.clock)
 
-    def reset(self) -> npt.NDArray[np.float32]:
+    def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> tuple[ObsType, dict[str, Any]]:
         # Reset environment
         self.clock.reset()
-        if self.toggle_render_mode:
-            self.world.disconnect()
-            self.toggle_render_mode = False
         # Reset robot by default joint configuration
         self.world.reset(render=self.is_render)
         # Get start joint start configuration by inverse kinematic
@@ -101,9 +101,11 @@ class EnvironmentSearcherComplianceCtrl(Environment):
         # Set new target pose
         self.noisy_p_arm2socket = self.socket_sensor.noisy_p_arm2sensor
         self.noisy_q_arm2socket = self.socket_sensor.noisy_q_arm2sensor
-        return self.get_obs()
+        obs = self.get_obs()
+        info = self.compose_info()
+        return obs, info
 
-    def step(self, action: npt.NDArray[np.float32]) -> tuple[npt.NDArray[np.float32], float, bool, dict[Any, Any]]:
+    def step(self, action: ActType) -> tuple[ObsType, float, bool, bool, dict[Any, Any]]:
         """ Execute environment/simulation step. """
         # Manipulate action. Always add some force in plugging direction
         if action[8] < 0.05:
@@ -115,13 +117,14 @@ class EnvironmentSearcherComplianceCtrl(Environment):
         self.clock.tick()
         self.ft_sensor.render_ft_bar(render=self.is_render)
         # Update and evaluate state
-        done = self.done
+        terminated = self.done
         solved = self.solved
         obs = self.get_obs()
         info = self.compose_info()
         reward = self.reward.compute(
-            solved, self.world.ur_arm.X_arm2plug, self.world.socket.X_arm2socket, self.world.ur_arm.wrench, done)
-        return obs, reward, done, info
+            solved, self.world.ur_arm.X_arm2plug, self.world.socket.X_arm2socket, self.world.ur_arm.wrench, terminated)
+        truncated = False
+        return obs, reward, terminated, truncated, info
 
     def close(self) -> None:
         self.world.disconnect()

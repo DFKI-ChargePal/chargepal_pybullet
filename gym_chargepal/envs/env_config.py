@@ -1,7 +1,7 @@
 """ Configuration setups point-to-point position controlled environments. """
 # global
 import numpy as np
-from gym import spaces
+from gymnasium import spaces
 from rigmopy import Pose
 
 # local

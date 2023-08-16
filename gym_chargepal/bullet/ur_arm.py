@@ -353,7 +353,7 @@ class URArm:
     def wrench(self) -> Vector6d:
         self.sensor_readings.append(self.raw_wrench.to_numpy())
         # Get sensor state and bring values in a range between -1.0 and +1.0
-        mean_wrench = np.mean(self.sensor_readings, axis=0, dtype=np.float64)
+        mean_wrench = np.mean(list(self.sensor_readings), axis=0)
         norm_wrench = Vector6d().from_xyzXYZ(np.clip(mean_wrench, self.ft_min, self.ft_max) / self.ft_max)
         return norm_wrench
 

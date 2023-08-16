@@ -3,6 +3,7 @@ from __future__ import annotations
 
 # global
 import logging
+import pybullet as p
 from rigmopy import Pose
 
 # local
@@ -58,6 +59,7 @@ class WorldReacher(World):
         return X0_world2plug
 
     def reset(self, joint_conf: tuple[float, ...] | None = None, render: bool = False) -> None:
+        super().reset(joint_conf, render)
         if self.bullet_client is None:
             # Connect to bullet simulation server
             self.connect(render)
