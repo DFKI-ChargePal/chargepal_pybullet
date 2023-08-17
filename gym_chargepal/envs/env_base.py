@@ -26,6 +26,7 @@ RenderFrame = TypeVar("RenderFrame")
 @dataclass
 class EnvironmentCfg(Generic[ObsType, ActType], ConfigHandler):
     T: int = 100  # time horizon
+    render_mode: str | None = None
     task_pos_eps: float = 0.003  # position task criterion [m]
     task_ang_eps: float = 0.0175  # angular task criterion [rad]
     action_space: spaces.Space[ActType] | None = None
@@ -33,13 +34,12 @@ class EnvironmentCfg(Generic[ObsType, ActType], ConfigHandler):
     start_config: Pose = Pose()
     reset_variance: tuple[tuple[float, ...], tuple[float, ...]] = ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
 
-
 class Environment(Env[ObsType, ActType], Generic[ObsType, ActType], metaclass=abc.ABCMeta):
     """
     This is the concrete implementation of the OpenAI gym interface.
     """
 
-    def __init__(self, config: dict[str, Any], render_mode: str | None = None):
+    def __init__(self, config: dict[str, Any]):
         # Create configuration object
         self.cfg: EnvironmentCfg[ObsType, ActType] = EnvironmentCfg()
         self.cfg.update(**config)
@@ -60,7 +60,7 @@ class Environment(Env[ObsType, ActType], Generic[ObsType, ActType], metaclass=ab
         # Performance logging
         self.task_pos_error = np.inf
         self.task_ang_error = np.inf
-        if render_mode == 'human':
+        if self.cfg.render_mode == 'human':
             self.render()
 
     @abc.abstractmethod

@@ -25,10 +25,11 @@ def main(env_name: str, n_episodes: int, gui: bool) -> None:
     #         'gui_txt': 'Hello World'
     #     }
     # }
-    kwargs_cfg: dict[str, Any] = {}
-    rm = "human" if gui else None 
-    env = gym.make("gym_chargepal:" + env_name, render_mode=rm, kwargs={'kwargs': kwargs_cfg})
-    # env = gym.make("gym_chargepal:" + env_name, kwargs={'kwargs': kwargs_cfg})
+    if gui:
+        kwargs_cfg = {'environment': {'render_mode': 'human'}}
+    else:
+        kwargs_cfg = {}
+    env = gym.make("gym_chargepal:" + env_name, kwargs=kwargs_cfg)
     env.action_space.seed(42)
     obs, _ = env.reset()
     if gui: env.render()

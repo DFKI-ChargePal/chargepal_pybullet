@@ -29,7 +29,7 @@ class EnvironmentReacherPositionCtrl(Environment[ObsType, ActType]):
     def __init__(self, **kwargs: Any):
         # Update environment configuration
         config_env = ch.search(kwargs, 'environment')
-        Environment.__init__(self, config_env, render_mode=kwargs.get('render_mode'))
+        Environment.__init__(self, config_env)
         # Extract component hyperparameter from kwargs
         config_world = ch.search(kwargs, 'world')
         config_ur_arm = ch.search(kwargs, 'ur_arm')
