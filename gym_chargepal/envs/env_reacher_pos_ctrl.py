@@ -2,8 +2,8 @@ from __future__ import annotations
 
 # global
 import numpy as np
+from rigmopy import Quaternion, Vector3d
 from rigmopy import utils_math as rp_math
-from rigmopy import Pose, Quaternion, Vector3d
 
 # local
 import gym_chargepal.utility.cfg_handler as ch
@@ -45,12 +45,12 @@ class EnvironmentReacherPositionCtrl(Environment[ObsType, ActType]):
         self.noisy_p_arm2tgt = Vector3d()
         self.noisy_q_arm2tgt = Quaternion()
         # Components
-        self.world = WorldReacher(config_world, config_ur_arm, config_start, config_target)
+        self.world: WorldReacher = WorldReacher(config_world, config_ur_arm, config_start, config_target)
         self.ik_solver = IKSolver(config_ik_solver, self.world.ur_arm)
         self.control_interface = JointPositionMotorControl(config_control_interface, self.world.ur_arm)
         self.plug_sensor = PlugSensor(config_plug_sensor, self.world.ur_arm)
         self.target_sensor = VirtTgtSensor(config_target_sensor, self.world)
-        self.low_level_control = TcpPositionController(
+        self.controller = TcpPositionController(
             config_low_level_control,
             self.world.ur_arm,
             self.ik_solver,
@@ -60,37 +60,19 @@ class EnvironmentReacherPositionCtrl(Environment[ObsType, ActType]):
 
     def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> tuple[ObsType, dict[str, Any]]:
         # Reset environment
-        self.clock.reset()
-        # Reset robot by default joint configuration
-        self.world.reset(render=self.is_render)
-        # Get start joint start configuration by inverse kinematic
-        joint_pos0 = self.ik_solver.solve(self.world.sample_X0())
-        self.world.reset(joint_conf=joint_pos0, render=self.is_render)
-        self.low_level_control.reset()
+        obs, info = self._reset_core()
         # Set new noisy target pose
         self.noisy_p_arm2tgt = self.target_sensor.noisy_p_arm2tgt
         self.noisy_q_arm2tgt = self.target_sensor.noisy_q_arm2tgt
-        obs = self.get_obs()
-        info = self.compose_info()
         return obs, info
 
     def step(self, action: ActType) -> tuple[ObsType, float, bool, bool, dict[Any, Any]]:
         """ Execute environment/simulation step. """
-        # Apply action
-        self.low_level_control.update(action=np.array(action))
-        # Step simulation
-        self.world.step(render=self.is_render)
-        self.clock.tick()
-        # Update and evaluate state
-        terminated = self.done
-        obs = self.get_obs()
-        info = self.compose_info()
+        # Perform core step
+        obs, terminated, truncated, info = self._update_core(action)
+        # Evaluate state
         reward = self.reward.compute(self.world.ur_arm.X_arm2plug, self.world.vrt_tgt.X_arm2tgt, terminated)
-        truncated = False
         return obs, reward, terminated, truncated, info
-
-    def close(self) -> None:
-        self.world.disconnect()
 
     def get_obs(self) -> npt.NDArray[np.float32]:
         # Build observation

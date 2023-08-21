@@ -28,5 +28,9 @@ class Controller(metaclass=abc.ABCMeta):
         self.cfg.update(**config)
 
     @abc.abstractmethod
+    def reset(self) -> None:
+        raise NotImplementedError('Must be implemented in subclass.')
+
+    @abc.abstractmethod
     def update(self, action: npt.NDArray[np.float32]) -> None:
         raise NotImplementedError('Must be implemented in subclass.')
