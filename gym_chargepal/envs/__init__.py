@@ -9,4 +9,5 @@ environment_register = {
     'ChargePal-Testbed-Plugger-6D-PositionControl-v1': config.testbed_plugger_6dof_position_ctrl_v1,
     'ChargePal-Testbed-Plugger-6D-ComplianceControl-v1': config.testbed_plugger_6dof_compliance_ctrl_v1,
     'ChargePal-Testbed-Searcher-6D-ComplianceControl-v0': config.testbed_searcher_6dof_compliance_ctrl_v0,
+    'ChargePal-Testbed-GuidedSearcher-6D-ComplianceControl-v0': config.testbed_guided_searcher_6dof_compliance_ctrl_v0,
 }
