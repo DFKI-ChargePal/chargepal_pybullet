@@ -241,7 +241,7 @@ testbed_guided_searcher_6dof_compliance_ctrl_v0 = {
     'low_level_control': {
         'force_action_scale_lin': 0.5,
         'force_action_scale_ang': 1.0,
-        'motion_action_scale_lin': 0.025,
+        'motion_action_scale_lin': 0.0125,
         'motion_action_scale_ang': 0.0125,
     },
 
@@ -249,7 +249,7 @@ testbed_guided_searcher_6dof_compliance_ctrl_v0 = {
         # Start configuration w.r.t. target configuration'
         'X_tgt2plug': Pose().from_xyz((0.0, 0.0, -0.05)),
         # Reset variance of the start pose
-        'variance': ((0.015, 0.015, 0.0), ((5/180) * np.pi, (5/180) * np.pi, (5/180) * np.pi)),
+        'variance': ((0.015, 0.015, 0.0), ((2/180) * np.pi, (2/180) * np.pi, (2/180) * np.pi)),
     },
 
     'socket': {
@@ -258,8 +258,7 @@ testbed_guided_searcher_6dof_compliance_ctrl_v0 = {
     },
 
     'socket_sensor': {
-        'var_lin': (0.025, 0.025, 0.0),
-        'var_ang': ((5/180) * np.pi, (5/180) * np.pi, (5/180) * np.pi),
+        'var_ang': ((2/180) * np.pi, (2/180) * np.pi, (2/180) * np.pi),
     },
 
 }

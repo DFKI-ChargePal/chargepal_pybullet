@@ -101,7 +101,7 @@ class EnvironmentGuidedSearcherComplianceCtrl(Environment[ObsType, ActType]):
         """ Execute environment/simulation step. """
         # Action will be interpreted as 6 dimensional wrench applied in tcp space
         # Motion error will be set by the environment.
-        p_plug2socket = self.noisy_p_arm2socket - self.plug_sensor.noisy_p_arm2sensor
+        p_plug2socket = self.noisy_p_arm2socket - Vector3d().from_xyz([0.025, 0.0, 0.0]) - self.plug_sensor.noisy_p_arm2sensor
         p_plug2goal = self.plug_sensor.noisy_q_arm2sensor.apply(p_plug2socket, inverse=True)
         q_plug2goal = self.plug_sensor.noisy_q_arm2sensor.inverse() * self.noisy_q_arm2socket
         X_plug2socket = np.array(p_plug2goal.xyz + q_plug2goal.to_euler_angle(), dtype=np.float64)

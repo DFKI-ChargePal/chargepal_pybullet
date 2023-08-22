@@ -43,7 +43,17 @@ class SocketSensor(Sensor):
 
     @property
     def noisy_X_arm2sensor(self) -> Pose:
-        return self.socket.X_arm2socket.random(self.cfg.var_lin, self.cfg.var_ang)
+        
+        if bool(np.random.randint(2)):
+            # Sample in negative space
+            random_pos = Vector3d().from_xyz(np.random.uniform((0.0, -0.025, -0.025), (0.0, -0.020, -0.020)))
+        else:
+            # Sample in positive space
+            random_pos = Vector3d().from_xyz(np.random.uniform((0.0, 0.020, 0.020), (0.0, 0.025, 0.025)))
+        
+        noisy_X = self.socket.X_arm2socket.random((0.0, 0.0, 0.0), self.cfg.var_ang)
+        noisy_X = noisy_X.from_pq(p=noisy_X.p + random_pos)
+        return noisy_X
 
     @property
     def noisy_p_arm2sensor(self) -> Vector3d:

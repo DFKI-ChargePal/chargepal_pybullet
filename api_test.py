@@ -41,7 +41,7 @@ def main(env_name: str, n_episodes: int, gui: bool) -> None:
     while True:
 
         action = env.action_space.sample()
-        # action = np.zeros_like(action)
+        action = np.zeros_like(action)
         # # action[2] = 1.0
         # if n_step <= 50:
         #     action[2] = 1.0
