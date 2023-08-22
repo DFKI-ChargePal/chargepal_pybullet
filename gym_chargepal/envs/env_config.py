@@ -235,7 +235,7 @@ testbed_guided_searcher_6dof_compliance_ctrl_v0 = {
         'type': EnvironmentGuidedSearcherComplianceCtrl,
         'T': 180,
         'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
-        'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(13,), dtype=np.float32),
+        'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
     },
 
     'low_level_control': {

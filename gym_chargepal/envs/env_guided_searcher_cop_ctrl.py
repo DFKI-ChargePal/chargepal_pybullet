@@ -13,10 +13,10 @@ from gym_chargepal.envs.env_base import (
 from gym_chargepal.bullet.ik_solver import IKSolver
 from gym_chargepal.sensors.sensor_ft import FTSensor
 from gym_chargepal.sensors.sensor_plug import PlugSensor
+from gym_chargepal.reward.reward_finder import FinderReward
 from gym_chargepal.worlds.world_plugger import WorldPlugger
 from gym_chargepal.sensors.sensor_socket import SocketSensor
 from gym_chargepal.bullet.ur_arm_virtual import VirtualURArm
-from gym_chargepal.reward.reward_sparse import SparseFinderReward
 from gym_chargepal.controllers.controller_tcp_compliance import TCPComplianceController
 from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotorControl
 from gym_chargepal.bullet.joint_velocity_motor_control import JointVelocityMotorControl
@@ -87,7 +87,7 @@ class EnvironmentGuidedSearcherComplianceCtrl(Environment[ObsType, ActType]):
             self.control_interface,
             self.plug_sensor
         )
-        self.reward = SparseFinderReward(config_reward, self.clock)
+        self.reward = FinderReward(config_reward, self.clock)
 
     def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> tuple[ObsType, dict[str, Any]]:
         # Reset environment
@@ -110,20 +110,17 @@ class EnvironmentGuidedSearcherComplianceCtrl(Environment[ObsType, ActType]):
         # Perform core step
         obs, terminated, truncated, info = self._update_core(com_action)
         # Evaluate state
-        reward = self.reward.compute(self.solved, 
-                                     self.world.ur_arm.X_arm2plug, 
-                                     self.world.socket.X_arm2socket, 
-                                     self.world.ur_arm.wrench, 
-                                     terminated)
+        reward = self.reward.compute(action, self.world.ur_arm.X_arm2plug, self.world.socket.X_arm2socket, terminated)
         return obs, reward, terminated, truncated, info
 
     def get_obs(self) -> npt.NDArray[np.float32]:
         # Build noisy observation
-        noisy_p_plug2socket = (self.noisy_p_arm2socket - self.plug_sensor.noisy_p_arm2sensor).xyz
-        noisy_q_plug2socket = rp_math.quaternion_difference(self.plug_sensor.noisy_q_arm2sensor, self.noisy_q_arm2socket).wxyz
+        # noisy_p_plug2socket = (self.noisy_p_arm2socket - self.plug_sensor.noisy_p_arm2sensor).xyz
+        # noisy_q_plug2socket = rp_math.quaternion_difference(self.plug_sensor.noisy_q_arm2sensor, self.noisy_q_arm2socket).wxyz
         noisy_F_plug = self.ft_sensor.noisy_wrench.xyzXYZ
         # Glue observation together
-        obs = np.array((noisy_p_plug2socket + noisy_q_plug2socket + noisy_F_plug), dtype=np.float32)
+        # obs = np.array((noisy_p_plug2socket + noisy_q_plug2socket + noisy_F_plug), dtype=np.float32)
+        obs = np.array(noisy_F_plug, dtype=np.float32)
         return obs
 
     def compose_info(self) -> dict[str, Any]:
