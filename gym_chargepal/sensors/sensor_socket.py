@@ -53,6 +53,7 @@ class SocketSensor(Sensor):
         
         noisy_X = self.socket.X_arm2socket.random((0.0, 0.0, 0.0), self.cfg.var_ang)
         noisy_X = noisy_X.from_pq(p=noisy_X.p + random_pos)
+        # noisy_X = self.socket.X_arm2socket.random(self.cfg.var_lin, self.cfg.var_ang)
         return noisy_X
 
     @property

@@ -9,9 +9,6 @@ import numpy as np
 # local
 from gym_chargepal.envs import environment_register
 
-# typing
-from typing import Any
-
 
 LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +38,7 @@ def main(env_name: str, n_episodes: int, gui: bool) -> None:
     while True:
 
         action = env.action_space.sample()
-        action = np.zeros_like(action)
+        # action = np.zeros_like(action)
         # # action[2] = 1.0
         # if n_step <= 50:
         #     action[2] = 1.0
@@ -56,7 +53,7 @@ def main(env_name: str, n_episodes: int, gui: bool) -> None:
         if gui: env.render()
         # reset environment
         if terminated:
-            LOGGER.info(f'Finish episode {episode} with return: {ep_return}')
+            LOGGER.info(f'Finish episode {episode:4} with return: {ep_return:5.1f}')
             episode += 1
             ep_return = 0.0
             if not run_inf and episode > n_episodes:

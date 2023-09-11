@@ -262,3 +262,46 @@ testbed_guided_searcher_6dof_compliance_ctrl_v0 = {
     },
 
 }
+
+testbed_guided_searcher_6dof_compliance_ctrl_v1 = {
+    'environment': {
+        'type': EnvironmentGuidedSearcherComplianceCtrl,
+        'T': 180,
+        'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
+        'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
+    },
+
+    'world': {
+        'robot_urdf': 'ur10e_ccs_type2.urdf',
+        'socket_urdf': 'ccs_socket_wall.urdf',
+    },
+
+    'ur_arm': {
+        'tcp_link_name': 'plug_tip',
+        'tool_com_link_names': ('plug_mounting',),
+    },
+
+    'low_level_control': {
+        'force_action_scale_lin': 0.5,
+        'force_action_scale_ang': 1.0,
+        'motion_action_scale_lin': 0.0125,
+        'motion_action_scale_ang': 0.0125,
+    },
+
+    'start': {
+        # Start configuration w.r.t. target configuration'
+        'X_tgt2plug': Pose().from_xyz((0.0, 0.0, -0.005)),
+        # Reset variance of the start pose
+        'variance': ((0.01, 0.01, 0.0), (np.deg2rad(1.0), np.deg2rad(1.0), np.deg2rad(1.0))),
+    },
+
+    'socket': {
+        # Socket configuration w.r.t. the arm base
+        'X_arm2socket': Pose().from_xyz((0.90, 0.30, 0.025)).from_euler_angle((np.pi, 0.0, 0.0)),
+    },
+
+    'socket_sensor': {
+        'var_ang': ((2/180) * np.pi, (2/180) * np.pi, (2/180) * np.pi),
+    },
+
+}

@@ -44,7 +44,7 @@ class FinderReward(Reward):
         # Distance to goal in plugging direction
         p_tcp2tgt_wrt_base = (X_tgt.p - X_tcp.p)
         p_tcp2tgt_wrt_tool = X_tcp.q.apply(p_tcp2tgt_wrt_base, inverse=True)
-        dz = p_tcp2tgt_wrt_tool.xyz[2] - 0.02
+        dz = p_tcp2tgt_wrt_tool.xyz[2] + 0.02
         if dz < 0.02:
             distance_reward = 1.0
         else:
