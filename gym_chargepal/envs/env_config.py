@@ -30,9 +30,9 @@ testbed_reacher_3dof_position_ctrl_v1 = {
 
     'start': {
         # Start configuration w.r.t. target configuration'
-        'X_tgt2plug': Pose().from_xyz((0.15, 0.3, -0.15)),
+        'X_tgt2plug': Pose().from_xyz((0.1, 0.2, -0.1)),
         # Reset variance of the start pose
-        'variance': ((0.1, 0.1, 0.1), (0.0, 0.0, 0.0)), 
+        'variance': ((0.05, 0.05, 0.05), (0.0, 0.0, 0.0)), 
     },
 
     'target': {
@@ -58,9 +58,9 @@ testbed_reacher_6dof_position_ctrl_v1 = {
 
     'start': {
         # Start configuration w.r.t. target configuration'
-        'X_tgt2plug': Pose().from_xyz((0.15, 0.3, -0.15)),
+        'X_tgt2plug': Pose().from_xyz((0.1, 0.2, -0.1)),
         # Reset variance of the start pose
-        'variance': ((0.1, 0.1, 0.1), (0.1 * np.pi, 0.1 * np.pi, 0.1 * np.pi)), 
+        'variance': ((0.05, 0.05, 0.05), (np.deg2rad(5.0), np.deg2rad(5.0), np.deg2rad(5.0))), 
     },
 
     'target': {
@@ -96,7 +96,7 @@ testbed_plugger_6dof_position_ctrl_v1 = {
         # Start configuration w.r.t. target configuration'
         'X_tgt2plug': Pose().from_xyz((0.0, 0.0, -0.1)),
         # Reset variance of the start pose
-        'variance': ((0.025, 0.025, 0.01), (0.01 * np.pi, 0.01 * np.pi, 0.01 * np.pi)), 
+        'variance': ((0.025, 0.025, 0.01), (np.deg2rad(2.5), np.deg2rad(2.5), np.deg2rad(2.5))), 
     },
 
     'socket': {
@@ -129,7 +129,7 @@ testbed_plugger_6dof_force_ctrl_v1 = {
         # Start configuration w.r.t. target configuration'
         'X_tgt2plug': Pose().from_xyz((0.0, 0.0, -0.1)),
         # Reset variance of the start pose
-        'variance': ((0.025, 0.025, 0.01), (0.01 * np.pi, 0.01 * np.pi, 0.01 * np.pi)),
+        'variance': ((0.025, 0.025, 0.01), (np.deg2rad(2.5), np.deg2rad(2.5), np.deg2rad(2.5))), 
     },
 
     'socket': {
@@ -157,7 +157,7 @@ testbed_plugger_6dof_motion_ctrl_v1 = {
         # Start configuration w.r.t. target configuration'
         'X_tgt2plug': Pose().from_xyz((0.0, 0.0, -0.1)),
         # Reset variance of the start pose
-        'variance': ((0.025, 0.025, 0.01), (0.01 * np.pi, 0.01 * np.pi, 0.01 * np.pi)),
+        'variance': ((0.025, 0.025, 0.01), (np.deg2rad(2.5), np.deg2rad(2.5), np.deg2rad(2.5))), 
     },
 
     'socket': {
@@ -184,9 +184,8 @@ testbed_plugger_6dof_compliance_ctrl_v1 = {
     'start': {
         # Start configuration w.r.t. target configuration'
         'X_tgt2plug': Pose().from_xyz((0.0, 0.0, -0.1)),
-        # 'X_tgt2plug': Pose().from_xyz((0.06, 0.0, -0.1)),
         # Reset variance of the start pose
-        'variance': ((0.025, 0.025, 0.01), (0.01 * np.pi, 0.01 * np.pi, 0.01 * np.pi)),
+        'variance': ((0.025, 0.025, 0.01), (np.deg2rad(2.5), np.deg2rad(2.5), np.deg2rad(2.5))), 
     },
 
     'socket': {
@@ -212,9 +211,9 @@ testbed_searcher_6dof_compliance_ctrl_v0 = {
 
     'start': {
         # Start configuration w.r.t. target configuration'
-        'X_tgt2plug': Pose().from_xyz((0.0, 0.0, -0.05)),
+        'X_tgt2plug': Pose().from_xyz((0.0, 0.0, -0.03)),
         # Reset variance of the start pose
-        'variance': ((0.015, 0.015, 0.0), ((5/180) * np.pi, (5/180) * np.pi, (5/180) * np.pi)),
+        'variance': ((0.015, 0.015, 0.0), (np.deg2rad(2.5), np.deg2rad(2.5), np.deg2rad(2.5))),
     },
 
     'socket': {
@@ -249,7 +248,7 @@ testbed_guided_searcher_6dof_compliance_ctrl_v0 = {
         # Start configuration w.r.t. target configuration'
         'X_tgt2plug': Pose().from_xyz((0.0, 0.0, -0.05)),
         # Reset variance of the start pose
-        'variance': ((0.015, 0.015, 0.0), ((2/180) * np.pi, (2/180) * np.pi, (2/180) * np.pi)),
+        'variance': ((0.015, 0.015, 0.0), (np.deg2rad(2.0), np.deg2rad(2.0), np.deg2rad(2.0))),
     },
 
     'socket': {

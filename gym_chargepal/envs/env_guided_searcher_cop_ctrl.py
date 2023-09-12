@@ -3,8 +3,7 @@ from __future__ import annotations
 # global
 import numpy as np
 from dataclasses import dataclass
-from rigmopy import Quaternion, Vector3d
-from rigmopy import utils_math as rp_math
+from rigmopy import Quaternion, Vector3d, Pose
 
 # local
 import gym_chargepal.utility.cfg_handler as ch
@@ -63,6 +62,9 @@ class EnvironmentGuidedSearcherComplianceCtrl(Environment[ObsType, ActType]):
         # Placeholder noisy target sensor state
         self.noisy_p_arm2socket = Vector3d()
         self.noisy_q_arm2socket = Quaternion()
+        # Manipulate default configuration
+        if config_ur_arm.get('tcp_link_offset') is None:
+            config_ur_arm['tcp_link_offset'] = Pose().from_xyz([0.0, 0.0, -0.02])
         # Components
         self.world: WorldPlugger = WorldPlugger(config_world, config_ur_arm, config_start, config_socket)
         config_virtual_arm['tcp_link_name'] = self.world.ur_arm.cfg.tcp_link_name
@@ -101,7 +103,7 @@ class EnvironmentGuidedSearcherComplianceCtrl(Environment[ObsType, ActType]):
         """ Execute environment/simulation step. """
         # Action will be interpreted as 6 dimensional wrench applied in tcp space
         # Motion error will be set by the environment.
-        p_plug2socket = self.noisy_p_arm2socket + Vector3d().from_xyz([0.02, 0.0, 0.0]) - self.plug_sensor.noisy_p_arm2sensor
+        p_plug2socket = self.noisy_p_arm2socket - self.plug_sensor.noisy_p_arm2sensor
         p_plug2goal = self.plug_sensor.noisy_q_arm2sensor.apply(p_plug2socket, inverse=True)
         q_plug2goal = self.plug_sensor.noisy_q_arm2sensor.inverse() * self.noisy_q_arm2socket
         X_plug2socket = np.array(p_plug2goal.xyz + q_plug2goal.to_euler_angle(), dtype=np.float64)

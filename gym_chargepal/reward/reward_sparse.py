@@ -68,7 +68,7 @@ class SparseFinderReward(Reward):
         # Check if there is spatial progress in plugging direction
         # Shift target by 2 cm since we are not interested in full plug in
         # Distance to goal in plugging direction
-        dz = p_tcp2tgt_wrt_tool.xyz[2] - 0.02
+        dz = p_tcp2tgt_wrt_tool.xyz[2]
         if dz < 0.02:
             distance_reward = 1.0 - (abs(dz) ** 0.4)
             contact_reward = 1.0

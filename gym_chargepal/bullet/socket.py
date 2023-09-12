@@ -55,7 +55,7 @@ class Socket:
             return self._bc
         else:
             raise RuntimeError("Not connected to PyBullet client.")
-        
+
     @property
     def bullet_body_id(self) -> int:
         if self.is_connected and self._body_id:

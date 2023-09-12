@@ -48,6 +48,9 @@ class EnvironmentPluggerPositionCtrl(Environment[ObsType, ActType]):
         # Placeholder noisy target sensor state
         self.noisy_p_arm2socket = Vector3d()
         self.noisy_q_arm2socket = Quaternion()
+        # Manipulate default configuration
+        if config_ur_arm.get('tcp_link_name') is None:
+            config_ur_arm['tcp_link_name'] = 'plug_lip'
         # Components
         self.world: WorldPlugger = WorldPlugger(config_world, config_ur_arm, config_start, config_socket)
         self.ik_solver = IKSolver(config_ik_solver, self.world.ur_arm)

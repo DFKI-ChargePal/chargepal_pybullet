@@ -43,8 +43,9 @@ class URArmCfg(ConfigHandler):
     joint_default_values: dict[str, float] = field(default_factory=lambda: ARM_JOINT_DEFAULT_VALUES)
     joint_pos_limits: dict[str, tuple[float, float]] = field(default_factory=lambda: ARM_JOINT_POS_LIMITS)
     joint_vel_limits: dict[str, float] = field(default_factory=lambda: ARM_JOINT_VEL_LIMITS)
-    tcp_link_name: str = 'plug'
-    tool_com_link_names: tuple[str, ...] = ('plug_root', 'plug')
+    tcp_link_name: str = 'plug_tip'
+    tcp_link_offset: Pose = Pose()
+    tool_com_link_names: tuple[str, ...] = ('plug_mounting', )
     base_link_name: str = 'base'
     ft_enable: bool = False
     ft_buffer_size: int = 10
@@ -305,7 +306,7 @@ class URArm:
             # Get tcp pose
             X_world2tcp = self.tcp_link.X_world2link
             # Get tcp pose wrt arm pose
-            X_arm2tcp = X_world2arm.inverse() * X_world2tcp
+            X_arm2tcp = X_world2arm.inverse() * X_world2tcp * self.cfg.tcp_link_offset
         else:
             LOGGER.error(self._CONNECTION_ERROR_MSG)
             X_arm2tcp = Pose()

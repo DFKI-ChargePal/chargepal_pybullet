@@ -38,7 +38,7 @@ class JointVelocityMotorControl:
         Args:
             tgt_vel: Desired joint velocities of the arm
         """
-        
+
         self.ur_arm.bullet_client.setJointMotorControlArray(
             bodyIndex=self.ur_arm._body_id,
             jointIndices=[idx for idx in self.ur_arm._joint_idx_dict.values()],

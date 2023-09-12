@@ -57,7 +57,7 @@ class WorldPlugger(World):
         self.socket = Socket(config_socket, self.ur_arm)
 
     def sample_X0(self) -> Pose:
-        X0_world2plug = self.ur_arm.X_world2arm * self.socket.X_arm2socket * self.start.random_X_tgt2plug
+        X0_world2plug = self.ur_arm.X_world2arm * self.socket.X_arm2socket * self.start.random_X_tgt2plug  * self.ur_arm.cfg.tcp_link_offset.inverse()
         return X0_world2plug
 
     def reset(self, joint_conf: tuple[float, ...] | None = None, render: bool = False) -> None:
