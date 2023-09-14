@@ -289,7 +289,7 @@ testbed_guided_searcher_6dof_compliance_ctrl_v1 = {
 
     'start': {
         # Start configuration w.r.t. target configuration'
-        'X_tgt2plug': Pose().from_xyz((0.0, 0.0, -0.005)),
+        'X_tgt2plug': Pose().from_xyz((0.0, 0.0, -0.025)),
         # Reset variance of the start pose
         'variance': ((0.01, 0.01, 0.0), (np.deg2rad(1.0), np.deg2rad(1.0), np.deg2rad(1.0))),
     },
