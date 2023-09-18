@@ -11,6 +11,7 @@ from gym_chargepal.envs.env_reacher_pos_ctrl import EnvironmentReacherPositionCt
 from gym_chargepal.envs.env_plugger_pos_ctrl import EnvironmentPluggerPositionCtrl
 from gym_chargepal.envs.env_plugger_cop_ctrl import EnvironmentPluggerComplianceCtrl
 from gym_chargepal.envs.env_searcher_cop_ctrl import EnvironmentSearcherComplianceCtrl
+from gym_chargepal.envs.env_guided_searcher_mot_ctrl import EnvironmentGuidedSearcherMotionCtrl
 from gym_chargepal.envs.env_guided_searcher_cop_ctrl import EnvironmentGuidedSearcherComplianceCtrl
 
 # ///////////////////////////////////////////////////////////// #
@@ -285,6 +286,53 @@ testbed_guided_searcher_6dof_compliance_ctrl_v1 = {
         'force_action_scale_ang': 1.0,
         'motion_action_scale_lin': 0.0125,
         'motion_action_scale_ang': 0.0125,
+    },
+
+    'start': {
+        # Start configuration w.r.t. target configuration'
+        'X_tgt2plug': Pose().from_xyz((0.0, 0.0, -0.025)),
+        # Reset variance of the start pose
+        'variance': ((0.01, 0.01, 0.0), (np.deg2rad(1.0), np.deg2rad(1.0), np.deg2rad(1.0))),
+    },
+
+    'socket': {
+        # Socket configuration w.r.t. the arm base
+        'X_arm2socket': Pose().from_xyz((0.90, 0.30, 0.025)).from_euler_angle((np.pi, 0.0, 0.0)),
+    },
+
+    'socket_sensor': {
+        'var_ang': ((2/180) * np.pi, (2/180) * np.pi, (2/180) * np.pi),
+    },
+
+}
+
+# /////////////////////////////////////////////////////////////////// #
+# ///                                                             /// #
+# ///   Environments Guided Searcher with TCP motion controller   /// #
+# ///                                                             /// #
+# /////////////////////////////////////////////////////////////////// #
+
+testbed_guided_searcher_6dof_motion_ctrl_v0 = {
+    'environment': {
+        'type': EnvironmentGuidedSearcherMotionCtrl,
+        'T': 180,
+        'action_space': spaces.Box(low=-1.0,  high=1.0, shape=(6,), dtype=np.float32),
+        'observation_space': spaces.Box(low=-1.0,  high=1.0, shape=(12,), dtype=np.float32),
+    },
+
+    'world': {
+        'robot_urdf': 'ur10e_ccs_type2.urdf',
+        'socket_urdf': 'ccs_socket_wall.urdf',
+    },
+
+    'ur_arm': {
+        'tcp_link_name': 'plug_tip',
+        'tool_com_link_names': ('plug_mounting',),
+    },
+
+    'low_level_control': {
+        'action_scale_lin': 0.1,
+        'action_scale_ang': 0.1,
     },
 
     'start': {

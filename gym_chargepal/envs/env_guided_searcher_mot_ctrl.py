@@ -3,20 +3,20 @@ from __future__ import annotations
 # global
 import numpy as np
 from dataclasses import dataclass
+from rigmopy import utils_math as rp_math
 from rigmopy import Quaternion, Vector3d, Pose
 
 # local
 import gym_chargepal.utility.cfg_handler as ch
-from gym_chargepal.envs.env_base import (
-    Environment, EnvironmentCfg)
 from gym_chargepal.bullet.ik_solver import IKSolver
+from gym_chargepal.envs.env_base import Environment, EnvironmentCfg
 from gym_chargepal.sensors.sensor_ft import FTSensor
 from gym_chargepal.sensors.sensor_plug import PlugSensor
 from gym_chargepal.reward.reward_finder import FinderReward
 from gym_chargepal.worlds.world_plugger import WorldPlugger
 from gym_chargepal.sensors.sensor_socket import SocketSensor
 from gym_chargepal.bullet.ur_arm_virtual import VirtualURArm
-from gym_chargepal.controllers.controller_tcp_compliance import TCPComplianceController
+from gym_chargepal.controllers.controller_tcp_motion import TCPMotionController
 from gym_chargepal.bullet.joint_position_motor_control import JointPositionMotorControl
 from gym_chargepal.bullet.joint_velocity_motor_control import JointVelocityMotorControl
 
@@ -29,12 +29,11 @@ ActType = npt.NDArray[np.float32]
 
 
 @dataclass
-class EnvironmentGuidedSearcherComplianceCtrlCfg(EnvironmentCfg[ObsType, ActType]):
+class EnvironmentGuidedSearcherMotionCtrlCfg(EnvironmentCfg[ObsType, ActType]):
     hw_interface: str = 'joint_velocity'
 
-
-class EnvironmentGuidedSearcherComplianceCtrl(Environment[ObsType, ActType]):
-    """ Cartesian environment with compliance controller - Task: Search the socket
+class EnvironmentGuidedSearcherMotionCtrl(Environment[ObsType, ActType]):
+    """ Cartesian environment with motion controller - Task: Search the socket
 
     Args:
         Environment: Base class
@@ -44,7 +43,7 @@ class EnvironmentGuidedSearcherComplianceCtrl(Environment[ObsType, ActType]):
         config_env = ch.search(kwargs, 'environment')
         Environment.__init__(self, config_env)
         # Create configuration and overwrite values
-        self.cfg: EnvironmentGuidedSearcherComplianceCtrlCfg = EnvironmentGuidedSearcherComplianceCtrlCfg()
+        self.cfg: EnvironmentGuidedSearcherMotionCtrlCfg = EnvironmentGuidedSearcherMotionCtrlCfg()
         self.cfg.update(**config_env)
         # Extract component hyperparameter from kwargs
         config_start = ch.search(kwargs, 'start')
@@ -65,7 +64,7 @@ class EnvironmentGuidedSearcherComplianceCtrl(Environment[ObsType, ActType]):
         # Manipulate default configuration
         if config_ur_arm.get('tcp_link_offset') is None:
             config_ur_arm['tcp_link_offset'] = Pose().from_xyz([0.0, 0.0, -0.02])
-        # Components
+                # Components
         self.world: WorldPlugger = WorldPlugger(config_world, config_ur_arm, config_start, config_socket)
         config_virtual_arm['tcp_link_name'] = self.world.ur_arm.cfg.tcp_link_name
         self.virtual_arm = VirtualURArm(config_virtual_arm, self.world)
@@ -82,7 +81,7 @@ class EnvironmentGuidedSearcherComplianceCtrl(Environment[ObsType, ActType]):
         self.plug_sensor = PlugSensor(config_plug_sensor, self.world.ur_arm)
         self.socket_sensor = SocketSensor(config_socket_sensor, self.world.ur_arm, self.world.socket)
         config_low_level_control['period'] = self.world.ctrl_period
-        self.controller = TCPComplianceController(
+        self.controller = TCPMotionController(
             config_low_level_control,
             self.world.ur_arm,
             self.virtual_arm,
@@ -98,33 +97,38 @@ class EnvironmentGuidedSearcherComplianceCtrl(Environment[ObsType, ActType]):
         self.noisy_p_arm2socket = self.socket_sensor.noisy_p_arm2sensor
         self.noisy_q_arm2socket = self.socket_sensor.noisy_q_arm2sensor
         return obs, info
-
+    
     def step(self, action: ActType) -> tuple[ObsType, float, bool, bool, dict[Any, Any]]:
-        """ Execute environment/simulation step. """
-        # Action will be interpreted as 6 dimensional wrench applied in tcp space
-        # Motion error will be set by the environment.
+        """ Execute environment/simulation step.
+
+        Args:
+            action: 6D movement in error space w.r.t. the plug
+
+        Returns:
+            Gymnasium interface information
+        """
+        # Adjust target by action
+        p_adj = Vector3d().from_xyz(0.01 * action[0:3])
+        q_adj = Quaternion().from_euler_angle(0.01 * action[3:6])
+        # Noisy observation
         p_plug2socket = self.noisy_p_arm2socket - self.plug_sensor.noisy_p_arm2sensor
-        p_plug2goal = self.plug_sensor.noisy_q_arm2sensor.apply(p_plug2socket, inverse=True)
-        q_plug2goal = self.plug_sensor.noisy_q_arm2sensor.inverse() * self.noisy_q_arm2socket
-        X_plug2socket = np.array(p_plug2goal.xyz + q_plug2goal.to_euler_angle(), dtype=np.float32)
-        # Combine actions
-        com_action = np.concatenate([X_plug2socket, action])
+        p_plug2socket_adj = self.plug_sensor.noisy_q_arm2sensor.apply(p_plug2socket, inverse=True) + p_adj
+        q_plug2socket_adj = (self.plug_sensor.noisy_q_arm2sensor.inverse() * self.noisy_q_arm2socket) * q_adj
+        X_plug2socket_adj = np.array(p_plug2socket_adj.xyz + q_plug2socket_adj.to_euler_angle(), dtype=np.float32)
         # Perform core step
-        obs, terminated, truncated, info = self._update_core(com_action)
+        obs, terminated, truncated, info = self._update_core(X_plug2socket_adj)
         # Evaluate state
         reward = self.reward.compute(action, self.world.ur_arm.X_arm2plug, self.world.socket.X_arm2socket, terminated)
         return obs, reward, terminated, truncated, info
 
     def get_obs(self) -> npt.NDArray[np.float32]:
         # Build noisy observation
-        # noisy_p_plug2socket = (self.noisy_p_arm2socket - self.plug_sensor.noisy_p_arm2sensor).xyz
-        # noisy_q_plug2socket = rp_math.quaternion_difference(self.plug_sensor.noisy_q_arm2sensor, self.noisy_q_arm2socket).wxyz
+        noisy_V_plug = self.plug_sensor.noisy_V_wrt_arm.xyzXYZ
         noisy_F_plug = self.ft_sensor.noisy_wrench.xyzXYZ
         # Glue observation together
-        # obs = np.array((noisy_p_plug2socket + noisy_q_plug2socket + noisy_F_plug), dtype=np.float32)
-        obs = np.array(noisy_F_plug, dtype=np.float32)
+        obs = np.array((noisy_V_plug + noisy_F_plug), dtype=np.float32)
         return obs
-
+    
     def compose_info(self) -> dict[str, Any]:
         # Calculate evaluation metrics
         p_plug2target = (self.world.socket.p_arm2socket - self.world.ur_arm.p_arm2plug).xyz
